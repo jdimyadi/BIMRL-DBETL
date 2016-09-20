@@ -1,0 +1,14 @@
+﻿<Window x:Class="BIMRLMisc.ElementIDTest"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ElementIDTest" Height="176" Width="634">
+    <Grid>
+        <TextBox x:Name="TextBox_ElementIDStr" HorizontalAlignment="Left" Height="23" Margin="10,46,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="231"/>
+        <TextBox x:Name="TextBox_ElementIDNo" HorizontalAlignment="Left" Height="58" Margin="334,30,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="282"/>
+        <Label Content="ElementID (string)" HorizontalAlignment="Left" Margin="10,4,0,0" VerticalAlignment="Top"/>
+        <Label Content="ElementID (pair of Uint64)" HorizontalAlignment="Left" Margin="334,4,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="Button_convert_toStr" Content="&lt;&lt;" HorizontalAlignment="Left" Margin="252,47,0,0" VerticalAlignment="Top" Width="31" Click="Button_convert_toStr_Click"/>
+        <Button x:Name="Button_convert_toNo" Content="&gt;&gt;" HorizontalAlignment="Left" Margin="292,47,0,0" VerticalAlignment="Top" Width="31" Click="Button_convert_toNo_Click"/>
+
+    </Grid>
+</Window>

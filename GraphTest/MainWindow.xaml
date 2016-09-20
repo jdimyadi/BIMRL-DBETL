@@ -1,0 +1,18 @@
+﻿<Window x:Class="GraphTest.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="536">
+    <Grid>
+        <TextBox x:Name="TextBox_FedModelID" HorizontalAlignment="Left" Height="23" Margin="175,13,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="61" Cursor="Help" SpellCheck.IsEnabled="True"/>
+        <Label Content="Federated Model ID" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="Button_genCirculation" Content="Circulation Graph" Margin="0,10,10,0" VerticalAlignment="Top" Click="Button_genCirculation_Click" HorizontalAlignment="Right" Width="107"/>
+        <Button x:Name="Button_AdjacencyGraph" Content="Adjacency Graph" Margin="0,35,10,0" VerticalAlignment="Top" Click="Button_AdjacencyGraph_Click" HorizontalAlignment="Right" Width="107"/>
+        <TextBox x:Name="TextBox_Output" Margin="10,0,10,10" TextWrapping="Wrap" IsReadOnly="True" Height="110" VerticalAlignment="Bottom"/>
+        <TextBox x:Name="TextBox_StartNode" HorizontalAlignment="Left" Height="23" Margin="10,81,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="189" TextChanged="TextBox_StartNode_TextChanged"/>
+        <TextBox x:Name="TextBox_EndNode" HorizontalAlignment="Left" Height="23" Margin="204,81,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="181" TextChanged="TextBox_EndNode_TextChanged"/>
+        <Button x:Name="Button_ShortestPath" Content="Comp. Shortest Path" Margin="0,81,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="117" Click="Button_ShortestPath_Click" Height="23"/>
+        <Button x:Name="Button_kShortestPath" Content="k-Shortest Path" Margin="0,109,10,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="117" Height="23" Click="Button_kShortestPath_Click"/>
+        <TextBox x:Name="TextBox_kPaths" HorizontalAlignment="Left" Height="23" Margin="342,109,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="43" TextChanged="TextBox_kPaths_TextChanged"/>
+
+    </Grid>
+</Window>
