@@ -324,6 +324,7 @@ BLACK:			[Bb][Ll][Aa][Cc][Kk] ;
 BLUE:			[Bb][Ll][Uu][Ee] ;
 BOOLEANTYPE:	[Bb][Oo][Oo][Ll][Ee][Aa][Nn] ;
 BREP:			[Bb][Rr][Ee][Pp] ;
+BREPFROMEDGE:	[Bb][Rr][Ee][Pp][Ff][Rr][Oo][Mm][Ee][Dd][Gg][Ee] ;
 BOTHDIRECTION:	[Bb][Oo][Tt][Hh][Dd][Ii][Rr][Ee][Cc][Tt][Ii][Oo][Nn] ;
 BOX:			[Bb][Oo][Xx] ;
 BY:				[Bb][Yy] ;

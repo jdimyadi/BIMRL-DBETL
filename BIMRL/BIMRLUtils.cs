@@ -28,6 +28,7 @@ using Xbim.Ifc2x3.Extensions;
 using Xbim.Ifc2x3.ActorResource;
 using Xbim.Ifc2x3.PropertyResource;
 using Xbim.Common.Geometry;
+using XbimGeometry.Interfaces;
 using Xbim.ModelGeometry.Converter;
 using Xbim.Ifc2x3.ExternalReferenceResource;
 using Oracle.DataAccess.Types;
@@ -130,8 +131,8 @@ namespace BIMRL
                     continue;                   // no geometry for this product
 
                 XbimGeometryData sdoGeomData = geomDataList.First();
-                m3D = sdoGeomData.Transform;
-
+                //m3D = sdoGeomData.Transform;
+                m3D = XbimMatrix3D.FromArray(sdoGeomData.DataArray2);       // Xbim 3.0 removes Tranform property
                 string sqlStmt = "update BIMRL_ELEMENT_" + fedID.ToString("X4") + " set TRANSFORM_COL1=:1, TRANSFORM_COL2=:2, TRANSFORM_COL3=:3, TRANSFORM_COL4=:4"
                                 + " Where elementid = '" + elemListItem.Value + "'";
                 // int status = DBOperation.updateGeometry(sqlStmt, sdoGeomData);

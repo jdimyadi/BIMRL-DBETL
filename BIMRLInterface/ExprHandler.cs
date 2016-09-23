@@ -99,7 +99,7 @@ namespace BIMRLInterface
         public static void validateBetween(bimrlParser.Between_conditionContext betweenCtx, nodeProperty expr1, nodeProperty expr2)
         {
             // For Between to work properly, we need to make sure that both expressions are valid
-            if (betweenCtx.expr().Count < 2
+            if (betweenCtx.expr().Count() < 2
                 || string.IsNullOrEmpty(expr1.forExpr)
                 || string.IsNullOrEmpty(expr2.forExpr))
                 throw new BIMRLInterfaceRuntimeException("%Error: Missing expression in the BETWEEN clause");

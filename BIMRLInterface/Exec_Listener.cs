@@ -221,7 +221,7 @@ namespace BIMRLInterface
                 nodeP.actionCommandInfo.evalTabName = evalResultTabName + "VAR1"; //
                 actionInfoList.Add(nodeP);
             }
-            else if (context.multi_action().Count > 0)
+            else if (context.multi_action().Count() > 0)
             {
                 foreach(bimrlParser.Multi_actionContext maCtx in context.multi_action())
                 {
@@ -408,7 +408,7 @@ namespace BIMRLInterface
 
                 if (printAcCtx.save_action() != null)
                 {
-                    for (int cnt = 0; cnt < printAcCtx.save_action().save_destination().Count; ++cnt)
+                    for (int cnt = 0; cnt < printAcCtx.save_action().save_destination().Count(); ++cnt)
                     {
                         if (printAcCtx.save_action().save_destination()[cnt].TABLE() != null)
                         {
@@ -846,7 +846,7 @@ namespace BIMRLInterface
             HashSet<string> constructAliases = new HashSet<string>();
 
             List<evalItems> evalStmtItems = new List<evalItems>();
-            if (context.foreach_fnexpr().Count > 0)
+            if (context.foreach_fnexpr().Count() > 0)
             {
                 int counter = 0;
                 // the second branch with one or multiple set
@@ -1183,7 +1183,7 @@ namespace BIMRLInterface
                             // handle geomertry creation
                             if (geomCtx.LINE() != null)
                             {
-                                if (geomCtx.three_position().Count > 0)
+                                if (geomCtx.three_position().Count() > 0)
                                 {
                                     List<Point3D> pList = getThreePositions(geomCtx.three_position());
                                     geomID = UserGeometryUtils.createLine(null, pList, false);
@@ -1387,7 +1387,7 @@ namespace BIMRLInterface
                                     int noVertFace = 3;                             // default for triangulated faces
                                     if (geomCtx.noVertInFace() != null)
                                         noVertFace = int.Parse(geomCtx.noVertInFace().GetText());
-                                    for (int i = 0; i < geomCtx.face_indexes().INT().Count; i+=noVertFace)
+                                    for (int i = 0; i < geomCtx.face_indexes().INT().Count(); i+=noVertFace)
                                     {
                                         List<int> faceIdx = new List<int>();
                                         for (int j = 0; j < noVertFace; ++j)
@@ -1911,7 +1911,7 @@ namespace BIMRLInterface
             string functionName = context.function_name().GetText();
             bool countFn = string.Compare(functionName, "COUNT", true) == 0;
             IList<string> exprStrList = new List<string>();
-            if (context.expr().Count > 0 && !countFn)
+            if (context.expr().Count() > 0 && !countFn)
             {
                 IReadOnlyCollection<bimrlParser.ExprContext> exprs = context.expr();
                 foreach (bimrlParser.ExprContext expr in exprs)

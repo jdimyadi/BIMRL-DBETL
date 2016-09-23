@@ -29,6 +29,7 @@ using System.Diagnostics;
 using Xbim.Ifc2x3.ActorResource;
 using Xbim.Ifc2x3.PropertyResource;
 using Xbim.Common.Geometry;
+using XbimGeometry.Interfaces;
 using Xbim.ModelGeometry.Converter;
 using Xbim.Ifc2x3.ExternalReferenceResource;
 using Oracle.DataAccess.Types;
@@ -82,7 +83,8 @@ namespace BIMRL
 
                 foreach (XbimGeometryData geomData in geomDataList)
                 {
-                    m3D = geomData.Transform;
+                    //m3D = geomData.Transform;
+                    m3D = XbimMatrix3D.FromArray(geomData.DataArray2);      // Xbim 3.0 removes Transform property!
                     XbimTriangulatedModelStream triangleStream = new XbimTriangulatedModelStream(geomData.ShapeData);
                     XbimMeshGeometry3D builder = new XbimMeshGeometry3D();
                     //                    triangleStream.Build(builder);  //This reads only the Vertices and triangle indexes, other modes of Build can read other info (e.g. BuildWithNormal, or BuildPNI)
