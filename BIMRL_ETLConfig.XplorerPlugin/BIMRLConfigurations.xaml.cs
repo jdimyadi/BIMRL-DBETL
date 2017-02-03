@@ -69,7 +69,7 @@ namespace BIMRL_ETLConfig.XplorerPlugin
                 CB_WallConn.IsChecked = DBOperation.objectForConnection["IFCWALLSTANDARDCASE"];    // Just check IFCWALLSTANDARDCASE is sufficient as IFCWALL is always set in pair with IFCWALLSTANDARDCASE
                 CB_WindowConn.IsChecked = DBOperation.objectForConnection[CB_WindowConn.Content.ToString().ToUpper()];
             }
-}
+         }
 
         private void TextBox_DBUserID_TextChanged(object sender, TextChangedEventArgs e)
         {
