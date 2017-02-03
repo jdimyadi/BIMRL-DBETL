@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
 using BIMRL.OctreeLib;
-using MathNet.Numerics;
 using MathNet.Numerics.Providers.LinearAlgebra;
 
 namespace BIMRL

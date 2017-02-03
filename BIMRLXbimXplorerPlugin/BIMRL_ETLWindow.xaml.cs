@@ -3,21 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Text.RegularExpressions;
+using Xbim.Presentation.XplorerPluginSystem;
+using Xbim.Ifc;
+using Xbim.Ifc4.Interfaces;
+using Xbim.Common;
 using BIMRL.OctreeLib;
 using BIMRL.BIMRLGraph;
 using BIMRL;
-using Xbim.Presentation.XplorerPluginSystem;
-using Xbim.IO;
 
 namespace BIMRLXbimXplorerPlugin
 {
@@ -636,16 +632,16 @@ namespace BIMRLXbimXplorerPlugin
             SetBinding(ModelProperty, new Binding());
         }
 
-        static XbimModel _model;
+        static IModel _model;
         
-        public XbimModel Model
+        public IModel Model
         {
-            get { return (XbimModel)GetValue(ModelProperty); }
+            get { return (IModel)GetValue(ModelProperty); }
             set { SetValue(ModelProperty, value); }
         }
 
         public static DependencyProperty ModelProperty =
-            DependencyProperty.Register("Model", typeof(XbimModel), typeof(BIMRL_ETLWindow),
+            DependencyProperty.Register("Model", typeof(IfcStore), typeof(BIMRL_ETLWindow),
         new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.Inherits, OnSelectedEntityChanged));
 
         private static void OnSelectedEntityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

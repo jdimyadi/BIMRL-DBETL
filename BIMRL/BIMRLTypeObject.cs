@@ -3,27 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Data;
-using Xbim.IO;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.Ifc2x3.SharedBldgElements;
-using Xbim.Ifc2x3.SharedBldgServiceElements;
-using Xbim.Ifc2x3.StructuralElementsDomain;
-using Xbim.Ifc2x3.StructuralAnalysisDomain;
-using Xbim.Ifc2x3.SharedComponentElements;
-using Xbim.Ifc2x3.SharedFacilitiesElements;
-using Xbim.XbimExtensions;
-using Xbim.XbimExtensions.Interfaces;
-using Xbim.Ifc2x3.Extensions;
-using Xbim.Ifc2x3.UtilityResource;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System.Threading;
-using Xbim.Common.Exceptions;
 using System.Diagnostics;
-using Xbim.Ifc2x3.ActorResource;
-using Xbim.Ifc2x3.PropertyResource;
-using Xbim.Ifc2x3.ExternalReferenceResource;
+using Xbim.Ifc;
+using Xbim.Ifc4.Interfaces;
 using Oracle.DataAccess.Types;
 using Oracle.DataAccess.Client;
 using NetSdoGeometry;
@@ -34,9 +19,9 @@ namespace BIMRL
     public class BIMRLTypeObject
     {
         BIMRLCommon _refBIMRLCommon;
-        XbimModel _model;
+        IfcStore _model;
 
-        public BIMRLTypeObject(XbimModel m, BIMRLCommon refBIMRLCommon)
+        public BIMRLTypeObject(IfcStore m, BIMRLCommon refBIMRLCommon)
         {
             _refBIMRLCommon = refBIMRLCommon;
             _model = m;
@@ -44,8 +29,8 @@ namespace BIMRL
 
         public void processTypeObject()
         {
-            IEnumerable<IfcTypeProduct> types = _model.InstancesLocal.OfType<IfcTypeProduct>();
-            foreach (IfcTypeProduct typ in types)
+            IEnumerable<IIfcTypeProduct> types = _model.Instances.OfType<IIfcTypeProduct>();
+            foreach (IIfcTypeProduct typ in types)
             {
                 OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
 
@@ -145,7 +130,7 @@ namespace BIMRL
 
 
                 dynamic dynTyp = typ;
-                if (!(typ is IfcDoorStyle || typ is IfcWindowStyle))
+                if (!(typ is IIfcDoorStyle || typ is IIfcWindowStyle))
                 {
                     if (dynTyp.ElementType == null)
                     {
@@ -160,14 +145,14 @@ namespace BIMRL
                     Param[6].Value = arrETyp.ToArray();
                 }
 
-                if (typ is IfcFurnitureType)
+                if (typ is IIfcFurnitureType)
                 {
                     // these entities do not have PredefinedType
                     arrPDTyp.Add(string.Empty);
                     Param[7].Value = arrPDTyp.ToArray();
                     Param[7].ArrayBindStatus = arrBStatN.ToArray();
                     // This entity has a different attribute: AssemblyPlace. This must be placed ahead of its supertype IfcFurnishingElementType
-                    IfcFurnitureType ftyp = typ as IfcFurnitureType;
+                    IIfcFurnitureType ftyp = typ as IIfcFurnitureType;
                     arrAPl.Add(ftyp.AssemblyPlace.ToString());
                     Param[8].Value = arrAPl.ToArray();
                     if (String.IsNullOrEmpty(ftyp.AssemblyPlace.ToString()))
@@ -182,8 +167,8 @@ namespace BIMRL
                     Param[10].Value = arrConsTyp.ToArray();
                     Param[10].ArrayBindStatus = arrBStatN.ToArray();
                 }
-                else if (typ is IfcFastenerType || typ is IfcMechanicalFastenerType || typ is IfcFurnishingElementType || typ is IfcSystemFurnitureElementType
-                    || typ is IfcDiscreteAccessoryType || typ is IfcCurtainWallType)
+                else if (typ is IIfcFastenerType || typ is IIfcMechanicalFastenerType || typ is IIfcFurnishingElementType || typ is IIfcSystemFurnitureElementType
+                    || typ is IIfcDiscreteAccessoryType || typ is IIfcCurtainWallType)
                 {
                     // these entities do not have PredefinedType. Xbim also has not implemented IfcCurtainWallType and therefore no PredefinedType yet!!
                     arrPDTyp.Add(string.Empty);
@@ -202,7 +187,7 @@ namespace BIMRL
 
                 // These entities do not have predefinedtype, but OperationType and ConstructionType
                 // We ignore ParameterTakesPrecedence and Sizeable are only useful for object construction
-                else if (typ is IfcDoorStyle)
+                else if (typ is IIfcDoorStyle)
                 {
                     // these entities do not have PredefinedType
                     arrETyp.Add(string.Empty);
@@ -215,34 +200,16 @@ namespace BIMRL
                     Param[8].Value = arrAPl.ToArray();
                     Param[8].ArrayBindStatus = arrBStatN.ToArray();
 
-                    IfcDoorStyle dst = typ as IfcDoorStyle;
-                    if (dst.OperationType != null)
-                    {
-                        arrOpTyp.Add(dst.OperationType.ToString());
-                        Param[9].Value = arrOpTyp.ToArray();
-                        Param[9].ArrayBindStatus = arrBStatS.ToArray();
-                    }
-                    else
-                    {
-                        arrOpTyp.Add(string.Empty);
-                        Param[9].Value = arrOpTyp.ToArray();
-                        Param[9].ArrayBindStatus = arrBStatN.ToArray();
-                    }
+                    IIfcDoorStyle dst = typ as IIfcDoorStyle;
+                     arrOpTyp.Add(dst.OperationType.ToString());
+                     Param[9].Value = arrOpTyp.ToArray();
+                     Param[9].ArrayBindStatus = arrBStatS.ToArray();
 
-                    if (dst.ConstructionType != null)
-                    {
-                        arrConsTyp.Add(dst.OperationType.ToString());
-                        Param[10].Value = arrConsTyp.ToArray();
-                        Param[10].ArrayBindStatus = arrBStatS.ToArray();
-                    }
-                    else
-                    {
-                        arrConsTyp.Add(string.Empty);
-                        Param[10].Value = arrConsTyp.ToArray();
-                        Param[10].ArrayBindStatus = arrBStatN.ToArray();
-                    }
+                     arrConsTyp.Add(dst.OperationType.ToString());
+                     Param[10].Value = arrConsTyp.ToArray();
+                     Param[10].ArrayBindStatus = arrBStatS.ToArray();
                 }
-                else if (typ is IfcWindowStyle)
+                else if (typ is IIfcWindowStyle)
                 {
                     // these entities do not have PredefinedType
                     arrETyp.Add(string.Empty);
@@ -255,32 +222,14 @@ namespace BIMRL
                     Param[8].Value = arrAPl.ToArray();
                     Param[8].ArrayBindStatus = arrBStatN.ToArray();
                     
-                    IfcWindowStyle wst = typ as IfcWindowStyle;
-                    if (wst.OperationType != null)
-                    {
-                        arrOpTyp.Add(wst.OperationType.ToString());
-                        Param[9].Value = arrOpTyp.ToArray();
-                        Param[9].ArrayBindStatus = arrBStatS.ToArray();
-                    }
-                    else
-                    {
-                        arrOpTyp.Add(string.Empty);
-                        Param[9].Value = arrOpTyp.ToArray();
-                        Param[9].ArrayBindStatus = arrBStatN.ToArray();
-                    }
+                    IIfcWindowStyle wst = typ as IIfcWindowStyle;
+                     arrOpTyp.Add(wst.OperationType.ToString());
+                     Param[9].Value = arrOpTyp.ToArray();
+                     Param[9].ArrayBindStatus = arrBStatS.ToArray();
 
-                    if (wst.ConstructionType != null)
-                    {
-                        arrConsTyp.Add(wst.OperationType.ToString());
-                        Param[10].Value = arrConsTyp.ToArray();
-                        Param[10].ArrayBindStatus = arrBStatS.ToArray();
-                    }
-                    else
-                    {
-                        arrConsTyp.Add(string.Empty);
-                        Param[10].Value = arrConsTyp.ToArray();
-                        Param[10].ArrayBindStatus = arrBStatN.ToArray();
-                    }
+                     arrConsTyp.Add(wst.OperationType.ToString());
+                     Param[10].Value = arrConsTyp.ToArray();
+                     Param[10].ArrayBindStatus = arrBStatS.ToArray();
                 }
                 else
                 {
