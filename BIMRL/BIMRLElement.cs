@@ -63,6 +63,8 @@ namespace BIMRL
             IIfcProduct product = _model.Instances[productLabel] as IIfcProduct;
 
             IEnumerable<XbimShapeInstance> shapeInstances = context.ShapeInstancesOf(product).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded);
+            if (shapeInstances == null)
+               continue;
             if (shapeInstances.Count() == 0)
                continue;         // SKip if the product has no geometry
 
@@ -592,12 +594,13 @@ namespace BIMRL
 
             // Process project units
             int uDefCnt = 1;
-            setupUnitRep();
+            BIMRLUtils.setupUnitRep();
             IEnumerable<IIfcUnit> units = project.UnitsInContext.Units;
             Dictionary<string, UnitSetting> unitItems = new Dictionary<string, UnitSetting>();
             foreach (IIfcUnit unit in units)
             {
-               string unitRepStr = getIfcUnitStr(unit);
+               BIMRLUtils.AddIfcProjectUnitDict(unit);
+               string unitRepStr = BIMRLUtils.getIfcUnitStr(unit);
                if (unit is IIfcSIUnit)
                {
                   IIfcSIUnit unitSI = unit as IIfcSIUnit;
@@ -708,6 +711,11 @@ namespace BIMRL
                   arrPropVal.Add(BIMRLUtils.checkSingleQuote(sse_s.SiteAddress.ToString()));
                   arrPropValBS.Add(OracleParameterStatus.Success);
                }
+               else
+               {
+                  arrPropVal.Add(string.Empty);
+                  arrPropValBS.Add(OracleParameterStatus.NullInsert);
+               }
 
                arrPropVal.Add(sse_s.CompositionType.ToString());
                for (int i = 0; i < noPar; i++) arrPDatatyp.Add("STRING");
@@ -738,6 +746,11 @@ namespace BIMRL
                if (sse_b.BuildingAddress != null)
                {
                   arrPropVal.Add(BIMRLUtils.checkSingleQuote(sse_b.BuildingAddress.ToString()));
+                  arrPropValBS.Add(OracleParameterStatus.NullInsert);
+               }
+               else
+               {
+                  arrPropVal.Add(string.Empty);
                   arrPropValBS.Add(OracleParameterStatus.NullInsert);
                }
 
@@ -795,6 +808,11 @@ namespace BIMRL
                      arrPropVal.Add(elem2x3.CompositionType.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
                   }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
+                  }
                }
                else
                {
@@ -803,6 +821,11 @@ namespace BIMRL
                   {
                      arrPropVal.Add(elem.PredefinedType.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
+                  }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
                   }
                }
                for (int i = 0; i < noPar; i++) arrPDatatyp.Add("STRING");
@@ -828,6 +851,12 @@ namespace BIMRL
                   arrPropVal.Add(elem.PredefinedType.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
                }
+               else
+               {
+                  arrPropVal.Add(string.Empty);
+                  arrPropValBS.Add(OracleParameterStatus.NullInsert);
+               }
+
                for (int i = 0; i < noPar; i++) arrPDatatyp.Add("STRING");
             }
 
@@ -854,6 +883,11 @@ namespace BIMRL
                      arrPropVal.Add(elem2x3.ControlElementId.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
                   }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
+                  }
                }
                else
                {
@@ -864,6 +898,11 @@ namespace BIMRL
                   {
                      arrPropVal.Add(elemDet.PredefinedType.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
+                  }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
                   }
                }
                for (int i = 0; i < noPar; i++) arrPDatatyp.Add("STRING");
@@ -896,7 +935,8 @@ namespace BIMRL
                   arrPropVal.Add(string.Empty);
                   arrPropValBS.Add(OracleParameterStatus.NullInsert);
                }
-               if (elem.OverallWidth == null)
+
+               if (elem.OverallWidth != null)
                {
                   arrPropVal.Add(elem.OverallWidth.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
@@ -962,6 +1002,11 @@ namespace BIMRL
                   arrPropVal.Add(elem.AssemblyPlace.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
                }
+               else
+               {
+                  arrPropVal.Add(string.Empty);
+                  arrPropValBS.Add(OracleParameterStatus.NullInsert);
+               }
 
                arrPropVal.Add(elem.PredefinedType.ToString());
                arrPropValBS.Add(OracleParameterStatus.Success);
@@ -1011,6 +1056,11 @@ namespace BIMRL
                   arrPropVal.Add(elem.ConstructionType.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
                }
+               else
+               {
+                  arrPropVal.Add(string.Empty);
+                  arrPropValBS.Add(OracleParameterStatus.NullInsert);
+               }
 
                arrPropVal.Add(elem.PredefinedType.ToString());
                arrPropValBS.Add(OracleParameterStatus.Success);
@@ -1037,6 +1087,11 @@ namespace BIMRL
                {
                   arrPropVal.Add(elem.PredefinedType.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
+               }
+               else
+               {
+                  arrPropVal.Add(string.Empty);
+                  arrPropValBS.Add(OracleParameterStatus.NullInsert);
                }
 
                for (int i = 0; i < noPar; i++) arrPDatatyp.Add("STRING");
@@ -1130,6 +1185,11 @@ namespace BIMRL
                      arrPropVal.Add(elem2x3.SteelGrade.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
                   }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
+                  }
 
                   arrPropVal.Add(elem2x3.BarRole.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
@@ -1141,6 +1201,11 @@ namespace BIMRL
                   {
                      arrPropVal.Add(elem.PredefinedType.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
+                  }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
                   }
                }
 
@@ -1159,11 +1224,21 @@ namespace BIMRL
                   arrPropVal.Add(elem.BarLength.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
                }
+               else
+               {
+                  arrPropVal.Add(string.Empty);
+                  arrPropValBS.Add(OracleParameterStatus.NullInsert);
+               }
 
                if (elem.BarSurface != null)
                {
                   arrPropVal.Add(elem.BarSurface.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
+               }
+               else
+               {
+                  arrPropVal.Add(string.Empty);
+                  arrPropValBS.Add(OracleParameterStatus.NullInsert);
                }
 
                for (int i = 0; i < noPar; i++) arrPDatatyp.Add("STRING");
@@ -1203,7 +1278,7 @@ namespace BIMRL
                   arrPropValBS.Add(OracleParameterStatus.NullInsert);
                }
 
-               if (elem.MeshLength == null)
+               if (elem.MeshLength != null)
                {
                   arrPropVal.Add(elem.MeshLength.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
@@ -1353,6 +1428,11 @@ namespace BIMRL
                      arrPropVal.Add(elem2x3.NumberOfRiser.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
                   }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
+                  }
                }
                else
                {
@@ -1362,6 +1442,11 @@ namespace BIMRL
                   {
                      arrPropVal.Add(elem.NumberOfRisers.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
+                  }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
                   }
                }
 
@@ -1379,6 +1464,7 @@ namespace BIMRL
                   arrPropVal.Add(string.Empty);
                   arrPropValBS.Add(OracleParameterStatus.NullInsert);
                }
+
                if (elem.RiserHeight != null)
                {
                   arrPropVal.Add(elem.RiserHeight.ToString());
@@ -1389,6 +1475,7 @@ namespace BIMRL
                   arrPropVal.Add(string.Empty);
                   arrPropValBS.Add(OracleParameterStatus.NullInsert);
                }
+
                if (elem.TreadLength!= null)
                {
                   arrPropVal.Add(elem.TreadLength.ToString());
@@ -1443,7 +1530,7 @@ namespace BIMRL
                   arrPropValBS.Add(OracleParameterStatus.NullInsert);
                }
 
-               if (elem.PreStress == null)
+               if (elem.PreStress != null)
                {
                   arrPropVal.Add(elem.PreStress.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
@@ -1465,7 +1552,7 @@ namespace BIMRL
                   arrPropValBS.Add(OracleParameterStatus.NullInsert);
                }
 
-               if (elem.AnchorageSlip == null)
+               if (elem.AnchorageSlip != null)
                {
                   arrPropVal.Add(elem.AnchorageSlip.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
@@ -1549,15 +1636,32 @@ namespace BIMRL
                      arrPropVal.Add(elem2x3.OperationType.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
                   }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
+                  }
+
                   if (elem2x3.CapacityByWeight != null)
                   {
                      arrPropVal.Add(elem2x3.CapacityByWeight.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
                   }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
+                  }
+
                   if (elem2x3.CapacityByNumber != null)
                   {
                      arrPropVal.Add(elem2x3.CapacityByNumber.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
+                  }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
                   }
                }
                else
@@ -1566,6 +1670,11 @@ namespace BIMRL
                   {
                      arrPropVal.Add(elem.PredefinedType.ToString());
                      arrPropValBS.Add(OracleParameterStatus.Success);
+                  }
+                  else
+                  {
+                     arrPropVal.Add(string.Empty);
+                     arrPropValBS.Add(OracleParameterStatus.NullInsert);
                   }
                }
 
@@ -1598,7 +1707,8 @@ namespace BIMRL
                   arrPropVal.Add(string.Empty);
                   arrPropValBS.Add(OracleParameterStatus.NullInsert);
                }
-               if (elem.OverallWidth == null)
+
+               if (elem.OverallWidth != null)
                {
                   arrPropVal.Add(elem.OverallWidth.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
@@ -1651,6 +1761,9 @@ namespace BIMRL
                Param[3].ArrayBindStatus = arrPropValBS.ToArray();
                Param[4].Value = arrPDatatyp.ToArray();
                Param[4].Size = arrPDatatyp.Count;
+               Param[5].Value = arrPUnit.ToArray();
+               Param[5].Size = arrPUnit.Count;
+               Param[5].ArrayBindStatus = arrPUnitBS.ToArray();
 
                try
                {
@@ -1663,6 +1776,8 @@ namespace BIMRL
                   arrPropVal.Clear();
                   arrPropValBS.Clear();
                   arrPDatatyp.Clear();
+                  arrPUnit.Clear();
+                  arrPUnitBS.Clear();
                }
                catch (OracleException e)
                {
@@ -1675,6 +1790,8 @@ namespace BIMRL
                   arrPropVal.Clear();
                   arrPropValBS.Clear();
                   arrPDatatyp.Clear();
+                  arrPUnit.Clear();
+                  arrPUnitBS.Clear();
                   continue;
                }
                catch (SystemException e)
@@ -1699,6 +1816,9 @@ namespace BIMRL
             Param[3].ArrayBindStatus = arrPropValBS.ToArray();
             Param[4].Value = arrPDatatyp.ToArray();
             Param[4].Size = arrPDatatyp.Count;
+            Param[5].Value = arrPUnit.ToArray();
+            Param[5].Size = arrPUnit.Count;
+            Param[5].ArrayBindStatus = arrPUnitBS.ToArray();
 
             try
             {
@@ -1722,326 +1842,6 @@ namespace BIMRL
 
          DBOperation.commitTransaction();
          command.Dispose();
-      }
-
-      // Misc functions to handle IfcUnits
-      static IDictionary<IfcSIUnitName, string> m_SIUnitNameRep = new Dictionary<IfcSIUnitName, string>();
-      static IDictionary<IfcSIPrefix, string> m_SIPrefixRep = new Dictionary<IfcSIPrefix, string>();
-      static IDictionary<string, string> m_IfcProjectUnitRep = new Dictionary<string, string>();
-      static IDictionary<string, string> m_ConversionBasedNameRep = new Dictionary<string, string>();
-      static string m_IfcProjectMonetaryUnit = string.Empty;
-      static int _uDefCounter = 1;
-
-      public static void setupUnitRep()
-      {
-         setupUnitNameRep();
-         setupUnitPrefix();
-         setupConversionBasedNameRep();
-      }
-
-      public static void setupUnitPrefix()
-      {
-         m_SIPrefixRep.Add(IfcSIPrefix.EXA, "E");
-         m_SIPrefixRep.Add(IfcSIPrefix.PETA, "P");
-         m_SIPrefixRep.Add(IfcSIPrefix.TERA, "T");
-         m_SIPrefixRep.Add(IfcSIPrefix.GIGA, "G");
-         m_SIPrefixRep.Add(IfcSIPrefix.MEGA, "M");
-         m_SIPrefixRep.Add(IfcSIPrefix.KILO, "k");
-         m_SIPrefixRep.Add(IfcSIPrefix.HECTO, "h");
-         m_SIPrefixRep.Add(IfcSIPrefix.DECA, "da");
-         m_SIPrefixRep.Add(IfcSIPrefix.DECI, "d");
-         m_SIPrefixRep.Add(IfcSIPrefix.CENTI, "c");
-         m_SIPrefixRep.Add(IfcSIPrefix.MILLI, "m");
-         m_SIPrefixRep.Add(IfcSIPrefix.MICRO, "u");
-         m_SIPrefixRep.Add(IfcSIPrefix.NANO, "n");
-         m_SIPrefixRep.Add(IfcSIPrefix.PICO, "p");
-         m_SIPrefixRep.Add(IfcSIPrefix.FEMTO, "f");
-         m_SIPrefixRep.Add(IfcSIPrefix.ATTO, "a");
-      }
-
-      public static void setupUnitNameRep()
-      {
-         m_SIUnitNameRep.Add(IfcSIUnitName.AMPERE, "A");
-         m_SIUnitNameRep.Add(IfcSIUnitName.BECQUEREL, "Bq");
-         m_SIUnitNameRep.Add(IfcSIUnitName.CANDELA, "cd");
-         m_SIUnitNameRep.Add(IfcSIUnitName.COULOMB, "C");
-         m_SIUnitNameRep.Add(IfcSIUnitName.CUBIC_METRE, "m^3");
-         m_SIUnitNameRep.Add(IfcSIUnitName.DEGREE_CELSIUS, "degC");
-         m_SIUnitNameRep.Add(IfcSIUnitName.FARAD, "F");
-         m_SIUnitNameRep.Add(IfcSIUnitName.GRAM, "g");
-         m_SIUnitNameRep.Add(IfcSIUnitName.GRAY, "Gy");
-         m_SIUnitNameRep.Add(IfcSIUnitName.HENRY, "H");
-         m_SIUnitNameRep.Add(IfcSIUnitName.HERTZ, "Hz");
-         m_SIUnitNameRep.Add(IfcSIUnitName.JOULE, "J");
-         m_SIUnitNameRep.Add(IfcSIUnitName.KELVIN, "K");
-         m_SIUnitNameRep.Add(IfcSIUnitName.LUMEN, "lm");
-         m_SIUnitNameRep.Add(IfcSIUnitName.LUX, "lx");
-         m_SIUnitNameRep.Add(IfcSIUnitName.METRE, "m");
-         m_SIUnitNameRep.Add(IfcSIUnitName.MOLE, "mol");
-         m_SIUnitNameRep.Add(IfcSIUnitName.NEWTON, "N");
-         m_SIUnitNameRep.Add(IfcSIUnitName.OHM, "ohm");
-         m_SIUnitNameRep.Add(IfcSIUnitName.PASCAL, "Pa");
-         m_SIUnitNameRep.Add(IfcSIUnitName.RADIAN, "rad");
-         m_SIUnitNameRep.Add(IfcSIUnitName.SECOND, "s");
-         m_SIUnitNameRep.Add(IfcSIUnitName.SIEMENS, "S");
-         m_SIUnitNameRep.Add(IfcSIUnitName.SIEVERT, "Sv");
-         m_SIUnitNameRep.Add(IfcSIUnitName.SQUARE_METRE, "m^2");
-         m_SIUnitNameRep.Add(IfcSIUnitName.STERADIAN, "sr");
-         m_SIUnitNameRep.Add(IfcSIUnitName.TESLA, "T");
-         m_SIUnitNameRep.Add(IfcSIUnitName.VOLT, "V");
-         m_SIUnitNameRep.Add(IfcSIUnitName.WATT, "W");
-         m_SIUnitNameRep.Add(IfcSIUnitName.WEBER, "Wb");
-      }
-
-      public static void setupConversionBasedNameRep()
-      {
-         m_ConversionBasedNameRep.Add("INCH", "in");
-         m_ConversionBasedNameRep.Add("FOOT", "ft");
-         m_ConversionBasedNameRep.Add("YARD", "yd");
-         m_ConversionBasedNameRep.Add("MILE", "mi");
-         m_ConversionBasedNameRep.Add("SQUARE INCH", "in^2");
-         m_ConversionBasedNameRep.Add("SQUARE FOOT", "ft^2");
-         m_ConversionBasedNameRep.Add("SQUARE YARD", "yd^2");
-         m_ConversionBasedNameRep.Add("ACRE", "ac");
-         m_ConversionBasedNameRep.Add("SQUARE MILE", "mi^2");
-         m_ConversionBasedNameRep.Add("CUBIC INCH", "in^3");
-         m_ConversionBasedNameRep.Add("CUBIC FOOT", "ft^3");
-         m_ConversionBasedNameRep.Add("CUBIC YARD", "yd^3");
-         m_ConversionBasedNameRep.Add("LITRE", "l");
-         m_ConversionBasedNameRep.Add("FLUID OUNCE UK", "fl oz");
-         m_ConversionBasedNameRep.Add("FLUID OUNCE US", "fl oz");
-         m_ConversionBasedNameRep.Add("PINT UK", "pint");
-         m_ConversionBasedNameRep.Add("PINT US", "pint");
-         m_ConversionBasedNameRep.Add("GALLON UK", "gal");
-         m_ConversionBasedNameRep.Add("GALLON US", "gal");
-         m_ConversionBasedNameRep.Add("DEGREE", "deg");
-         m_ConversionBasedNameRep.Add("OUNCE", "oz");
-         m_ConversionBasedNameRep.Add("POUND", "oz");
-         m_ConversionBasedNameRep.Add("TON UK", "ton");
-         m_ConversionBasedNameRep.Add("TON US", "ton");
-         m_ConversionBasedNameRep.Add("LBF", "lbf");
-         m_ConversionBasedNameRep.Add("KIP", "kip");
-         m_ConversionBasedNameRep.Add("PSI", "psi");
-         m_ConversionBasedNameRep.Add("KSI", "ksi");
-         m_ConversionBasedNameRep.Add("MINUTE", "M");
-         m_ConversionBasedNameRep.Add("HOUR", "H");
-         m_ConversionBasedNameRep.Add("DAY", "day");
-         m_ConversionBasedNameRep.Add("BTU", "btu");
-      }
-
-      public static void AddIfcProjectUnitDict(IIfcUnit unitDef)
-      {
-         // Initialize the static Dicts, if it is still empty upon the first use. These Dicts do not need to be reset
-         if (m_SIUnitNameRep.Count == 0)
-            setupUnitRep();
-
-         string unitType = string.Empty;
-         string unitRepStr = string.Empty;
-
-         if (unitDef is IIfcMonetaryUnit)
-         {
-            m_IfcProjectMonetaryUnit = (unitDef as IIfcMonetaryUnit).Currency.ToString();
-         }
-         else if (unitDef is IIfcNamedUnit)
-         {
-            if (getNamedUnitRepStr(unitDef, out unitType, out unitRepStr))
-               m_IfcProjectUnitRep.Add(unitType, unitRepStr);
-         }
-         else if (unitDef is IIfcDerivedUnit)
-         {
-            if (getDerivedUnitRepStr(unitDef, out unitType, out unitRepStr))
-               m_IfcProjectUnitRep.Add(unitType, unitRepStr);
-         }
-      }
-
-      static bool getNamedUnitRepStr(IIfcUnit unitDef, out string unitType, out string unitRepStr)
-      {
-         unitType = string.Empty;
-         unitRepStr = string.Empty;
-         if (unitDef is IIfcContextDependentUnit)
-         {
-            // Not supported yet at this time
-         }
-         else if (unitDef is IIfcConversionBasedUnit)
-         {
-            unitType = ((IIfcConversionBasedUnit)unitDef).UnitType.ToString();
-            unitRepStr = getConversionBasedUnitRepStr(unitDef);
-            if (!string.IsNullOrEmpty(unitRepStr))
-               return true;
-         }
-         else if (unitDef is IIfcSIUnit)
-         {
-            unitType = ((IIfcSIUnit)unitDef).UnitType.ToString();
-            unitRepStr = getSIUnitRepStr(unitDef);
-            if (!string.IsNullOrEmpty(unitRepStr))
-               return true;
-         }
-         return false;
-      }
-
-      static bool getDerivedUnitRepStr(IIfcUnit unitDef, out string unitType, out string unitRepStr)
-      {
-         IIfcDerivedUnit derivedUnit = unitDef as IIfcDerivedUnit;
-         if (derivedUnit.UnitType == IfcDerivedUnitEnum.USERDEFINED)
-         {
-            if (derivedUnit.UserDefinedType.HasValue)
-               unitType = derivedUnit.UserDefinedType.ToString();
-            else
-               unitType = derivedUnit.UnitType.ToString() + _uDefCounter++.ToString();
-         }
-         else
-            unitType = derivedUnit.UnitType.ToString();
-
-         unitRepStr = string.Empty;
-         IList<string> positiveExpUnits = new List<string>();
-         IList<string> negativeExpUnits = new List<string>();
-         foreach (IIfcDerivedUnitElement dUnitElem in derivedUnit.Elements)
-         {
-            string elemUnitType = string.Empty;
-            string elemUnitRepStr = string.Empty;
-            int exponent = (int)dUnitElem.Exponent;
-            if (getNamedUnitRepStr(dUnitElem.Unit, out elemUnitType, out elemUnitRepStr))
-            {
-               if (exponent >= 0)
-               {
-                  if (exponent > 1)
-                     elemUnitRepStr = elemUnitRepStr + "^" + exponent.ToString();
-                  //elemUnitRepStr = elemUnitRepStr + unicodeSuperScript(exponent);
-                  positiveExpUnits.Add(elemUnitRepStr);
-               }
-               else
-               {
-                  if (exponent < -1)
-                     elemUnitRepStr = elemUnitRepStr + "^" + Math.Abs(exponent).ToString();
-                  //elemUnitRepStr = elemUnitRepStr + unicodeSuperScript(Math.Abs(exponent));
-                  negativeExpUnits.Add(elemUnitRepStr);
-               }
-            }
-         }
-
-         if (positiveExpUnits.Count > 0)
-         {
-            foreach (string elemUnit in positiveExpUnits)
-            {
-               BIMRLCommon.appendToString(elemUnit, ".", ref unitRepStr);
-               //BAIFCCommon.appendToString(elemUnit, "\u22C5", ref negUnitRepStr);
-            }
-         }
-         else
-         {
-            if (negativeExpUnits.Count > 0)
-               unitRepStr = "1";
-         }
-
-         string negUnitRepStr = string.Empty;
-         if (negativeExpUnits.Count > 0)
-         {
-            foreach (string elemUnit in negativeExpUnits)
-            {
-               BIMRLCommon.appendToString(elemUnit, "·", ref negUnitRepStr);
-               //BAIFCCommon.appendToString(elemUnit, "\u22C5", ref negUnitRepStr);
-            }
-         }
-         if (!string.IsNullOrEmpty(negUnitRepStr))
-            unitRepStr += "/" + negUnitRepStr;
-
-         if (!string.IsNullOrEmpty(unitRepStr))
-            return true;
-         else
-            return false;
-      }
-
-      static string getSIUnitRepStr(IIfcUnit unitDef)
-      {
-         IIfcSIUnit siUnit = unitDef as IIfcSIUnit;
-         string unitRepStr = string.Empty;
-         m_SIUnitNameRep.TryGetValue(siUnit.Name, out unitRepStr);
-         if (siUnit.Prefix.HasValue)
-         {
-            string prefixStr = string.Empty;
-            m_SIPrefixRep.TryGetValue(siUnit.Prefix.Value, out prefixStr);
-            unitRepStr = prefixStr + unitRepStr;
-         }
-         return unitRepStr;
-      }
-
-      static string getConversionBasedUnitRepStr(IIfcUnit unitDef)
-      {
-         IIfcConversionBasedUnit convUnit = unitDef as IIfcConversionBasedUnit;
-         string convUnitStr = convUnit.Name.ToString().ToUpper();
-         string unitRepStr = string.Empty;
-         m_ConversionBasedNameRep.TryGetValue(convUnitStr, out unitRepStr);
-         //string unitRepStr = getIfcUnitStr(convUnit.ConversionFactor.UnitComponent);
-         return unitRepStr;
-      }
-
-      public static string getIfcUnitStr(IIfcUnit unitDef)
-      {
-         string unitType = string.Empty;
-         string unitRepStr = string.Empty;
-
-         if (unitDef is IIfcMonetaryUnit)
-         {
-            return m_IfcProjectMonetaryUnit;
-         }
-         else if (unitDef is IIfcNamedUnit)
-         {
-            if (getNamedUnitRepStr(unitDef, out unitType, out unitRepStr))
-               return unitRepStr;
-         }
-         else if (unitDef is IIfcDerivedUnit)
-         {
-            if (getDerivedUnitRepStr(unitDef, out unitType, out unitRepStr))
-               return unitRepStr;
-         }
-         return null;
-      }
-
-      public static string getDefaultIfcUnitStr(IIfcValue value)
-      {
-         if (value != null)
-            return getDefaultIfcUnitStr(value.GetType());
-         else
-            return null;
-      }
-
-      public static string getDefaultIfcUnitStr(Type propType)
-      {
-         string unitRepStr = string.Empty;
-         // We will first try MeasureUnit
-         //if (propType is IIfcMeasureValue)
-         {
-            // From IfcValue.IfcMeasureValue 
-            if (propType == typeof(IfcPositivePlaneAngleMeasure) || propType == typeof(IfcPlaneAngleMeasure)
-                  || propType == typeof(IfcCompoundPlaneAngleMeasure))
-               m_IfcProjectUnitRep.TryGetValue(IfcUnitEnum.PLANEANGLEUNIT.ToString(), out unitRepStr);
-            else if (propType == typeof(IfcPositiveLengthMeasure) || propType == typeof(IfcLengthMeasure)
-                     || propType == typeof(IfcNonNegativeLengthMeasure))
-               m_IfcProjectUnitRep.TryGetValue(IfcUnitEnum.LENGTHUNIT.ToString(), out unitRepStr);
-            else
-            {
-               string enumStr = string.Empty;
-               string typeStr = propType.Name.ToUpper();
-               typeStr = typeStr.Replace("IFC", "").Replace("MEASURE", "") + "UNIT";   // Trim the IFC and Measure
-               IfcUnitEnum uEnum;
-               if (Enum.TryParse<IfcUnitEnum>(typeStr, out uEnum))
-                  m_IfcProjectUnitRep.TryGetValue(uEnum.ToString(), out unitRepStr);
-            }
-         }
-
-         if (string.IsNullOrEmpty(unitRepStr))
-         // From IfcValue.IfcDerivedMeasureValue
-         //else if (propType is IIfcDerivedMeasureValue)
-         {
-            string enumStr = string.Empty;
-            string typeStr = propType.Name.ToUpper();
-            typeStr = typeStr.Replace("IFC", "").Replace("MEASURE", "") + "UNIT";   // Trim the IFC and Measure
-            IfcDerivedUnitEnum dEnum;
-            if (Enum.TryParse<IfcDerivedUnitEnum>(typeStr, out dEnum))
-               m_IfcProjectUnitRep.TryGetValue(dEnum.ToString(), out unitRepStr);
-         }
-
-         return unitRepStr;
       }
    }
 }

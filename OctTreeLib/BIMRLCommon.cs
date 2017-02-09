@@ -41,12 +41,8 @@ namespace BIMRL.OctreeLib
 
         public void resetAll()
         {
-            LineNoToGuidMapping.Clear();
-            GuidToLineNoMapping.Clear();
-            PortToElem.Clear();
-            OwnerHistory.Clear();
+            ClearDicts();
             ClassificationSet.Clear();
-            EntityLabelList.Clear();
 
             _LLB.X = float.MaxValue;
             _LLB.Y = float.MaxValue;
@@ -58,6 +54,15 @@ namespace BIMRL.OctreeLib
             _bimrlErrorStack.Clear();
 
         }
+
+      public void ClearDicts()
+      {
+         LineNoToGuidMapping.Clear();
+         GuidToLineNoMapping.Clear();
+         PortToElem.Clear();
+         OwnerHistory.Clear();
+         EntityLabelList.Clear();
+      }
 
         public void guidLineNoMappingAdd (int modelId, int lineNo, string guid)
         {

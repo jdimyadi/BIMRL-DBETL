@@ -49,12 +49,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BIMRL">
-      <HintPath>..\BIMRL\bin\x64\Debug\BIMRL.dll</HintPath>
-    </Reference>
-    <Reference Include="OctreeLib">
-      <HintPath>..\OctTreeLib\bin\x64\Debug\OctreeLib.dll</HintPath>
-    </Reference>
     <Reference Include="Oracle.DataAccess, Version=4.121.1.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\app\oracle\product\12.1.0\dbhome_1\ODP.NET\bin\4\Oracle.DataAccess.dll</HintPath>
@@ -95,6 +89,16 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BIMRL\BIMRL_QDB.csproj">
+      <Project>{6bafbb4a-44a8-4b24-91ee-a429eeb03246}</Project>
+      <Name>BIMRL_QDB</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OctTreeLib\OctreeLib.csproj">
+      <Project>{571c1a04-3d2f-43c4-9bbc-e42a19ff2397}</Project>
+      <Name>OctreeLib</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

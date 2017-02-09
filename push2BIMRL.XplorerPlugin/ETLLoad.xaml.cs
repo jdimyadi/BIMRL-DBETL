@@ -112,7 +112,7 @@ namespace push2BIMRL.XplorerPlugin
 
         private void button_OK_Click(object sender, RoutedEventArgs e)
         {
-            if (checkBox_ETLOption.IsEnabled)
+            if (checkBox_ETLOption.IsChecked.Value)
                 DBOperation.OnepushETL = true;
             else
                 DBOperation.OnepushETL = false;

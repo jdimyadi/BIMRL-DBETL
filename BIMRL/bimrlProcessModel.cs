@@ -58,9 +58,16 @@ namespace BIMRL
          try
          {
             DBOperation.beginTransaction();
-
-            IfcStore firstModel = modelStore.ReferencedModels.FirstOrDefault() as IfcStore;
-            IIfcProject firstProject = firstModel.Instances.OfType<IIfcProject>().FirstOrDefault();
+            IIfcProject firstProject;
+            if (modelStore.IsFederation)
+            {
+               IfcStore firstModel = modelStore.ReferencedModels.FirstOrDefault().Model as IfcStore;
+               firstProject = firstModel.Instances.OfType<IIfcProject>().FirstOrDefault();
+            }
+            else
+            {
+               firstProject = modelStore.Instances.OfType<IIfcProject>().FirstOrDefault();
+            }
             string projLName;
 
             // Check whether Model has been defined before
@@ -90,23 +97,17 @@ namespace BIMRL
 
             if (modelStore.IsFederation)
             {
-               //IEnumerable<IfcDocumentInformation> docInfos = model.InstancesLocal.OfType<IfcDocumentInformation>();
-               //foreach (IfcDocumentInformation docInfo in docInfos)
-               //{
-               //    string docID = docInfo.DocumentId;
-               //    string docName = docInfo.Name;
-               //    string intendedUse = docInfo.IntendedUse;
-               //}
-
                // get all models
 
                foreach (IReferencedModel refModel in modelStore.ReferencedModels)
                {
                   IfcStore m = refModel.Model as IfcStore;
                   currStep = "Getting Model ID for Federated model ID:" + _FederatedID.ToString("X4");
+                  _bimrlCommon.ClearDicts();
 
                   _ModelID = DBOperation.getModelID(_FederatedID);
                   doModel(m);
+                  BIMRLUtils.ResetIfcUnitDicts();
                }
 
             }
@@ -114,8 +115,8 @@ namespace BIMRL
             {
                currStep = "Getting Model ID for Federated model ID:" + _FederatedID.ToString("X4");
                _ModelID = DBOperation.getModelID(_FederatedID);
-               IfcStore m = modelStore.ReferencedModels.FirstOrDefault() as IfcStore;
-               doModel(m);
+               doModel(modelStore);
+               BIMRLUtils.ResetIfcUnitDicts();
             }
          }
          catch (Exception e)

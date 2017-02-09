@@ -473,6 +473,7 @@ namespace BIMRL
 
                foreach (IIfcPhysicalQuantity pQ in elq.Quantities)
                {
+                  string unitOfMeasure = string.Empty;
                   if (pQ is IIfcPhysicalSimpleQuantity)
                   {
                      arrEleGuid.Add(guid);
@@ -485,21 +486,61 @@ namespace BIMRL
                      if (((IIfcPhysicalSimpleQuantity)pQ).Unit != null)
                      {
                         IIfcPhysicalSimpleQuantity pQSimple = pQ as IIfcPhysicalSimpleQuantity;
-                        if (pQSimple.Unit is IIfcContextDependentUnit)
-                        {
-                           IIfcContextDependentUnit unit = pQSimple.Unit as IIfcContextDependentUnit;
-                           arrPUnit.Add(unit.Name);
-                        }
-                        else if (pQSimple.Unit is IIfcConversionBasedUnit)
-                        {
-                           IIfcConversionBasedUnit unit = pQSimple.Unit as IIfcConversionBasedUnit;
-                           arrPUnit.Add(unit.Name);
-                        }
-                        else if (pQSimple.Unit is IIfcSIUnit)
-                        {
-                           IIfcSIUnit unit = pQSimple.Unit as IIfcSIUnit;
-                           arrPUnit.Add(unit.Name.ToString());
-                        }
+                        unitOfMeasure = BIMRLUtils.getIfcUnitStr(pQSimple.Unit);
+                     }
+
+                     if (pQ is IIfcQuantityLength)
+                     {
+                        IIfcQuantityLength quant = pQ as IIfcQuantityLength;
+                        arrPropVal.Add(quant.LengthValue.ToString());
+                        arrPropValBS.Add(OracleParameterStatus.Success);
+                        if (string.IsNullOrEmpty(unitOfMeasure))
+                           unitOfMeasure = BIMRLUtils.getDefaultIfcUnitStr(quant.LengthValue);
+                     }
+                     else if (pQ is IIfcQuantityArea)
+                     {
+                        IIfcQuantityArea quant = pQ as IIfcQuantityArea;
+                        arrPropVal.Add(quant.AreaValue.ToString());
+                        arrPropValBS.Add(OracleParameterStatus.Success);
+                        if (string.IsNullOrEmpty(unitOfMeasure))
+                           unitOfMeasure = BIMRLUtils.getDefaultIfcUnitStr(quant.AreaValue);
+                     }
+                     else if (pQ is IIfcQuantityVolume)
+                     {
+                        IIfcQuantityVolume quant = pQ as IIfcQuantityVolume;
+                        arrPropVal.Add(quant.VolumeValue.ToString());
+                        arrPropValBS.Add(OracleParameterStatus.Success);
+                        if (string.IsNullOrEmpty(unitOfMeasure))
+                           unitOfMeasure = BIMRLUtils.getDefaultIfcUnitStr(quant.VolumeValue);
+                     }
+                     else if (pQ is IIfcQuantityCount)
+                     {
+                        IIfcQuantityCount quant = pQ as IIfcQuantityCount;
+                        arrPropVal.Add(quant.CountValue.ToString());
+                        arrPropValBS.Add(OracleParameterStatus.Success);
+                        if (string.IsNullOrEmpty(unitOfMeasure))
+                           unitOfMeasure = BIMRLUtils.getDefaultIfcUnitStr(quant.CountValue);
+                     }
+                     else if (pQ is IIfcQuantityWeight)
+                     {
+                        IIfcQuantityWeight quant = pQ as IIfcQuantityWeight;
+                        arrPropVal.Add(quant.WeightValue.ToString());
+                        arrPropValBS.Add(OracleParameterStatus.Success);
+                        if (string.IsNullOrEmpty(unitOfMeasure))
+                           unitOfMeasure = BIMRLUtils.getDefaultIfcUnitStr(quant.WeightValue);
+                     }
+                     else if (pQ is IIfcQuantityTime)
+                     {
+                        IIfcQuantityTime quant = pQ as IIfcQuantityTime;
+                        arrPropVal.Add(quant.TimeValue.ToString());
+                        arrPropValBS.Add(OracleParameterStatus.Success);
+                        if (string.IsNullOrEmpty(unitOfMeasure))
+                           unitOfMeasure = BIMRLUtils.getDefaultIfcUnitStr(quant.TimeValue);
+                     }
+
+                     if (!string.IsNullOrEmpty(unitOfMeasure))
+                     {
+                        arrPUnit.Add(unitOfMeasure);
                         arrPUnitBS.Add(OracleParameterStatus.Success);
                      }
                      else
@@ -508,42 +549,6 @@ namespace BIMRL
                         arrPUnitBS.Add(OracleParameterStatus.NullInsert);
                      }
 
-                     if (pQ is IIfcQuantityLength)
-                     {
-                        IIfcQuantityLength quant = pQ as IIfcQuantityLength;
-                        arrPropVal.Add(quant.LengthValue.ToString());
-                        arrPropValBS.Add(OracleParameterStatus.Success);
-                     }
-                     else if (pQ is IIfcQuantityArea)
-                     {
-                        IIfcQuantityArea quant = pQ as IIfcQuantityArea;
-                        arrPropVal.Add(quant.AreaValue.ToString());
-                        arrPropValBS.Add(OracleParameterStatus.Success);
-                     }
-                     else if (pQ is IIfcQuantityVolume)
-                     {
-                        IIfcQuantityVolume quant = pQ as IIfcQuantityVolume;
-                        arrPropVal.Add(quant.VolumeValue.ToString());
-                        arrPropValBS.Add(OracleParameterStatus.Success);
-                     }
-                     else if (pQ is IIfcQuantityCount)
-                     {
-                        IIfcQuantityCount quant = pQ as IIfcQuantityCount;
-                        arrPropVal.Add(quant.CountValue.ToString());
-                        arrPropValBS.Add(OracleParameterStatus.Success);
-                     }
-                     else if (pQ is IIfcQuantityWeight)
-                     {
-                        IIfcQuantityWeight quant = pQ as IIfcQuantityWeight;
-                        arrPropVal.Add(quant.WeightValue.ToString());
-                        arrPropValBS.Add(OracleParameterStatus.Success);
-                     }
-                     else if (pQ is IIfcQuantityTime)
-                     {
-                        IIfcQuantityTime quant = pQ as IIfcQuantityTime;
-                        arrPropVal.Add(quant.TimeValue.ToString());
-                        arrPropValBS.Add(OracleParameterStatus.Success);
-                     }
                   }
                   else if (pQ is IIfcPhysicalComplexQuantity)
                   {
@@ -566,6 +571,9 @@ namespace BIMRL
                Param[3].ArrayBindStatus = arrPropValBS.ToArray();
                Param[4].Value = arrPDatatyp.ToArray();
                Param[4].Size = arrPDatatyp.Count;
+               Param[5].Value = arrPUnit.ToArray();
+               Param[5].Size = arrPUnitBS.Count;
+               Param[5].ArrayBindStatus = arrPUnitBS.ToArray();
 
                try
                {
@@ -578,6 +586,8 @@ namespace BIMRL
                   arrPropVal.Clear();
                   arrPropValBS.Clear();
                   arrPDatatyp.Clear();
+                  arrPUnit.Clear();
+                  arrPUnitBS.Clear();
                }
                catch (OracleException e)
                {
@@ -590,6 +600,8 @@ namespace BIMRL
                   arrPropVal.Clear();
                   arrPropValBS.Clear();
                   arrPDatatyp.Clear();
+                  arrPUnit.Clear();
+                  arrPUnitBS.Clear();
                }
                catch (SystemException e)
                {
@@ -613,6 +625,9 @@ namespace BIMRL
             Param[3].ArrayBindStatus = arrPropValBS.ToArray();
             Param[4].Value = arrPDatatyp.ToArray();
             Param[4].Size = arrPDatatyp.Count;
+            Param[5].Value = arrPUnit.ToArray();
+            Param[5].Size = arrPUnitBS.Count;
+            Param[5].ArrayBindStatus = arrPUnitBS.ToArray();
 
             try
             {
@@ -677,46 +692,49 @@ namespace BIMRL
                {
                   arrEleGuid.Add(guid);
                   arrPGrpName.Add(pset.Name);
-                  string[] propStr = new string[4];
+                  //string[] propStr = new string[4];
 
-                  processSimpleProperty(prop, out propStr);
-                  arrPropName.Add(propStr[0]); 
-                  if (string.IsNullOrEmpty(propStr[1]))
-                        continue;               // property not supported (only for Reference property)
+                  //processSimpleProperty(prop, out propStr);
+                  //arrPropName.Add(propStr[0]); 
+                  //if (string.IsNullOrEmpty(propStr[1]))
+                  //      continue;               // property not supported (only for Reference property)
+                  Tuple<string, string, string, string> propVal = processSimpleProperty(prop);
+                  if (string.IsNullOrEmpty(propVal.Item1))
+                     continue;               // property not supported (only for Reference property)
 
-                  arrPropVal.Add(propStr[1]);
-                  if (string.IsNullOrEmpty(propStr[1]))
+                  arrPropName.Add(propVal.Item1);
+                  arrPropVal.Add(propVal.Item2);
+                  if (string.IsNullOrEmpty(propVal.Item2))
                         arrPropValBS.Add(OracleParameterStatus.NullInsert);
                   else
                         arrPropValBS.Add(OracleParameterStatus.Success);
 
-                  arrPDatatyp.Add(propStr[2]);
-                  arrPUnit.Add(propStr[3]);
-                  if (string.IsNullOrEmpty(propStr[3]))
+                  arrPDatatyp.Add(propVal.Item3);
+                  arrPUnit.Add(propVal.Item4);
+                  if (string.IsNullOrEmpty(propVal.Item4))
                         arrPUnitBS.Add(OracleParameterStatus.NullInsert);
                   else
                         arrPUnitBS.Add(OracleParameterStatus.Success);
                }
                else if (prop is IIfcComplexProperty)
                {
-                  List<string[]> compList = new List<string[]>();
                   IIfcComplexProperty comP = prop as IIfcComplexProperty;
-                  processComplexProp(prop, out compList);
+                  List<Tuple<string, Tuple<string, string, string, string>>> compList = processComplexProp(prop);
 
                   for (int i = 0; i < compList.Count; i++)
                   {
                      arrEleGuid.Add(guid);
-                     arrPGrpName.Add(pset.Name + "." + compList[i][0]);
-                     arrPropName.Add(compList[i][1]);
-                     arrPropVal.Add(compList[i][2]);
-                     if (string.IsNullOrEmpty(compList[i][2]))
+                     arrPGrpName.Add(pset.Name + "." + compList[i].Item1);
+                     arrPropName.Add(compList[i].Item2.Item1);
+                     arrPropVal.Add(compList[i].Item2.Item2);
+                     if (string.IsNullOrEmpty(compList[i].Item2.Item2))
                         arrPropValBS.Add(OracleParameterStatus.NullInsert);
                      else
                         arrPropValBS.Add(OracleParameterStatus.Success);
 
-                     arrPDatatyp.Add(compList[i][3]);
-                     arrPUnit.Add(compList[i][4]);
-                     if (string.IsNullOrEmpty(compList[i][4]))
+                     arrPDatatyp.Add(compList[i].Item2.Item3);
+                     arrPUnit.Add(compList[i].Item2.Item4);
+                     if (string.IsNullOrEmpty(compList[i].Item2.Item4))
                         arrPUnitBS.Add(OracleParameterStatus.NullInsert);
                      else
                         arrPUnitBS.Add(OracleParameterStatus.Success);
@@ -742,6 +760,9 @@ namespace BIMRL
             Param[3].ArrayBindStatus = arrPropValBS.ToArray();
             Param[4].Value = arrPDatatyp.ToArray();
             Param[4].Size = arrPDatatyp.Count;
+            Param[5].Value = arrPUnit.ToArray();
+            Param[5].Size = arrPUnit.Count;
+            Param[5].ArrayBindStatus = arrPUnitBS.ToArray();
 
             try
             {
@@ -754,6 +775,8 @@ namespace BIMRL
                arrPropVal.Clear();
                arrPropValBS.Clear();
                arrPDatatyp.Clear();
+               arrPUnit.Clear();
+               arrPUnitBS.Clear();
             }
             catch (OracleException e)
             {
@@ -766,6 +789,8 @@ namespace BIMRL
                arrPropVal.Clear();
                arrPropValBS.Clear();
                arrPDatatyp.Clear();
+               arrPUnit.Clear();
+               arrPUnitBS.Clear();
             }
             catch (SystemException e)
             {
@@ -789,6 +814,9 @@ namespace BIMRL
             Param[3].ArrayBindStatus = arrPropValBS.ToArray();
             Param[4].Value = arrPDatatyp.ToArray();
             Param[4].Size = arrPDatatyp.Count;
+            Param[5].Value = arrPUnit.ToArray();
+            Param[5].Size = arrPUnit.Count;
+            Param[5].ArrayBindStatus = arrPUnitBS.ToArray();
 
             try
             {
@@ -827,40 +855,61 @@ namespace BIMRL
       /// <param name="prop"></param>
       /// <param name="outStr"></param>
       /// <returns></returns>
-      private void processSimpleProperty(IIfcProperty prop, out string[] outStr)
+      private Tuple<string, string, string, string> processSimpleProperty(IIfcProperty prop)
       {
-         string[] tmpString = new string[4];
+         //private void processSimpleProperty(IIfcProperty prop, out string[] outStr)
+         //{
+         //string[] tmpString = new string[4];
 
-         for (int i = 0; i < 4; i++ )
-               tmpString[i] = string.Empty;
+         //for (int i = 0; i < 4; i++ )
+         //      tmpString[i] = string.Empty;
+
+         string propName = string.Empty;
+         string propValue = string.Empty;
+         string propDataType = string.Empty;
+         string propUnit = string.Empty;
 
          if (prop is IIfcPropertySingleValue)
          {
             IIfcPropertySingleValue psv = prop as IIfcPropertySingleValue;
-            tmpString[0] = psv.Name;
-            tmpString[1] = psv.ToString();
+            propName = psv.Name;
             if (psv.NominalValue != null)
-               tmpString[2] = psv.NominalValue.GetType().Name.ToUpper();
+            {
+               if (psv.NominalValue.Value != null)
+               {
+                  propValue = psv.NominalValue.Value.ToString();
+                  propDataType = psv.NominalValue.Value.GetType().Name.ToUpper();      // This will give the primitive datatype, e.g. Integer, Double, String
+               }
+            }
+
             if (psv.Unit != null)
-               tmpString[3] = psv.Unit.ToString();
+            {
+               propUnit = BIMRLUtils.getIfcUnitStr(psv.Unit);
+            }
+            else
+            {
+               propUnit = BIMRLUtils.getDefaultIfcUnitStr(psv.NominalValue);
+            }
          }
          else if (prop is IIfcPropertyEnumeratedValue)
          {
             IIfcPropertyEnumeratedValue pev = prop as IIfcPropertyEnumeratedValue;
-            tmpString[0] = pev.Name;
+            propName = pev.Name;
             if (pev.EnumerationValues != null)
             {
+               string tmpStr = string.Empty;
                for (int i = 0; i < pev.EnumerationValues.Count; i++)
                {
-                  tmpString[1] += "(" + pev.EnumerationValues[i].ToString() + "); ";
+                  tmpStr += "(" + pev.EnumerationValues[i].ToString() + "); ";
                }
-               tmpString[2] = pev.EnumerationValues[0].GetType().Name.ToUpper();
+               propValue = tmpStr;
+               propDataType = pev.EnumerationValues[0].GetType().Name.ToUpper();
             }
          }
          else if (prop is IIfcPropertyBoundedValue)
          {
             IIfcPropertyBoundedValue pbv = prop as IIfcPropertyBoundedValue;
-            tmpString[0] = pbv.Name;
+            propName = pbv.Name;
             string lowerB;
             string upperB;
             if (pbv.LowerBoundValue == null)
@@ -872,68 +921,95 @@ namespace BIMRL
             else
                upperB = pbv.UpperBoundValue.ToString();
 
-            tmpString[1] = "[" + lowerB + ", " + upperB + "]";
+            string tmpStr = "[" + lowerB + ", " + upperB + "]";
 
             if (pbv.LowerBoundValue != null)
-               tmpString[2] = pbv.LowerBoundValue.GetType().Name.ToUpper();
+               propDataType = pbv.LowerBoundValue.GetType().Name.ToUpper();
             else if (pbv.UpperBoundValue != null)
-               tmpString[2] = pbv.UpperBoundValue.GetType().Name.ToUpper();
+               propDataType = pbv.UpperBoundValue.GetType().Name.ToUpper();
 
+            // We will always assign the property unit by its explicit unit, or by the IfcProject default unit if not specified
             if (pbv.Unit != null)
-               tmpString[3] = pbv.Unit.ToString();
+            {
+               propUnit = BIMRLUtils.getIfcUnitStr(pbv.Unit);
+            }
+            else
+            {
+               propUnit = BIMRLUtils.getDefaultIfcUnitStr(pbv.LowerBoundValue);
+            }
          }
          else if (prop is IIfcPropertyTableValue)
          {
             IIfcPropertyTableValue ptv = prop as IIfcPropertyTableValue;
-            tmpString[0] = ptv.Name;
+            propName = ptv.Name;
             if (ptv.DefiningValues != null)
             {
+               string tmpStr = string.Empty;
                for (int i = 0; i < ptv.DefiningValues.Count; i++)
                {
                   if (ptv.DefinedValues != null)
-                        tmpString[1] += "(" + ptv.DefiningValues[i].ToString() + ", " + ptv.DefinedValues[i].ToString() + "); ";
+                        tmpStr += "(" + ptv.DefiningValues[i].ToString() + ", " + ptv.DefinedValues[i].ToString() + "); ";
                   else
-                        tmpString[1] += "(" + ptv.DefiningValues[i].ToString() + ", ); ";
+                        tmpStr += "(" + ptv.DefiningValues[i].ToString() + ", ); ";
                }
+               propValue = tmpStr;
                if (ptv.DefinedValues != null)
-                  tmpString[2] = "(" + ptv.DefiningValues[0].GetType().Name.ToUpper() + ", " + ptv.DefinedValues[0].GetType().Name.ToUpper() + ")";
+                  propDataType = "(" + ptv.DefiningValues[0].GetType().Name.ToUpper() + ", " + ptv.DefinedValues[0].GetType().Name.ToUpper() + ")";
                else
-                  tmpString[2] = "(" + ptv.DefiningValues[0].GetType().Name.ToUpper() + ", )";
+                  propDataType = "(" + ptv.DefiningValues[0].GetType().Name.ToUpper() + ", )";
             }
-            if (ptv.DefiningUnit != null || ptv.DefinedUnit != null)
-            {
-               tmpString[3] = "(" + ptv.DefiningUnit != null ? ptv.DefiningUnit.ToString() : "-" + ", " + ptv.DefinedUnit != null ? ptv.DefinedUnit.ToString() : "-" + ")";
-            }
+            string definingUnitStr = "-";
+            string definedUnitStr = "-";
+            if (ptv.DefiningUnit != null)
+               definingUnitStr = BIMRLUtils.getIfcUnitStr(ptv.DefiningUnit);
+            else
+               definingUnitStr = BIMRLUtils.getDefaultIfcUnitStr(ptv.DefiningValues[0]);
+
+            if (ptv.DefinedUnit != null)
+               definedUnitStr = BIMRLUtils.getIfcUnitStr(ptv.DefinedUnit);
+            else
+               if (ptv.DefinedValues != null)
+               definedUnitStr = BIMRLUtils.getDefaultIfcUnitStr(ptv.DefinedValues[0]);
+
          }
          else if (prop is IIfcPropertyReferenceValue)
          {
             // ReferenceValue is not yet supported!
             IIfcPropertyReferenceValue prv = prop as IIfcPropertyReferenceValue;
-            tmpString[0] = prv.Name;
+            propName = prv.Name;
          }
          else if (prop is IIfcPropertyListValue)
          {
             IIfcPropertyListValue plv = prop as IIfcPropertyListValue;
-            tmpString[0] = plv.Name;
+            propName = plv.Name;
             if (plv.ListValues != null)
             {
+               string tmpStr = string.Empty;
                for (int i = 0; i < plv.ListValues.Count; i++)
                {
-                  tmpString[1] += "(" + plv.ListValues[i].ToString() + "); ";
+                  tmpStr += "(" + plv.ListValues[i].ToString() + "); ";
                }
-               tmpString[2] = plv.ListValues[0].GetType().Name.ToUpper();
+               propValue = tmpStr;
+               propDataType = plv.ListValues[0].GetType().Name.ToUpper();
             }
             if (plv.Unit != null)
-               tmpString[3] = plv.Unit.ToString();
+            {
+               propUnit = BIMRLUtils.getIfcUnitStr(plv.Unit);
+            }
+            else
+            {
+               propUnit = BIMRLUtils.getDefaultIfcUnitStr(plv.ListValues[0]);
+            }
          }
          else
          {
                // prop not supported
          }
-         tmpString[0] = BIMRLUtils.checkSingleQuote(tmpString[0]);
-         tmpString[1] = BIMRLUtils.checkSingleQuote(tmpString[1]);
-            
-         outStr = tmpString;
+         propName = BIMRLUtils.checkSingleQuote(propName);
+         if (propValue is string)
+            propValue = BIMRLUtils.checkSingleQuote(propValue as string);
+
+         return new Tuple<string, string, string, string>(propName, propValue, propDataType, propUnit);
       }
  
       /// <summary>
@@ -950,46 +1026,35 @@ namespace BIMRL
       /// </summary>
       /// <param name="prop"></param>
       /// <param name="outStr"></param>
-      private void processComplexProp(IIfcProperty prop, out List<string[]> outStr)
+      //private void processComplexProp(IIfcProperty prop, out List<string[]> outStr)
+      private List<Tuple<string, Tuple<string, string, string, string>>> processComplexProp(IIfcProperty prop)
       {
-         List<string[]> tmpList = new List<string[]>();
+         //List<string[]> tmpList = new List<string[]>();
+         List<Tuple<string, Tuple<string, string, string, string>>> tmpList = new List<Tuple<string, Tuple<string, string, string, string>>>();
+
          IIfcComplexProperty cProp = prop as IIfcComplexProperty;
          IEnumerable<IIfcProperty> hasProps = cProp.HasProperties;
          foreach (IIfcProperty hProp in hasProps)
          {
             if (hProp is IIfcSimpleProperty)
             {
-               string[] tmpStr = new string[5];
-               tmpStr[0] = prop.Name;
-
-               string[] sProp = new string[4];
-               processSimpleProperty(hProp, out sProp);
-               tmpStr[1] = sProp[0]; 
-               if (string.IsNullOrEmpty(sProp[1]))
+               string complexPropName = prop.Name;
+               Tuple<string, string, string, string> propVal = processSimpleProperty(hProp);
+               if (propVal.Item2 == null)
                   continue;       // not supported (reference property only)
-               tmpStr[2] = sProp[1];
-               tmpStr[3] = sProp[2];
-               tmpStr[4] = sProp[3];
 
-               tmpList.Add(tmpStr);
+               tmpList.Add(new Tuple<string, Tuple<string, string, string, string>>(complexPropName, propVal));
             }
             else if (hProp is IIfcComplexProperty)
             {
-               List<string[]> retList = new List<string[]>();
-               processComplexProp(hProp, out retList);
-               if (retList.Count == 0)
+               List<Tuple<string, Tuple<string, string, string, string>>> compPropValList = processComplexProp(hProp);
+               if (compPropValList.Count == 0)
                   continue;   // empty list, maybe all of unspported types
-               // go trhough the list now and populate own list
-               for (int i =0; i<retList.Count; i++)
-               {
-                  string[] tmpStr = new string[5];
-                  tmpStr[0] = prop.Name + "." + retList[i][0];
-                  tmpStr[1] = retList[i][1];
-                  tmpStr[2] = retList[i][2];
-                  tmpStr[3] = retList[i][3];
-                  tmpStr[4] = retList[i][4];
 
-                  tmpList.Add(tmpStr);
+               // go through the list now and populate own list
+               for (int i = 0; i < compPropValList.Count; i++)
+               {
+                  tmpList.AddRange(compPropValList);
                }
             }
             else
@@ -998,7 +1063,7 @@ namespace BIMRL
             }
          }
 
-         outStr = tmpList;
+         return tmpList;
       }
    }
 }
