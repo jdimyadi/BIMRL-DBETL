@@ -32,7 +32,7 @@ namespace BIMRL
 
         Dictionary<Point3D, HashSet<int>> sortedFVert = new Dictionary<Point3D, HashSet<int>>();
 
-        public BIMRLGeometryPostProcess(string elementid, Polyhedron geometry, BIMRLCommon bimrlCommon, int federatedID, string faceCategory)
+      public BIMRLGeometryPostProcess(string elementid, Polyhedron geometry, BIMRLCommon bimrlCommon, int federatedID, string faceCategory)
         {
             _geom = geometry;
             _elementid = elementid;
@@ -164,7 +164,8 @@ namespace BIMRL
             // Loop through the dictionary to merge faces that have the same normal (on the same plane)
             foreach (KeyValuePair<Point3D, HashSet<int>> dictItem in sortedFVert)
             {
-                Dictionary<Vector3D, List<int>> faceSortedByNormal = new Dictionary<Vector3D, List<int>>();
+               IEqualityComparer<Vector3D> normalComparer = new vectorCompare(MathUtils.tol, MathUtils._doubleDecimalPrecision);
+               Dictionary<Vector3D, List<int>> faceSortedByNormal = new Dictionary<Vector3D, List<int>>(normalComparer);
                 List<int> fIDList;
                 List<int> badFIDList = new List<int>();
 
@@ -515,7 +516,313 @@ namespace BIMRL
             return merged;
         }
 
-        public bool insertIntoDB(bool forUserDict)
+      int findMatechedIndexSegment(Dictionary<LineSegment3D, int> segDict, LineSegment3D inpSeg)
+      {
+         int idx;
+         if (segDict.TryGetValue(inpSeg, out idx))
+            return idx;
+         else
+            return -1;
+      }
+
+      bool tryMergeFacesUsingDict(List<int> inputFaceList, out List<int> outputFaceList)
+      {
+         outputFaceList = new List<int>();
+         Face3D firstF = facesColl[inputFaceList[0]];
+         int prevFirstFIdx = 0;
+         HashSet<int> mergedFacesIdxList = new HashSet<int>();
+         mergedFacesIdxList.Add(inputFaceList[0]);
+
+         inputFaceList.RemoveAt(0);  // remove the first face from the list
+         int currEdgeIdx = 0;
+         bool merged = false;
+
+         while (currEdgeIdx < firstF.outerAndInnerBoundaries.Count && inputFaceList.Count > 0)
+         {
+            LineSegment3D reversedEdge = new LineSegment3D(firstF.outerAndInnerBoundaries[currEdgeIdx].endPoint, firstF.outerAndInnerBoundaries[currEdgeIdx].startPoint);
+            int currFaceIdx = 0;
+            while (currFaceIdx < inputFaceList.Count && currEdgeIdx < firstF.outerAndInnerBoundaries.Count)
+            {
+
+               //int idx = -1;
+               Face3D currFace = facesColl[inputFaceList[currFaceIdx]];
+               //idx = currFace.outerAndInnerBoundaries.IndexOf(reversedEdge);       // Test reversedEdge first as it is the most likely one in our data
+               int idx = findMatechedIndexSegment(currFace.outerAndInnerBoundariesWithDict, reversedEdge);
+               if (idx < 0)
+               {
+                  //idx = currFace.outerAndInnerBoundaries.IndexOf(firstF.outerAndInnerBoundaries[currEdgeIdx]);
+                  idx = findMatechedIndexSegment(currFace.outerAndInnerBoundariesWithDict, firstF.outerAndInnerBoundaries[currEdgeIdx]);
+                  if (idx >= 0)
+                  {
+                     // Found match, we need to reversed the order of the data in this face
+                     currFace.Reverse();
+                     //idx = currFace.outerAndInnerBoundaries.IndexOf(reversedEdge);
+                     idx = findMatechedIndexSegment(currFace.outerAndInnerBoundariesWithDict, reversedEdge);
+                  }
+               }
+               if (idx < 0)
+               {
+                  currFaceIdx++;
+                  merged = false;
+                  continue;   // not found
+               }
+
+               // Now we need to check other edges of this face whether there is other coincide edge (this is in the case of hole(s))
+               List<int> fFaceIdxList = new List<int>();
+               List<int> currFaceIdxList = new List<int>();
+               for (int ci = 0; ci < currFace.outerAndInnerBoundaries.Count; ci++)
+               {
+                  if (ci == idx)
+                     continue;   // skip already known coincide edge
+                  int ffIdx = -1;
+                  LineSegment3D reL = new LineSegment3D(currFace.outerAndInnerBoundaries[ci].endPoint, currFace.outerAndInnerBoundaries[ci].startPoint);
+                  //ffIdx = firstF.outerAndInnerBoundaries.IndexOf(reL);
+                  ffIdx = findMatechedIndexSegment(firstF.outerAndInnerBoundariesWithDict, reL);
+                  if (ffIdx > 0)
+                  {
+                     fFaceIdxList.Add(ffIdx);        // List of edges to skip when merging
+                     currFaceIdxList.Add(ci);        // List of edges to skip when merging
+                  }
+               }
+
+               // Now we will remove the paired edges and merge the faces
+               List<LineSegment3D> newFaceEdges = new List<LineSegment3D>();
+               for (int i = 0; i < currEdgeIdx; i++)
+               {
+                  bool toSkip = false;
+                  if (fFaceIdxList.Count > 0)
+                     toSkip = fFaceIdxList.Contains(i);
+                  if (!toSkip)
+                     newFaceEdges.Add(firstF.outerAndInnerBoundaries[i]);     // add the previous edges from the firstF faces first. This will skip the currEdge
+               }
+
+               // Add the next-in-sequence edges from the second face
+               for (int i = idx + 1; i < currFace.outerAndInnerBoundaries.Count; i++)
+               {
+                  bool toSkip = false;
+                  if (currFaceIdxList.Count > 0)
+                     toSkip = currFaceIdxList.Contains(i);
+                  if (!toSkip)
+                     newFaceEdges.Add(currFace.outerAndInnerBoundaries[i]);
+               }
+               for (int i = 0; i < idx; i++)
+               {
+                  bool toSkip = false;
+                  if (currFaceIdxList.Count > 0)
+                     toSkip = currFaceIdxList.Contains(i);
+                  if (!toSkip)
+                     newFaceEdges.Add(currFace.outerAndInnerBoundaries[i]);
+               }
+
+               for (int i = currEdgeIdx + 1; i < firstF.outerAndInnerBoundaries.Count; i++)
+               {
+                  bool toSkip = false;
+                  if (fFaceIdxList.Count > 0)
+                     toSkip = fFaceIdxList.Contains(i);
+                  if (!toSkip)
+                     newFaceEdges.Add(firstF.outerAndInnerBoundaries[i]);
+               }
+
+               // Build a new face
+               // Important to note that the list of edges may not be continuous if there is a whole. We need to go through the list here to identify whether there is any such
+               //   discontinuity and collect the edges into their respective loops
+               List<List<LineSegment3D>> loops = new List<List<LineSegment3D>>();
+
+               List<LineSegment3D> loopEdges = new List<LineSegment3D>();
+               loops.Add(loopEdges);
+               for (int i = 0; i < newFaceEdges.Count; i++)
+               {
+                  if (i == 0)
+                  {
+                     loopEdges.Add(newFaceEdges[i]);
+                  }
+                  else
+                  {
+                     if (newFaceEdges[i].startPoint == newFaceEdges[i - 1].endPoint)
+                        loopEdges.Add(newFaceEdges[i]);
+                     else
+                     {
+                        // Discontinuity detected
+                        loopEdges = new List<LineSegment3D>();   // start new loop
+                        loops.Add(loopEdges);
+                        loopEdges.Add(newFaceEdges[i]);
+                     }
+                  }
+               }
+
+               List<List<LineSegment3D>> finalLoops = new List<List<LineSegment3D>>();
+               //if (loops.Count <= 2)
+               //    finalLoops.AddRange(loops);
+               //else
+               {
+                  while (loops.Count > 1)
+                  {
+                     // There are more than 1 loops, need to consolidate if there are fragments to combine due to their continuity between the fragments
+                     int toDelIdx = -1;
+                     for (int i = 1; i < loops.Count; i++)
+                     {
+                        if (loops[0][loops[0].Count - 1].endPoint == loops[i][0].startPoint)
+                        {
+                           // found continuity, merge the loops
+                           List<LineSegment3D> newLoop = new List<LineSegment3D>(loops[0]);
+                           newLoop.AddRange(loops[i]);
+                           finalLoops.Add(newLoop);
+                           toDelIdx = i;
+                           break;
+                        }
+                     }
+                     if (toDelIdx > 0)
+                     {
+                        loops.RemoveAt(toDelIdx);   // !!!! Important to remove the later member first before removing the first one 
+                        loops.RemoveAt(0);
+                     }
+                     else
+                     {
+                        // No continuity found, copy the firs loop to the final loop
+                        List<LineSegment3D> newLoop = new List<LineSegment3D>(loops[0]);
+                        finalLoops.Add(newLoop);
+                        loops.RemoveAt(0);
+                     }
+                  }
+                  if (loops.Count > 0)
+                  {
+                     // Add remaining list into the final loops
+                     finalLoops.AddRange(loops);
+                  }
+               }
+
+               if (finalLoops.Count > 1)
+               {
+                  // Find the largest loop and put it in the first position signifying the outer loop and the rest are the inner loops
+                  int largestPerimeterIdx = 0;
+                  double largestPerimeter = 0.0;
+                  for (int i = 0; i < finalLoops.Count; i++)
+                  {
+                     double loopPerimeter = 0.0;
+                     foreach (LineSegment3D line in finalLoops[i])
+                        loopPerimeter += line.extent;
+                     if (loopPerimeter > largestPerimeter)
+                     {
+                        largestPerimeter = loopPerimeter;
+                        largestPerimeterIdx = i;
+                     }
+                  }
+                  // We need to move the largest loop into the head if it is not
+                  if (largestPerimeterIdx > 0)
+                  {
+                     List<LineSegment3D> largestLoop = new List<LineSegment3D>(finalLoops[largestPerimeterIdx]);
+                     finalLoops.RemoveAt(largestPerimeterIdx);
+                     finalLoops.Insert(0, largestLoop);
+                  }
+               }
+
+               // Collect the vertices from the list of Edges into list of list of vertices starting with the outer loop (largest loop) following the finalLoop
+               List<List<Point3D>> newFaceVertsLoops = new List<List<Point3D>>();
+               foreach (List<LineSegment3D> loop in finalLoops)
+               {
+                  List<Point3D> newFaceVerts = new List<Point3D>();
+                  for (int i = 0; i < loop.Count; i++)
+                  {
+                     if (i == 0)
+                     {
+                        newFaceVerts.Add(loop[i].startPoint);
+                        newFaceVerts.Add(loop[i].endPoint);
+                     }
+                     else if (i == loop.Count - 1)   // Last
+                     {
+                        // Add nothing as the last segment ends at the first vertex
+                     }
+                     else
+                     {
+                        newFaceVerts.Add(loop[i].endPoint);
+                     }
+                  }
+                  // close the loop with end point from the starting point (it is important to mark the end of loop and if there is any other vertex follow, they start the inner loop)
+                  if (newFaceVerts.Count > 0)
+                  {
+                     if (newFaceVerts[0] != newFaceVerts[newFaceVerts.Count - 1])
+                     {
+                        // If the end vertex is not the same as the start vertex, add the first vertex to the end vertex
+                        newFaceVerts.Add(newFaceVerts[0]);
+                     }
+                     newFaceVertsLoops.Add(newFaceVerts);
+                  }
+               }
+
+               // Validate the resulting face, skip if not valid
+               if (!Face3D.validateFace(newFaceVertsLoops))
+               {
+                  inputFaceList.RemoveAt(0);  // remove the first face from the list to advance to the next face
+                  currEdgeIdx = 0;
+                  merged = false;
+                  break;
+               }
+
+               // This new merged face will override/replace the original firstF for the next round
+               //Vector3D origNormal = firstF.basePlane.normalVector;
+               firstF = new Face3D(newFaceVertsLoops);
+               //Vector3D newFNormal = new Vector3D(firstF.basePlane.normalVector.X, firstF.basePlane.normalVector.Y, firstF.basePlane.normalVector.Z);
+               //// Need to make sure the new face maintains the same normal. If somehow it turns (possibly because of hole), reverse it
+               //if (origNormal != newFNormal)
+               //{
+               //    newFNormal.Negate();
+               //    if (origNormal == newFNormal)
+               //        firstF.Reverse();
+               //}
+               // Reset currEdgeIdx since the first face has been replaced
+               currEdgeIdx = 0;
+               reversedEdge = new LineSegment3D(firstF.outerAndInnerBoundaries[currEdgeIdx].endPoint, firstF.outerAndInnerBoundaries[currEdgeIdx].startPoint);
+
+               mergedFacesIdxList.Add(inputFaceList[currFaceIdx]);
+               inputFaceList.RemoveAt(currFaceIdx);
+               currFaceIdx = 0;
+               merged = true;
+            }
+
+            if (!merged)
+            {
+               currEdgeIdx++;
+            }
+            if (merged || currEdgeIdx == firstF.outerAndInnerBoundaries.Count)
+            {
+               facesColl.Add(lastFaceID, firstF);
+               prevFirstFIdx = lastFaceID;
+               outputFaceList.Add(lastFaceID);
+
+               // Now loop through all the dictionary of the sortedVert and replace all merged face indexes with the new one
+               foreach (KeyValuePair<Point3D, HashSet<int>> v in sortedFVert)
+               {
+                  HashSet<int> fIndexes = v.Value;
+                  bool replaced = false;
+                  foreach (int Idx in mergedFacesIdxList)
+                  {
+                     replaced |= fIndexes.Remove(Idx);
+                     _mergedFaceList.Remove(Idx);        // Remove the idx face also from _mergeFaceList as some faces might be left unmerged in the previous step(s)
+                                                         // remove also prev firstF
+                                                         //fIndexes.Remove(prevFirstFIdx);
+                                                         //_mergedFaceList.Remove(prevFirstFIdx);
+                                                         //outputFaceList.Remove(prevFirstFIdx);
+                  }
+                  if (replaced)
+                     fIndexes.Add(lastFaceID);   // replace the merged face indexes with the new merged face index
+               }
+
+               lastFaceID++;
+               if (inputFaceList.Count > 0)
+               {
+                  firstF = facesColl[inputFaceList[0]];
+                  mergedFacesIdxList.Clear();
+                  mergedFacesIdxList.Add(inputFaceList[0]);
+                  inputFaceList.RemoveAt(0);  // remove the first face from the list
+                  currEdgeIdx = 0;
+                  merged = false;
+               }
+            }
+         }
+
+         return merged;
+      }
+      public bool insertIntoDB(bool forUserDict)
         {
             List<string> arrElementID = new List<string>();
             List<string> arrFaceID = new List<string>();

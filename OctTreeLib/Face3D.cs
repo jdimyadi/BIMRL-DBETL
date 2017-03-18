@@ -168,6 +168,26 @@ namespace BIMRL.OctreeLib
             }
         }
 
+      Dictionary<LineSegment3D, int> _outerAndInnerBoundariesWithDict;
+      public Dictionary<LineSegment3D, int> outerAndInnerBoundariesWithDict
+      {
+         get
+         {
+            if (_outerAndInnerBoundariesWithDict == null)
+            {
+               IEqualityComparer<LineSegment3D> segCompare = new SegmentCompare();
+               _outerAndInnerBoundariesWithDict = new Dictionary<LineSegment3D, int>(segCompare);
+               int count = 0;
+               foreach (LineSegment3D lineS in _boundaryLines)
+                  _outerAndInnerBoundariesWithDict.Add(lineS, count++);
+               foreach (List<LineSegment3D> innerBound in _innerBoundaries)
+                  foreach (LineSegment3D lineS in innerBound)
+                     _outerAndInnerBoundariesWithDict.Add(lineS, count++);
+            }
+            return _outerAndInnerBoundariesWithDict;
+         }
+      }
+
         public List<List<LineSegment3D>> boundariesWithHoles
         {
             get

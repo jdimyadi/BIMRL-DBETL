@@ -14,6 +14,7 @@ using NetSdoGeometry;
 using BIMRL.OctreeLib;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Ifc;
+using Xbim.Common;
 
 namespace BIMRL
 {
@@ -28,10 +29,9 @@ namespace BIMRL
 
         public void processTypeProperties(IIfcTypeProduct typ)
         {
-         IEnumerable<IIfcRelDefinesByProperties> relDProps = typ.DefinedByProperties;
          IList<IIfcPropertySet> pSets = new List<IIfcPropertySet>();
          IList<IIfcPropertySetDefinition> psetDefs = new List<IIfcPropertySetDefinition>();
-         foreach (IIfcRelDefinesByProperties relDProp in relDProps)
+         foreach (IIfcRelDefinesByProperties relDProp in typ.HasPropertySets)
          {
             IIfcPropertySetDefinitionSelect pDefSel = relDProp.RelatingPropertyDefinition;
             // IFC2x3:
@@ -53,67 +53,53 @@ namespace BIMRL
                   psetDefs.Add(pDefSel2x3 as IIfcPropertySetDefinition);
             }
          }
-         //processProperties(modelResource, typeResource, pSets);
 
          processProperties(typ.GlobalId.ToString(), pSets, "BIMRL_TYPEPROPERTIES");
          if (psetDefs.Count > 0)
             processPropertyDefinitions(typ.GlobalId.ToString(), psetDefs, "BIMRL_TYPEPROPERTIES");
-
-         //IEnumerable<IfcPropertySetDefinition> psets = typ.HasPropertySets;
-         //if (psets != null)
-         //{
-         //    List<IfcPropertySetDefinition> psetDefs = new List<IfcPropertySetDefinition>();
-         //    foreach (IfcPropertySetDefinition p in psets)
-         //    {
-         //        if (p is IfcDoorLiningProperties || p is IfcDoorPanelProperties
-         //            || p is IfcWindowLiningProperties || p is IfcWindowPanelProperties)
-         //        {
-         //            psetDefs.Add(p);
-         //        }
-         //    }
-         //    if (psetDefs.Count > 0)
-         //        processPropertyDefinitions(typ.GlobalId.ToString(), psetDefs, "BIMRL_TYPEPROPERTIES");
-         //}
       }
 
-      public void processElemProperties(IIfcObject el)
+      public void processAllElemProperties(IfcStore model)
       {
          // Now process Property set definitions attachd to the object via IsDefinedByProperties for special properties
-         IEnumerable<IIfcRelDefinesByProperties> relDProps = el.IsDefinedBy;
-         IList<IIfcPropertySet> pSets = new List<IIfcPropertySet>();
-         IList<IIfcPropertySetDefinition> psetDefs = new List<IIfcPropertySetDefinition>();
+         IEnumerable<IIfcRelDefinesByProperties> relDProps = model.Instances.OfType<IIfcRelDefinesByProperties>();
+
          foreach (IIfcRelDefinesByProperties relDProp in relDProps)
          {
-         IIfcPropertySetDefinitionSelect pDefSel = relDProp.RelatingPropertyDefinition;
-         // IFC2x3:
-         Xbim.Ifc2x3.Interfaces.IIfcPropertySetDefinition pDefSel2x3 = pDefSel as Xbim.Ifc2x3.Interfaces.IIfcPropertySetDefinition;
-         if (pDefSel2x3 == null)
-         {
-            if (pDefSel is IIfcPreDefinedPropertySet || pDefSel is IIfcQuantitySet)
-               psetDefs.Add(pDefSel as IIfcPropertySetDefinition);
-            if (pDefSel is IIfcPropertySet)
-               pSets.Add(pDefSel as IIfcPropertySet);
-         }
-         else
-         {
-            if (pDefSel2x3 is IIfcPropertySet)
-               pSets.Add(pDefSel2x3 as IIfcPropertySet);
-            else if (pDefSel2x3 is IIfcDoorLiningProperties || pDefSel2x3 is IIfcDoorPanelProperties
-                        || pDefSel2x3 is IIfcWindowLiningProperties || pDefSel2x3 is IIfcWindowPanelProperties
-                        || pDefSel2x3 is IIfcElementQuantity)
-               psetDefs.Add(pDefSel2x3 as IIfcPropertySetDefinition);
-         }
-         //if (p.RelatingPropertyDefinition is IIfcDoorLiningProperties || p.RelatingPropertyDefinition is IIfcDoorPanelProperties
-         //      || p.RelatingPropertyDefinition is IIfcWindowLiningProperties || p.RelatingPropertyDefinition is IIfcWindowPanelProperties
-         //      || p.RelatingPropertyDefinition is IIfcElementQuantity)
-         //   {
-         //      psetDefs.Add(p.RelatingPropertyDefinition);
-         //   }
-         }
-         processProperties(el.GlobalId.ToString(), pSets, "BIMRL_ELEMENTPROPERTIES");
+            IList<IIfcPropertySet> pSets = new List<IIfcPropertySet>();
+            IList<IIfcPropertySetDefinition> psetDefs = new List<IIfcPropertySetDefinition>();
 
-         if (psetDefs.Count > 0)
-               processPropertyDefinitions(el.GlobalId.ToString(), psetDefs, "BIMRL_ELEMENTPROPERTIES");
+            IIfcPropertySetDefinitionSelect pDefSel = relDProp.RelatingPropertyDefinition;
+            // IFC2x3:
+            Xbim.Ifc2x3.Interfaces.IIfcPropertySetDefinition pDefSel2x3 = pDefSel as Xbim.Ifc2x3.Interfaces.IIfcPropertySetDefinition;
+            if (pDefSel2x3 == null)
+            {
+               if (pDefSel is IIfcPreDefinedPropertySet || pDefSel is IIfcQuantitySet)
+                  psetDefs.Add(pDefSel as IIfcPropertySetDefinition);
+               if (pDefSel is IIfcPropertySet)
+                  pSets.Add(pDefSel as IIfcPropertySet);
+            }
+            else
+            {
+               if (pDefSel2x3 is IIfcPropertySet)
+                  pSets.Add(pDefSel2x3 as IIfcPropertySet);
+               else if (pDefSel2x3 is IIfcDoorLiningProperties || pDefSel2x3 is IIfcDoorPanelProperties
+                           || pDefSel2x3 is IIfcWindowLiningProperties || pDefSel2x3 is IIfcWindowPanelProperties
+                           || pDefSel2x3 is IIfcElementQuantity)
+                  psetDefs.Add(pDefSel2x3 as IIfcPropertySetDefinition);
+            }
+            foreach (IIfcObjectDefinition objDef in relDProp.RelatedObjects)
+            {
+               // We need to process only properties for the objects (not the types. Types will be handled when processing Types)
+               if (!(objDef is IIfcObject))
+                  continue;
+
+               processProperties(objDef.GlobalId.ToString(), pSets, "BIMRL_ELEMENTPROPERTIES");
+
+               if (psetDefs.Count > 0)
+                  processPropertyDefinitions(objDef.GlobalId.ToString(), psetDefs, "BIMRL_ELEMENTPROPERTIES");
+            }
+         }
       }
 
       private void processPropertyDefinitions(string guid, IEnumerable<IIfcPropertySetDefinition> psdefs, string tableName)
@@ -857,13 +843,6 @@ namespace BIMRL
       /// <returns></returns>
       private Tuple<string, string, string, string> processSimpleProperty(IIfcProperty prop)
       {
-         //private void processSimpleProperty(IIfcProperty prop, out string[] outStr)
-         //{
-         //string[] tmpString = new string[4];
-
-         //for (int i = 0; i < 4; i++ )
-         //      tmpString[i] = string.Empty;
-
          string propName = string.Empty;
          string propValue = string.Empty;
          string propDataType = string.Empty;
@@ -873,103 +852,114 @@ namespace BIMRL
          {
             IIfcPropertySingleValue psv = prop as IIfcPropertySingleValue;
             propName = psv.Name;
-            if (psv.NominalValue != null)
+            IIfcValue propNominalValue = psv.NominalValue;
+            if (propNominalValue != null)
             {
-               if (psv.NominalValue.Value != null)
+               object pValue = propNominalValue.Value;
+               if (pValue != null)
                {
-                  propValue = psv.NominalValue.Value.ToString();
-                  propDataType = psv.NominalValue.Value.GetType().Name.ToUpper();      // This will give the primitive datatype, e.g. Integer, Double, String
+                  propValue = pValue.ToString();
+                  propDataType = pValue.GetType().Name.ToUpper();      // This will give the primitive datatype, e.g. Integer, Double, String
                }
             }
 
-            if (psv.Unit != null)
+            IIfcUnit propSingleValueUnit = psv.Unit;
+            if (propSingleValueUnit != null)
             {
-               propUnit = BIMRLUtils.getIfcUnitStr(psv.Unit);
+               propUnit = BIMRLUtils.getIfcUnitStr(propSingleValueUnit);
             }
             else
             {
-               propUnit = BIMRLUtils.getDefaultIfcUnitStr(psv.NominalValue);
+               propUnit = BIMRLUtils.getDefaultIfcUnitStr(propNominalValue);
             }
          }
          else if (prop is IIfcPropertyEnumeratedValue)
          {
             IIfcPropertyEnumeratedValue pev = prop as IIfcPropertyEnumeratedValue;
             propName = pev.Name;
-            if (pev.EnumerationValues != null)
+            IItemSet<IIfcValue> propEnumerationValues = pev.EnumerationValues;
+            if (propEnumerationValues != null)
             {
                string tmpStr = string.Empty;
-               for (int i = 0; i < pev.EnumerationValues.Count; i++)
+               for (int i = 0; i < propEnumerationValues.Count; i++)
                {
-                  tmpStr += "(" + pev.EnumerationValues[i].ToString() + "); ";
+                  tmpStr += "(" + propEnumerationValues[i].ToString() + "); ";
                }
                propValue = tmpStr;
-               propDataType = pev.EnumerationValues[0].GetType().Name.ToUpper();
+               propDataType = propEnumerationValues[0].GetType().Name.ToUpper();
             }
          }
          else if (prop is IIfcPropertyBoundedValue)
          {
             IIfcPropertyBoundedValue pbv = prop as IIfcPropertyBoundedValue;
             propName = pbv.Name;
+            IIfcValue propLowerBoundValue = pbv.LowerBoundValue;
+            IIfcValue propUpperBoundValue = pbv.UpperBoundValue;
             string lowerB;
             string upperB;
-            if (pbv.LowerBoundValue == null)
+            if (propLowerBoundValue == null)
                lowerB = "-";
             else
-               lowerB = pbv.LowerBoundValue.ToString();
-            if (pbv.UpperBoundValue == null)
+               lowerB = propLowerBoundValue.ToString();
+            if (propUpperBoundValue == null)
                upperB = "-";
             else
-               upperB = pbv.UpperBoundValue.ToString();
+               upperB = propUpperBoundValue.ToString();
 
             string tmpStr = "[" + lowerB + ", " + upperB + "]";
 
-            if (pbv.LowerBoundValue != null)
-               propDataType = pbv.LowerBoundValue.GetType().Name.ToUpper();
-            else if (pbv.UpperBoundValue != null)
-               propDataType = pbv.UpperBoundValue.GetType().Name.ToUpper();
+            if (propLowerBoundValue != null)
+               propDataType = propLowerBoundValue.GetType().Name.ToUpper();
+            else if (propUpperBoundValue != null)
+               propDataType = propUpperBoundValue.GetType().Name.ToUpper();
 
             // We will always assign the property unit by its explicit unit, or by the IfcProject default unit if not specified
-            if (pbv.Unit != null)
+            IIfcUnit propBoundedValueUnit = pbv.Unit;
+            if (propBoundedValueUnit != null)
             {
-               propUnit = BIMRLUtils.getIfcUnitStr(pbv.Unit);
+               propUnit = BIMRLUtils.getIfcUnitStr(propBoundedValueUnit);
             }
             else
             {
-               propUnit = BIMRLUtils.getDefaultIfcUnitStr(pbv.LowerBoundValue);
+               propUnit = BIMRLUtils.getDefaultIfcUnitStr(propLowerBoundValue);
             }
          }
          else if (prop is IIfcPropertyTableValue)
          {
             IIfcPropertyTableValue ptv = prop as IIfcPropertyTableValue;
+            IItemSet<IIfcValue> propDefiningValues = ptv.DefiningValues;
+            IItemSet<IIfcValue> propDefinedValues = ptv.DefinedValues;
             propName = ptv.Name;
-            if (ptv.DefiningValues != null)
+            if (propDefiningValues != null)
             {
                string tmpStr = string.Empty;
-               for (int i = 0; i < ptv.DefiningValues.Count; i++)
+               for (int i = 0; i < propDefiningValues.Count; i++)
                {
-                  if (ptv.DefinedValues != null)
-                        tmpStr += "(" + ptv.DefiningValues[i].ToString() + ", " + ptv.DefinedValues[i].ToString() + "); ";
+                  if (propDefinedValues != null)
+                        tmpStr += "(" + propDefiningValues[i].ToString() + ", " + propDefinedValues[i].ToString() + "); ";
                   else
-                        tmpStr += "(" + ptv.DefiningValues[i].ToString() + ", ); ";
+                        tmpStr += "(" + propDefiningValues[i].ToString() + ", ); ";
                }
                propValue = tmpStr;
-               if (ptv.DefinedValues != null)
-                  propDataType = "(" + ptv.DefiningValues[0].GetType().Name.ToUpper() + ", " + ptv.DefinedValues[0].GetType().Name.ToUpper() + ")";
+               if (propDefinedValues != null)
+                  propDataType = "(" + propDefiningValues[0].GetType().Name.ToUpper() + ", " + propDefinedValues[0].GetType().Name.ToUpper() + ")";
                else
-                  propDataType = "(" + ptv.DefiningValues[0].GetType().Name.ToUpper() + ", )";
+                  propDataType = "(" + propDefiningValues[0].GetType().Name.ToUpper() + ", )";
             }
             string definingUnitStr = "-";
             string definedUnitStr = "-";
-            if (ptv.DefiningUnit != null)
-               definingUnitStr = BIMRLUtils.getIfcUnitStr(ptv.DefiningUnit);
+            IIfcUnit propDefiningUnit = ptv.DefiningUnit;
+            IIfcUnit propDefinedUnit = ptv.DefinedUnit;
+            if (propDefiningUnit != null)
+               definingUnitStr = BIMRLUtils.getIfcUnitStr(propDefiningUnit);
             else
-               definingUnitStr = BIMRLUtils.getDefaultIfcUnitStr(ptv.DefiningValues[0]);
+               definingUnitStr = BIMRLUtils.getDefaultIfcUnitStr(propDefiningValues[0]);
 
-            if (ptv.DefinedUnit != null)
-               definedUnitStr = BIMRLUtils.getIfcUnitStr(ptv.DefinedUnit);
+            if (propDefinedUnit != null)
+               definedUnitStr = BIMRLUtils.getIfcUnitStr(propDefinedUnit);
             else
-               if (ptv.DefinedValues != null)
-               definedUnitStr = BIMRLUtils.getDefaultIfcUnitStr(ptv.DefinedValues[0]);
+               if (propDefinedValues!= null)
+               definedUnitStr = BIMRLUtils.getDefaultIfcUnitStr(propDefinedValues[0]);
 
          }
          else if (prop is IIfcPropertyReferenceValue)
@@ -982,23 +972,26 @@ namespace BIMRL
          {
             IIfcPropertyListValue plv = prop as IIfcPropertyListValue;
             propName = plv.Name;
-            if (plv.ListValues != null)
+            IItemSet<IIfcValue> propListValues = plv.ListValues;
+            if (propListValues != null)
             {
                string tmpStr = string.Empty;
-               for (int i = 0; i < plv.ListValues.Count; i++)
+               for (int i = 0; i < propListValues.Count; i++)
                {
-                  tmpStr += "(" + plv.ListValues[i].ToString() + "); ";
+                  tmpStr += "(" + propListValues[i].ToString() + "); ";
                }
                propValue = tmpStr;
-               propDataType = plv.ListValues[0].GetType().Name.ToUpper();
+               propDataType = propListValues[0].GetType().Name.ToUpper();
             }
-            if (plv.Unit != null)
+
+            IIfcUnit propListValueUnit = plv.Unit;
+            if (propListValueUnit != null)
             {
-               propUnit = BIMRLUtils.getIfcUnitStr(plv.Unit);
+               propUnit = BIMRLUtils.getIfcUnitStr(propListValueUnit);
             }
             else
             {
-               propUnit = BIMRLUtils.getDefaultIfcUnitStr(plv.ListValues[0]);
+               propUnit = BIMRLUtils.getDefaultIfcUnitStr(propListValues[0]);
             }
          }
          else

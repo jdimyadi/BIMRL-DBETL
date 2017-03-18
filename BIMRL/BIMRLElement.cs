@@ -1745,7 +1745,7 @@ namespace BIMRL
             /* 
             **** Now process all other properties from property set(s)
             */
-            bimrlProp.processElemProperties(el);
+            // bimrlProp.processElemProperties(el);
 
             if (arrEleGuid.Count >= DBOperation.commitInterval)
             {
@@ -1801,6 +1801,9 @@ namespace BIMRL
                   throw;
                }
             }
+
+            // Now Process all properties from property sets (and quantity sets) in one go for performance reason
+            bimrlProp.processAllElemProperties(_model);
          }
 
          if (arrEleGuid.Count > 0)

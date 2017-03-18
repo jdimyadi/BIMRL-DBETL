@@ -5,7 +5,44 @@ using System.Text;
 
 namespace BIMRL.OctreeLib
 {
-    public class Vector3D
+
+   /// <summary>
+   /// Custom IEqualityComparer for a vector with tolerance for use with Dictionary
+   /// </summary>
+   public class vectorCompare : IEqualityComparer<Vector3D>
+   {
+      double _tol;
+      int _tolNoDecPrecision;
+
+      public vectorCompare(double tol, int doubleDecimalPrecision)
+      {
+         _tol = tol;
+         _tolNoDecPrecision = doubleDecimalPrecision;
+      }
+
+      public bool Equals(Vector3D o1, Vector3D o2)
+      {
+         bool xdiff = Math.Abs(o1.X - o2.X) < _tol;
+         bool ydiff = Math.Abs(o1.Y - o2.Y) < _tol;
+         bool zdiff = Math.Abs(o1.Z - o2.Z) < _tol;
+         if (xdiff && ydiff && zdiff)
+            return true;
+         else
+            return false;
+      }
+
+      public int GetHashCode(Vector3D obj)
+      {
+         // Uses the precision set in MathUtils to round the values so that the HashCode will be consistent with the Equals method
+         double X = Math.Round(obj.X, _tolNoDecPrecision);
+         double Y = Math.Round(obj.Y, _tolNoDecPrecision);
+         double Z = Math.Round(obj.Z, _tolNoDecPrecision);
+
+         return X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode();
+      }
+   }
+
+   public class Vector3D
     {
         private double _X;
         private double _Y;

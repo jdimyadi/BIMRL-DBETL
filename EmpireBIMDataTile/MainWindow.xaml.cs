@@ -404,15 +404,51 @@ namespace BIMRL.BIMDataTile
                     TextBox_LS_Result.Text = "Point is NOT anywhere on the line";
             }
         }
-        #endregion
+      #endregion
 
-#region Matrix_tests
-        private void Button_M4x4_CP_Click(object sender, RoutedEventArgs e)
-        {
+      #region Matrix_tests
 
-        }
+      private void Button_M3x3_CP_Click(object sender, RoutedEventArgs e)
+      {
+         double[,] res = new double[3, 3];
+         bool stat = getSqMatrix(TextBox_M3x3CP_L.Text, 3, out res);
+         if (!stat)
+            return;
 
-        private void Button_MInv_RtoL_Click(object sender, RoutedEventArgs e)
+         Matrix3x3 ML = new Matrix3x3(res[0, 0], res[0, 1], res[0, 2], res[1, 0], res[1, 1], res[1, 2], res[2, 0], res[2, 1], res[2, 2]);
+
+         stat = getSqMatrix(TextBox_M3x3CP_R.Text, 3, out res);
+         if (!stat)
+            return;
+
+         Matrix3x3 MR = new Matrix3x3(res[0, 0], res[0, 1], res[0, 2], res[1, 0], res[1, 1], res[1, 2], res[2, 0], res[2, 1], res[2, 2]);
+
+         Matrix3x3 Mres = ML * MR;
+         TextBox_M3x3CP_Result.Text = Mres.ToString();
+      }
+
+      private void Button_M4x4_CP_Click(object sender, RoutedEventArgs e)
+      {
+         double[,] res = new double[4, 4];
+         bool stat = getSqMatrix(TextBox_M4x4CP_L.Text, 4, out res);
+         if (!stat)
+            return;
+
+         Matrix3D ML = new Matrix3D(res[0, 0], res[0, 1], res[0, 2], res[0, 3], res[1, 0], res[1, 1], res[1, 2], res[1, 3],
+                                       res[2, 0], res[2, 1], res[2, 2], res[2, 3], res[3, 0], res[3, 1], res[3, 2], res[3, 3]);
+
+         stat = getSqMatrix(TextBox_M4x4CP_R.Text, 4, out res);
+         if (!stat)
+            return;
+
+         Matrix3D MR = new Matrix3D(res[0, 0], res[0, 1], res[0, 2], res[0, 3], res[1, 0], res[1, 1], res[1, 2], res[1, 3],
+                                       res[2, 0], res[2, 1], res[2, 2], res[2, 3], res[3, 0], res[3, 1], res[3, 2], res[3, 3]);
+
+         Matrix3D Mres = ML * MR;
+         TextBox_M4x4CP_Result.Text = Mres.ToString();
+      }
+
+      private void Button_MInv_RtoL_Click(object sender, RoutedEventArgs e)
         {
             double[,] res = new double[3, 3];
             bool stat = getSqMatrix(TextBox_M3x3Inv_R.Text, 3, out res);
@@ -431,10 +467,134 @@ namespace BIMRL.BIMDataTile
             Matrix3x3 MR = ML.inverse;
             TextBox_M3x3Inv_R.Text = MR.ToString();
         }
-#endregion
 
-#region Face3D_tests
-        private Face3D _F3D_Face1;
+
+      private void Button_M4x4Inv_RtoL_Click(object sender, RoutedEventArgs e)
+      {
+         double[,] res = new double[4, 4];
+         bool stat = getSqMatrix(TextBox_M4x4Inv_R.Text, 4, out res);
+
+         Matrix3D MR = new Matrix3D(res[0, 0], res[0, 1], res[0, 2], res[0, 3], res[1, 0], res[1, 1], res[1, 2], res[1, 3],
+                                       res[2, 0], res[2, 1], res[2, 2], res[2, 3], res[3, 0], res[3, 1], res[3, 2], res[3, 3]);
+         Matrix3D ML = MR.inverse();
+         TextBox_M4x4Inv_L.Text = ML.ToString();
+      }
+
+      private void Button_M4x4Inv_LtoR_Click(object sender, RoutedEventArgs e)
+      {
+         double[,] res = new double[4, 4];
+         bool stat = getSqMatrix(TextBox_M4x4Inv_L.Text, 4, out res);
+
+         Matrix3D ML = new Matrix3D(res[0, 0], res[0, 1], res[0, 2], res[0, 3], res[1, 0], res[1, 1], res[1, 2], res[1, 3],
+                                       res[2, 0], res[2, 1], res[2, 2], res[2, 3], res[3, 0], res[3, 1], res[3, 2], res[3, 3]);
+
+         Matrix3D MR = ML.inverse();
+         TextBox_M4x4Inv_R.Text = MR.ToString();
+      }
+
+      private void button_transform1_Click(object sender, RoutedEventArgs e)
+      {
+         double[,] res = new double[3, 3];
+         bool stat = getSqMatrix(TextBox_M3x3Inv_R.Text, 3, out res);
+         if (!stat)
+            return;
+
+         Matrix3x3 MR = new Matrix3x3(res[0, 0], res[0, 1], res[0, 2], res[1, 0], res[1, 1], res[1, 2], res[2, 0], res[2, 1], res[2, 2]);
+
+         object pObj;
+         if (!getPointOrVector3D(TextBox_Vector1.Text, out pObj))
+            return;
+         if (!(pObj is Point3D))
+            return;
+
+         Point3D p = pObj as Point3D;
+         p.W = 1;
+         Point3D trfRes = calc_transformed_3x3(MR, p);
+         TextBox_Vector1_result.Text = trfRes.ToString();
+      }
+
+      private void button_transform2_Click(object sender, RoutedEventArgs e)
+      {
+         double[,] res = new double[3, 3];
+         bool stat = getSqMatrix(TextBox_M3x3CP_Result.Text, 3, out res);
+         if (!stat)
+            return;
+
+         Matrix3x3 MR = new Matrix3x3(res[0, 0], res[0, 1], res[0, 2], res[1, 0], res[1, 1], res[1, 2], res[2, 0], res[2, 1], res[2, 2]);
+
+         object pObj;
+         if (!getPointOrVector3D(TextBox_Vector2.Text, out pObj))
+            return;
+         if (!(pObj is Point3D))
+            return;
+
+         Point3D p = pObj as Point3D;
+         p.W = 1;
+         Point3D trfRes = calc_transformed_3x3(MR, p);
+         TextBox_Vector2_result.Text = trfRes.ToString();
+      }
+
+      private void button_transform3_Click(object sender, RoutedEventArgs e)
+      {
+         double[,] res = new double[4, 4];
+         bool stat = getSqMatrix(TextBox_M4x4CP_Result.Text, 4, out res);
+         if (!stat)
+            return;
+
+         Matrix3D MR = new Matrix3D(res[0, 0], res[0, 1], res[0, 2], res[0, 3], res[1, 0], res[1, 1], res[1, 2], res[1, 3],
+                                       res[2, 0], res[2, 1], res[2, 2], res[2, 3], res[3, 0], res[3, 1], res[3, 2], res[3, 3]);
+
+         object pObj;
+         if (!getPointOrVector3D(TextBox_Vector3.Text, out pObj))
+            return;
+         if (!(pObj is Point3D))
+            return;
+
+         Point3D pR = pObj as Point3D;
+         pR.W = 1;
+         pR.Transform(MR);
+         TextBox_Vector3_result.Text = pR.ToString();
+      }
+
+      private void button_transform4_Click(object sender, RoutedEventArgs e)
+      {
+         double[,] res = new double[4, 4];
+         bool stat = getSqMatrix(TextBox_M4x4Inv_R.Text, 4, out res);
+
+         Matrix3D MR = new Matrix3D(res[0, 0], res[0, 1], res[0, 2], res[0, 3], res[1, 0], res[1, 1], res[1, 2], res[1, 3],
+                                       res[2, 0], res[2, 1], res[2, 2], res[2, 3], res[3, 0], res[3, 1], res[3, 2], res[3, 3]);
+
+         object pObj;
+         if (!getPointOrVector3D(TextBox_Vector4.Text, out pObj))
+            return;
+         if (!(pObj is Point3D))
+            return;
+
+         Point3D pR = pObj as Point3D;
+         pR.W = 1;
+         pR.Transform(MR);
+         TextBox_Vector4_result.Text = pR.ToString();
+      }
+
+      private Point3D calc_transformed_3x3(Matrix3x3 M3, Point3D vec)
+      {
+         Point3D res = new Point3D(vec);
+         res.Transform(M3x3ToMatrix3D(M3));
+         return res;
+      }
+
+      private Matrix3D M3x3ToMatrix3D(Matrix3x3 M3)
+      {
+         Matrix3D M3D = new Matrix3D(M3.M[0, 0], M3.M[0, 1], M3.M[0, 2], 0.0,
+                                       M3.M[1, 0], M3.M[1, 1], M3.M[1, 2], 0.0,
+                                       M3.M[2, 0], M3.M[2, 1], M3.M[2, 2], 0.0,
+                                       M3.M[3, 0], M3.M[3, 1], M3.M[3, 2], 1);
+         return M3D;
+      }
+      #endregion
+
+      #region Face3D_tests
+      private Face3D _F3D_Face1;
         private Face3D _F3D_Face2;
         private Point3D _F3D_Point;
         private LineSegment3D _F3D_LS;
@@ -1190,6 +1350,5 @@ namespace BIMRL.BIMDataTile
             TextBox_F3D_Tol.Text = MathUtils.tol.ToString("E2");
         }
 
-
-    }
+   }
 }

@@ -225,14 +225,22 @@ namespace BIMRL
       // Misc functions to handle IfcUnits
       static IDictionary<IfcSIUnitName, string> m_SIUnitNameRep = new Dictionary<IfcSIUnitName, string>();
       static IDictionary<IfcSIPrefix, string> m_SIPrefixRep = new Dictionary<IfcSIPrefix, string>();
-      static IDictionary<string, string> m_IfcProjectUnitRep = new Dictionary<string, string>();
       static IDictionary<string, string> m_ConversionBasedNameRep = new Dictionary<string, string>();
+      static IDictionary<IfcUnitEnum, string> m_IfcProjectNamedUnitRep = new Dictionary<IfcUnitEnum, string>();
+      static IDictionary<string, IfcUnitEnum> m_IfcPropTypeToNamedUnitEnum = new Dictionary<string, IfcUnitEnum>();
+      static HashSet<string> m_PropTypeProcessedNoRep = new HashSet<string>();
+      static IDictionary<IfcDerivedUnitEnum, string> m_IfcProjectDerivedUnitRep = new Dictionary<IfcDerivedUnitEnum, string>();
+      static IDictionary<string, IfcDerivedUnitEnum> m_IfcPropTypeToDerivedUnitEnum = new Dictionary<string, IfcDerivedUnitEnum>();
       static string m_IfcProjectMonetaryUnit = string.Empty;
       static int _uDefCounter = 1;
 
       public static void ResetIfcUnitDicts()
       {
-         m_IfcProjectUnitRep.Clear();
+         m_IfcProjectNamedUnitRep.Clear();
+         m_IfcPropTypeToNamedUnitEnum.Clear();
+         m_IfcProjectDerivedUnitRep.Clear();
+         m_IfcPropTypeToDerivedUnitEnum.Clear();
+         m_PropTypeProcessedNoRep.Clear();
          m_IfcProjectMonetaryUnit = string.Empty;
       }
 
@@ -347,7 +355,8 @@ namespace BIMRL
          // Initialize the static Dicts, if it is still empty upon the first use. These Dicts do not need to be reset
          setupUnitRep();
 
-         string unitType = string.Empty;
+         IfcUnitEnum namedUnitType;
+         IfcDerivedUnitEnum derivedUnitType;
          string unitRepStr = string.Empty;
 
          try
@@ -358,13 +367,15 @@ namespace BIMRL
             }
             else if (unitDef is IIfcNamedUnit)
             {
-               if (getNamedUnitRepStr(unitDef, out unitType, out unitRepStr))
-                  m_IfcProjectUnitRep.Add(unitType, unitRepStr);
+               if (getNamedUnitRepStr(unitDef, out namedUnitType, out unitRepStr))
+                  if (!m_IfcProjectNamedUnitRep.ContainsKey(namedUnitType))
+                     m_IfcProjectNamedUnitRep.Add(namedUnitType, unitRepStr);
             }
             else if (unitDef is IIfcDerivedUnit)
             {
-               if (getDerivedUnitRepStr(unitDef, out unitType, out unitRepStr))
-                  m_IfcProjectUnitRep.Add(unitType, unitRepStr);
+               if (getDerivedUnitRepStr(unitDef, out derivedUnitType, out unitRepStr))
+                  if (!m_IfcProjectDerivedUnitRep.ContainsKey(derivedUnitType))
+                     m_IfcProjectDerivedUnitRep.Add(derivedUnitType, unitRepStr);
             }
          }
          catch
@@ -373,12 +384,12 @@ namespace BIMRL
          }
       }
 
-      static bool getNamedUnitRepStr(IIfcUnit unitDef, out string unitType, out string unitRepStr)
+      static bool getNamedUnitRepStr(IIfcUnit unitDef, out IfcUnitEnum unitType, out string unitRepStr)
       {
          // Initialize the static Dicts, if it is still empty upon the first use. These Dicts do not need to be reset
          setupUnitRep();
 
-         unitType = string.Empty;
+         unitType = IfcUnitEnum.LENGTHUNIT;     // initial value
          unitRepStr = string.Empty;
          if (unitDef is IIfcContextDependentUnit)
          {
@@ -386,14 +397,14 @@ namespace BIMRL
          }
          else if (unitDef is IIfcConversionBasedUnit)
          {
-            unitType = ((IIfcConversionBasedUnit)unitDef).UnitType.ToString();
+            unitType = ((IIfcConversionBasedUnit)unitDef).UnitType;
             unitRepStr = getConversionBasedUnitRepStr(unitDef);
             if (!string.IsNullOrEmpty(unitRepStr))
                return true;
          }
          else if (unitDef is IIfcSIUnit)
          {
-            unitType = ((IIfcSIUnit)unitDef).UnitType.ToString();
+            unitType = ((IIfcSIUnit)unitDef).UnitType;
             unitRepStr = getSIUnitRepStr(unitDef);
             if (!string.IsNullOrEmpty(unitRepStr))
                return true;
@@ -401,28 +412,21 @@ namespace BIMRL
          return false;
       }
 
-      static bool getDerivedUnitRepStr(IIfcUnit unitDef, out string unitType, out string unitRepStr)
+      static bool getDerivedUnitRepStr(IIfcUnit unitDef, out IfcDerivedUnitEnum unitType, out string unitRepStr)
       {
          // Initialize the static Dicts, if it is still empty upon the first use. These Dicts do not need to be reset
          setupUnitRep();
 
+         unitType = IfcDerivedUnitEnum.USERDEFINED;      // initial value
          IIfcDerivedUnit derivedUnit = unitDef as IIfcDerivedUnit;
-         if (derivedUnit.UnitType == IfcDerivedUnitEnum.USERDEFINED)
-         {
-            if (derivedUnit.UserDefinedType.HasValue)
-               unitType = derivedUnit.UserDefinedType.ToString();
-            else
-               unitType = derivedUnit.UnitType.ToString() + _uDefCounter++.ToString();
-         }
-         else
-            unitType = derivedUnit.UnitType.ToString();
+         unitType = derivedUnit.UnitType;
 
          unitRepStr = string.Empty;
          IList<string> positiveExpUnits = new List<string>();
          IList<string> negativeExpUnits = new List<string>();
          foreach (IIfcDerivedUnitElement dUnitElem in derivedUnit.Elements)
          {
-            string elemUnitType = string.Empty;
+            IfcUnitEnum elemUnitType;
             string elemUnitRepStr = string.Empty;
             int exponent = (int)dUnitElem.Exponent;
             if (getNamedUnitRepStr(dUnitElem.Unit, out elemUnitType, out elemUnitRepStr))
@@ -511,7 +515,8 @@ namespace BIMRL
          // Initialize the static Dicts, if it is still empty upon the first use. These Dicts do not need to be reset
          setupUnitRep();
 
-         string unitType = string.Empty;
+         IfcUnitEnum namedUnitType;
+         IfcDerivedUnitEnum derivedUnitType;
          string unitRepStr = string.Empty;
 
          if (unitDef is IIfcMonetaryUnit)
@@ -520,12 +525,12 @@ namespace BIMRL
          }
          else if (unitDef is IIfcNamedUnit)
          {
-            if (getNamedUnitRepStr(unitDef, out unitType, out unitRepStr))
+            if (getNamedUnitRepStr(unitDef, out namedUnitType, out unitRepStr))
                return unitRepStr;
          }
          else if (unitDef is IIfcDerivedUnit)
          {
-            if (getDerivedUnitRepStr(unitDef, out unitType, out unitRepStr))
+            if (getDerivedUnitRepStr(unitDef, out derivedUnitType, out unitRepStr))
                return unitRepStr;
          }
          return null;
@@ -549,39 +554,95 @@ namespace BIMRL
 
          string unitRepStr = string.Empty;
          // We will first try MeasureUnit
-         //if (propType is IIfcMeasureValue)
+         // From IfcValue.IfcMeasureValue 
+         if (propType == typeof(IfcPositivePlaneAngleMeasure) || propType == typeof(IfcPlaneAngleMeasure)
+               || propType == typeof(IfcCompoundPlaneAngleMeasure))
+            m_IfcProjectNamedUnitRep.TryGetValue(IfcUnitEnum.PLANEANGLEUNIT, out unitRepStr);
+         else if (propType == typeof(IfcPositiveLengthMeasure) || propType == typeof(IfcLengthMeasure)
+                  || propType == typeof(IfcNonNegativeLengthMeasure))
+            m_IfcProjectNamedUnitRep.TryGetValue(IfcUnitEnum.LENGTHUNIT, out unitRepStr);
+         else
          {
-            // From IfcValue.IfcMeasureValue 
-            if (propType == typeof(IfcPositivePlaneAngleMeasure) || propType == typeof(IfcPlaneAngleMeasure)
-                  || propType == typeof(IfcCompoundPlaneAngleMeasure))
-               m_IfcProjectUnitRep.TryGetValue(IfcUnitEnum.PLANEANGLEUNIT.ToString(), out unitRepStr);
-            else if (propType == typeof(IfcPositiveLengthMeasure) || propType == typeof(IfcLengthMeasure)
-                     || propType == typeof(IfcNonNegativeLengthMeasure))
-               m_IfcProjectUnitRep.TryGetValue(IfcUnitEnum.LENGTHUNIT.ToString(), out unitRepStr);
-            else
-            {
-               string enumStr = string.Empty;
-               string typeStr = propType.Name.ToUpper();
-               typeStr = typeStr.Replace("IFC", "").Replace("MEASURE", "") + "UNIT";   // Trim the IFC and Measure
-               IfcUnitEnum uEnum;
-               if (Enum.TryParse<IfcUnitEnum>(typeStr, out uEnum))
-                  m_IfcProjectUnitRep.TryGetValue(uEnum.ToString(), out unitRepStr);
-            }
+            IfcUnitEnum? uEnum = getUnitEnum(propType.Name);
+            if (uEnum.HasValue)
+               m_IfcProjectNamedUnitRep.TryGetValue(uEnum.Value, out unitRepStr);
          }
 
          if (string.IsNullOrEmpty(unitRepStr))
-         // From IfcValue.IfcDerivedMeasureValue
-         //else if (propType is IIfcDerivedMeasureValue)
          {
-            string enumStr = string.Empty;
-            string typeStr = propType.Name.ToUpper();
-            typeStr = typeStr.Replace("IFC", "").Replace("MEASURE", "") + "UNIT";   // Trim the IFC and Measure
-            IfcDerivedUnitEnum dEnum;
-            if (Enum.TryParse<IfcDerivedUnitEnum>(typeStr, out dEnum))
-               m_IfcProjectUnitRep.TryGetValue(dEnum.ToString(), out unitRepStr);
+            IfcDerivedUnitEnum? dEnum = getDerivedUnitEnum(propType.Name);
+            if (dEnum.HasValue)
+               m_IfcProjectDerivedUnitRep.TryGetValue(dEnum.Value, out unitRepStr);
          }
 
          return unitRepStr;
       }
+
+      static IfcUnitEnum? getUnitEnum(string propType)
+      {
+         IfcUnitEnum? propUnitEnum = null;
+         IfcUnitEnum propUnitEnumValue;
+         // Skip if the prop type has been processed before and has no corresponding enum found
+         if (!m_PropTypeProcessedNoRep.Contains(propType))
+         {
+            if (!m_IfcPropTypeToNamedUnitEnum.TryGetValue(propType, out propUnitEnumValue))
+            {
+               //string typeStr = (propType.Replace("IFC", "").Replace("MEASURE", "") + "UNIT").ToUpper();   // Trim the IFC and Measure
+               string typeStr;
+               if (string.Compare(propType, propType.Length - 7, "MEASURE", 0, 7, ignoreCase: true) == 0)
+                  typeStr = propType.Substring(3, propType.Length - 10).ToUpper() + "UNIT";
+               else
+                  typeStr = propType.Substring(3, propType.Length - 3).ToUpper() + "UNIT";   // Trim the IFC and Measure
+               IfcUnitEnum uEnum;
+               if (Enum.TryParse<IfcUnitEnum>(typeStr, out uEnum))
+               {
+                  m_IfcPropTypeToNamedUnitEnum.Add(propType, uEnum);
+                  propUnitEnum = uEnum;
+               }
+               else
+               {
+                  // The type has no associated Enum, keep it in HashSet so that we can skip it the next time without expensive EnumTryPass
+                  m_PropTypeProcessedNoRep.Add(propType);
+               }
+            }
+            else
+               propUnitEnum = propUnitEnumValue;
+         }
+         return propUnitEnum;
+      }
+
+      static IfcDerivedUnitEnum? getDerivedUnitEnum(string propType)
+      {
+         IfcDerivedUnitEnum? propUnitEnum = null;
+         IfcDerivedUnitEnum propUnitEnumValue;
+         // Skip if the prop type has been processed before and has no corresponding enum found
+         if (!m_PropTypeProcessedNoRep.Contains(propType))
+         {
+            if (!m_IfcPropTypeToDerivedUnitEnum.TryGetValue(propType, out propUnitEnumValue))
+            {
+               //string typeStr = (propType.Replace("IFC", "").Replace("MEASURE", "") + "UNIT").ToUpper();   // Trim the IFC and Measure
+               string typeStr;
+               if (string.Compare(propType, propType.Length - 7, "MEASURE", 0, 7, ignoreCase: true) == 0)
+                  typeStr = propType.Substring(3, propType.Length - 10).ToUpper() + "UNIT";
+               else
+                  typeStr = propType.Substring(3, propType.Length - 3).ToUpper() + "UNIT";   // Trim the IFC and Measure
+               IfcDerivedUnitEnum dEnum;
+               if (Enum.TryParse<IfcDerivedUnitEnum>(typeStr, out dEnum))
+               {
+                  m_IfcPropTypeToDerivedUnitEnum.Add(propType, dEnum);
+                  propUnitEnum = dEnum;
+               }
+               else
+               {
+                  // The type has no associated Enum, keep it in HashSet so that we can skip it the next time without expensive EnumTryPass
+                  m_PropTypeProcessedNoRep.Add(propType);
+               }
+            }
+            else
+               propUnitEnum = propUnitEnumValue;
+         }
+         return propUnitEnum;
+      }
+
    }
 }

@@ -16,19 +16,6 @@ using System.IO;
 using System.Data;
 using BIMRL;
 using BIMRL.OctreeLib;
-using Xbim.Ifc2x3.Kernel;
-using Xbim.Ifc2x3.ProductExtension;
-using Xbim.Ifc2x3.SharedBldgElements;
-using Xbim.Ifc2x3.SharedBldgServiceElements;
-using Xbim.Ifc2x3.StructuralElementsDomain;
-using Xbim.Ifc2x3.StructuralAnalysisDomain;
-using Xbim.Ifc2x3.SharedComponentElements;
-using Xbim.Ifc2x3.Extensions;
-using Xbim.Ifc2x3.ActorResource;
-using Xbim.Ifc2x3.PropertyResource;
-using Xbim.Ifc2x3.ExternalReferenceResource;
-using Xbim.Ifc2x3.XbimExtensions;
-using Oracle.DataAccess.Types;
 using Oracle.DataAccess.Client;
 
 namespace BIMRLMisc

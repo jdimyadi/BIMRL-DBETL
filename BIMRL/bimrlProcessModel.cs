@@ -447,6 +447,7 @@ namespace BIMRL
          string projName = m.Instances.FirstOrDefault<IIfcProject>().Name;
          string SqlStmt;
          string currStep = string.Empty;
+         m.BeginCaching();
 
          try
          {
@@ -498,6 +499,7 @@ namespace BIMRL
             _bimrlCommon.BIMRlErrorStack.Push(excStr);
             throw;
          }
+         m.StopCaching();
       }
    }
 }

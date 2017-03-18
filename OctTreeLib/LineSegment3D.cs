@@ -7,7 +7,39 @@ using Newtonsoft.Json;
 
 namespace BIMRL.OctreeLib
 {
-    public class LineSegment3DLW
+
+   /// <summary>
+   /// Custom IEqualityComparer for a lighweight line segment
+   /// </summary>
+   public class SegmentCompare : IEqualityComparer<LineSegment3D>
+   {
+      public bool Equals(LineSegment3D o1, LineSegment3D o2)
+      {
+         if (o1.Equals(o2))
+            return true;
+         else
+            return false;
+      }
+
+      public int GetHashCode(LineSegment3D obj)
+      {
+         int hash = 23;
+         hash = hash * 31 + VertexHashCode(obj.startPoint);
+         hash = hash * 31 + VertexHashCode(obj.endPoint);
+         return hash;
+      }
+
+      int VertexHashCode(Point3D obj)
+      {
+         double X = Math.Round(obj.X, MathUtils._doubleDecimalPrecision);
+         double Y = Math.Round(obj.Y, MathUtils._doubleDecimalPrecision);
+         double Z = Math.Round(obj.Z, MathUtils._doubleDecimalPrecision);
+
+         return X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode();
+      }
+   }
+
+   public class LineSegment3DLW
     {
         public Point3DLW startpoint { get; set; }
         public Point3DLW endpoint { get; set; }
