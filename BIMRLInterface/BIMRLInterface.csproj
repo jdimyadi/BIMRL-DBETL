@@ -73,6 +73,25 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithPDB|AnyCPU'">
+    <OutputPath>bin\ReleaseWithPDB\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithPDB|x64'">
+    <OutputPath>bin\x64\ReleaseWithPDB\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Antlr4.Runtime">
       <HintPath>..\packages\Antlr4.Runtime.4.5.3\lib\net45\Antlr4.Runtime.dll</HintPath>
@@ -81,15 +100,6 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
-    </Reference>
-    <Reference Include="OctreeLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">..\OctTreeLib\bin\Debug\OctreeLib.dll</HintPath>
-      <HintPath Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">..\OctTreeLib\bin\Release\OctreeLib.dll</HintPath>
-      <HintPath Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">..\OctTreeLib\bin\x86\Debug\OctreeLib.dll</HintPath>
-      <HintPath Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">..\OctTreeLib\bin\x86\Release\OctreeLib.dll</HintPath>
-      <HintPath Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">..\OctTreeLib\bin\x64\Debug\OctreeLib.dll</HintPath>
-      <HintPath Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">..\OctTreeLib\bin\x64\Release\OctreeLib.dll</HintPath>
     </Reference>
     <Reference Include="Oracle.DataAccess, Version=4.121.1.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -234,6 +244,10 @@
     <ProjectReference Include="..\BIMRL\BIMRL_QDB.csproj">
       <Project>{6bafbb4a-44a8-4b24-91ee-a429eeb03246}</Project>
       <Name>BIMRL_QDB</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OctTreeLib\OctreeLib.csproj">
+      <Project>{571c1a04-3d2f-43c4-9bbc-e42a19ff2397}</Project>
+      <Name>OctreeLib</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

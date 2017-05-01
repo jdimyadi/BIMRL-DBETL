@@ -1201,158 +1201,136 @@ namespace BIMRL
 
       private void processElemDependency()
       {
-         string SqlStmt;
-         string currStep = string.Empty;
-
-         DBOperation.beginTransaction();
-
-         OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
-
-         SqlStmt = "insert into BIMRL_ELEMENTDEPENDENCY_" + bimrlProcessModel.currFedID.ToString("X4")
-                     + " (ELEMENTID, ELEMENTTYPE, DEPENDENTELEMENTID, DEPENDENTELEMENTTYPE, DEPENDENCYTYPE) "
-                     + "VALUES (:1, :2, :3, :4, :5)";
-         command.CommandText = SqlStmt;
-         currStep = SqlStmt;
-
-         OracleParameter[] Param = new OracleParameter[5];
-         for (int i = 0; i < 5; i++)
-         {
-               Param[i] = command.Parameters.Add((i + 1).ToString(), OracleDbType.Varchar2);
-               Param[i].Direction = ParameterDirection.Input;
-         }
-
-         int commandStatus = -1;
-
          List<string> cEleId = new List<string>();
          List<string> cEleTyp = new List<string>();
          List<string> cDepend = new List<string>();
          List<string> cDependTyp = new List<string>();
          List<string> cDepTyp = new List<string>();
 
-         IEnumerable<IIfcRelConnects> rels = _model.Instances.OfType<IIfcRelConnects>(true).Where
-                  (re => (re is IIfcRelFillsElement || re is IIfcRelVoidsElement || re is IIfcRelProjectsElement));
-         foreach (IIfcRelConnects conn in rels)
+         IEnumerable<IIfcRelVoidsElement> relVoids = _model.Instances.OfType<IIfcRelVoidsElement>(true);
+         foreach (IIfcRelVoidsElement connPE in relVoids)
          {
-               if (conn is IIfcRelVoidsElement)
-               {
-                  IIfcRelVoidsElement connPE = conn as IIfcRelVoidsElement;
-                  if ((_refBIMRLCommon.getLineNoFromMapping(connPE.RelatingBuildingElement.GlobalId.ToString()) == null)
-                     || (_refBIMRLCommon.getLineNoFromMapping(connPE.RelatedOpeningElement.GlobalId.ToString()) == null)) 
-                     continue;       // skip "non" element guid in the relationship object
-                    
-                  cEleId.Add(connPE.RelatingBuildingElement.GlobalId.ToString());
-                  cEleTyp.Add(connPE.RelatingBuildingElement.GetType().Name.ToUpper());
-                  cDepend.Add(connPE.RelatedOpeningElement.GlobalId.ToString());
-                  cDependTyp.Add(connPE.RelatedOpeningElement.GetType().Name.ToUpper());
-                  cDepTyp.Add(connPE.GetType().Name.ToUpper());
-               }
-               else if (conn is IIfcRelProjectsElement)
-               {
-                  IIfcRelProjectsElement connPE = conn as IIfcRelProjectsElement;
-                  if ((_refBIMRLCommon.getLineNoFromMapping(connPE.RelatingElement.GlobalId.ToString()) == null)
-                     || (_refBIMRLCommon.getLineNoFromMapping(connPE.RelatedFeatureElement.GlobalId.ToString()) == null))
-                     continue;       // skip "non" element guid in the relationship object
+            if ((_refBIMRLCommon.getLineNoFromMapping(connPE.RelatingBuildingElement.GlobalId.ToString()) == null)
+               || (_refBIMRLCommon.getLineNoFromMapping(connPE.RelatedOpeningElement.GlobalId.ToString()) == null))
+               continue;       // skip "non" element guid in the relationship object
 
-                  cEleId.Add(connPE.RelatingElement.GlobalId.ToString());
-                  cEleTyp.Add(connPE.RelatingElement.GetType().Name.ToUpper());
-                  cDepend.Add(connPE.RelatedFeatureElement.GlobalId.ToString()); 
-                  cDependTyp.Add(connPE.RelatedFeatureElement.GetType().Name.ToUpper());
-                  cDepTyp.Add(connPE.GetType().Name.ToUpper());
-               }
-               else if (conn is IIfcRelFillsElement)
-               {
-                  IIfcRelFillsElement connPE = conn as IIfcRelFillsElement;
-                  if ((_refBIMRLCommon.getLineNoFromMapping(connPE.RelatingOpeningElement.GlobalId.ToString()) == null)
-                     || (_refBIMRLCommon.getLineNoFromMapping(connPE.RelatedBuildingElement.GlobalId.ToString()) == null))
-                     continue;       // skip "non" element guid in the relationship object
-
-                  cEleId.Add(connPE.RelatingOpeningElement.GlobalId.ToString());
-                  cEleTyp.Add(connPE.RelatingOpeningElement.GetType().Name.ToUpper());
-                  cDepend.Add(connPE.RelatedBuildingElement.GlobalId.ToString());
-                  cDependTyp.Add(connPE.RelatedBuildingElement.GetType().Name.ToUpper());
-                  cDepTyp.Add(connPE.GetType().Name.ToUpper());
-               }
-
-               if (cEleId.Count >= DBOperation.commitInterval)
-               {
-                  Param[0].Size = cEleId.Count();
-                  Param[0].Value = cEleId.ToArray();
-                  Param[1].Size = cEleTyp.Count();
-                  Param[1].Value = cEleTyp.ToArray();
-                  Param[2].Size = cDepend.Count();
-                  Param[2].Value = cDepend.ToArray();
-                  Param[3].Size = cDependTyp.Count();
-                  Param[3].Value = cDependTyp.ToArray();
-                  Param[4].Size = cDepTyp.Count();
-                  Param[4].Value = cDepTyp.ToArray();
-                  try
-                  {
-                     command.ArrayBindCount = cDepTyp.Count;    // No of values in the array to be inserted
-                     commandStatus = command.ExecuteNonQuery();
-                     //Do commit at interval but keep the long transaction (reopen)
-                     DBOperation.commitTransaction();
-                     cEleId.Clear();
-                     cEleTyp.Clear();
-                     cDepend.Clear();
-                     cDependTyp.Clear();
-                     cDepTyp.Clear();
-                  }
-                  catch (OracleException e)
-                  {
-                     string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-                     _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
-                     // Ignore any error
-                     cEleId.Clear();
-                     cEleTyp.Clear();
-                     cDepend.Clear();
-                     cDependTyp.Clear();
-                     cDepTyp.Clear();
-                     continue;
-                  }
-                  catch (SystemException e)
-                  {
-                     string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-                     _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
-                     throw;
-                  }
-               }
+            cEleId.Add(connPE.RelatingBuildingElement.GlobalId.ToString());
+            cEleTyp.Add(connPE.RelatingBuildingElement.GetType().Name.ToUpper());
+            cDepend.Add(connPE.RelatedOpeningElement.GlobalId.ToString());
+            cDependTyp.Add(connPE.RelatedOpeningElement.GetType().Name.ToUpper());
+            cDepTyp.Add(connPE.GetType().Name.ToUpper());
          }
+         InsertDependencyRecords(cEleId, cEleTyp, cDepend, cDependTyp, cDepTyp);
 
-         if (cEleId.Count > 0)
+         IEnumerable<IIfcRelProjectsElement> relProjects = _model.Instances.OfType<IIfcRelProjectsElement>(true);
+         foreach (IIfcRelProjectsElement connPE in relProjects)
          {
-               Param[0].Size = cEleId.Count();
-               Param[0].Value = cEleId.ToArray();
-               Param[1].Size = cEleTyp.Count();
-               Param[1].Value = cEleTyp.ToArray();
-               Param[2].Size = cDepend.Count();
-               Param[2].Value = cDepend.ToArray();
-               Param[3].Size = cDependTyp.Count();
-               Param[3].Value = cDependTyp.ToArray();
-               Param[4].Size = cDepTyp.Count();
-               Param[4].Value = cDepTyp.ToArray();
+            if ((_refBIMRLCommon.getLineNoFromMapping(connPE.RelatingElement.GlobalId.ToString()) == null)
+               || (_refBIMRLCommon.getLineNoFromMapping(connPE.RelatedFeatureElement.GlobalId.ToString()) == null))
+               continue;       // skip "non" element guid in the relationship object
 
-               try
-               {
-                  command.ArrayBindCount = cEleId.Count;    // No of values in the array to be inserted
-                  commandStatus = command.ExecuteNonQuery();
-                  //Do commit at interval but keep the long transaction (reopen)
-                  DBOperation.commitTransaction();
-               }
-               catch (OracleException e)
-               {
-                  string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
-               }
-               catch (SystemException e)
-               {
-                  string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
-                  throw;
-               }
+            cEleId.Add(connPE.RelatingElement.GlobalId.ToString());
+            cEleTyp.Add(connPE.RelatingElement.GetType().Name.ToUpper());
+            cDepend.Add(connPE.RelatedFeatureElement.GlobalId.ToString());
+            cDependTyp.Add(connPE.RelatedFeatureElement.GetType().Name.ToUpper());
+            cDepTyp.Add(connPE.GetType().Name.ToUpper());
          }
-         DBOperation.commitTransaction();
-         command.Dispose();
+         InsertDependencyRecords(cEleId, cEleTyp, cDepend, cDependTyp, cDepTyp);
+
+         IEnumerable<IIfcRelFillsElement> relFills = _model.Instances.OfType<IIfcRelFillsElement>(true);
+         foreach (IIfcRelFillsElement connPE in relFills)
+         {
+            if ((_refBIMRLCommon.getLineNoFromMapping(connPE.RelatingOpeningElement.GlobalId.ToString()) == null)
+               || (_refBIMRLCommon.getLineNoFromMapping(connPE.RelatedBuildingElement.GlobalId.ToString()) == null))
+               continue;       // skip "non" element guid in the relationship object
+
+            cEleId.Add(connPE.RelatingOpeningElement.GlobalId.ToString());
+            cEleTyp.Add(connPE.RelatingOpeningElement.GetType().Name.ToUpper());
+            cDepend.Add(connPE.RelatedBuildingElement.GlobalId.ToString());
+            cDependTyp.Add(connPE.RelatedBuildingElement.GetType().Name.ToUpper());
+            cDepTyp.Add(connPE.GetType().Name.ToUpper());
+         }
+         InsertDependencyRecords(cEleId, cEleTyp, cDepend, cDependTyp, cDepTyp);
+
+         IEnumerable<IIfcRelNests> relNests = _model.Instances.OfType<IIfcRelNests>(true);
+         foreach (IIfcRelNests connPE in relNests)
+         {
+            string relatingObject = connPE.RelatingObject.GlobalId.ToString();
+            if (_refBIMRLCommon.getLineNoFromMapping(relatingObject) == null)
+               continue;
+            string relatingType = connPE.RelatingObject.GetType().Name.ToUpper();
+            string depTyp = connPE.GetType().Name.ToUpper();
+
+            foreach (IIfcObjectDefinition relatedObj in connPE.RelatedObjects)
+            {
+               string relatedObjGUID = relatedObj.GlobalId.ToString();
+               if (_refBIMRLCommon.getLineNoFromMapping(relatedObjGUID) == null)
+                  continue;       // skip "non" element guid in the relationship object
+
+               cEleId.Add(relatingObject);
+               cEleTyp.Add(relatingType);
+               cDepend.Add(relatedObjGUID);
+               cDependTyp.Add(relatedObj.GetType().Name.ToUpper());
+               cDepTyp.Add(depTyp);
+            }
+         }
+         InsertDependencyRecords(cEleId, cEleTyp, cDepend, cDependTyp, cDepTyp);
       }
 
+      private void InsertDependencyRecords(List<string> cEleId, List<string> cEleTyp, List<string> cDepend, List<string> cDependTyp, List<string> cDepTyp)
+      {
+         OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
+
+         string SqlStmt = "insert into BIMRL_ELEMENTDEPENDENCY_" + bimrlProcessModel.currFedID.ToString("X4")
+                     + " (ELEMENTID, ELEMENTTYPE, DEPENDENTELEMENTID, DEPENDENTELEMENTTYPE, DEPENDENCYTYPE) "
+                     + "VALUES (:1, :2, :3, :4, :5)";
+         command.CommandText = SqlStmt;
+         string currStep = SqlStmt;
+         int commandStatus = -1;
+
+         DBOperation.beginTransaction();
+
+         OracleParameter[] Param = new OracleParameter[5];
+         for (int i = 0; i < 5; i++)
+         {
+            Param[i] = command.Parameters.Add((i + 1).ToString(), OracleDbType.Varchar2);
+            Param[i].Direction = ParameterDirection.Input;
+         }
+
+         if (cEleId.Count >= DBOperation.commitInterval)
+         {
+            Param[0].Size = cEleId.Count();
+            Param[0].Value = cEleId.ToArray();
+            Param[1].Size = cEleTyp.Count();
+            Param[1].Value = cEleTyp.ToArray();
+            Param[2].Size = cDepend.Count();
+            Param[2].Value = cDepend.ToArray();
+            Param[3].Size = cDependTyp.Count();
+            Param[3].Value = cDependTyp.ToArray();
+            Param[4].Size = cDepTyp.Count();
+            Param[4].Value = cDepTyp.ToArray();
+            try
+            {
+               command.ArrayBindCount = cDepTyp.Count;    // No of values in the array to be inserted
+               commandStatus = command.ExecuteNonQuery();
+               DBOperation.commitTransaction();
+            }
+            catch (OracleException e)
+            {
+               string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
+               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               // Ignore any error
+            }
+            catch (SystemException e)
+            {
+               string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               throw;
+            }
+
+            DBOperation.commitTransaction();
+            command.Dispose();
+         }
+      }
    }
 }
