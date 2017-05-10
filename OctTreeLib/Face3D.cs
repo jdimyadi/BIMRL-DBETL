@@ -931,7 +931,7 @@ namespace BIMRL.OctreeLib
                         return false;
                 }
             }
-            return true;
+            return nullFace;
         }
     }
 }

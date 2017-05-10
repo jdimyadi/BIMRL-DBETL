@@ -276,8 +276,8 @@ namespace BIMRL
                }
                catch (OracleException e)
                {
-                  string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+                  _refBIMRLCommon.StackPushIgnorableError(excStr);
 
                   className.Clear();
                   classSource.Clear();
@@ -303,8 +303,8 @@ namespace BIMRL
                }
                catch (SystemException e)
                {
-                  string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+                  _refBIMRLCommon.StackPushIgnorableError(excStr);
                }
             }
          }
@@ -370,13 +370,13 @@ namespace BIMRL
 
                catch (OracleException e)
                {
-                  string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+                  _refBIMRLCommon.StackPushIgnorableError(excStr);
                }
                catch (SystemException e)
                {
                   string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  _refBIMRLCommon.StackPushError(excStr);
                   throw;
                }
          }

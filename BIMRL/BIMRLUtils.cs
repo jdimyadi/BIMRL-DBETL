@@ -203,7 +203,7 @@ namespace BIMRL
             catch (OracleException e)
             {
                string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               _refBIMRLCommon.StackPushError(excStr);
                //command.Dispose();   // Log Oracle error and continue
                command = new OracleCommand(" ", DBOperation.DBConn);
                // throw;
@@ -211,7 +211,7 @@ namespace BIMRL
             catch (SystemException e)
             {
                string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               _refBIMRLCommon.StackPushError(excStr);
                throw;
             }
 
@@ -232,7 +232,6 @@ namespace BIMRL
       static IDictionary<IfcDerivedUnitEnum, string> m_IfcProjectDerivedUnitRep = new Dictionary<IfcDerivedUnitEnum, string>();
       static IDictionary<string, IfcDerivedUnitEnum> m_IfcPropTypeToDerivedUnitEnum = new Dictionary<string, IfcDerivedUnitEnum>();
       static string m_IfcProjectMonetaryUnit = string.Empty;
-      static int _uDefCounter = 1;
 
       public static void ResetIfcUnitDicts()
       {

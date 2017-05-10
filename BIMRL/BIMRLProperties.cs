@@ -31,9 +31,8 @@ namespace BIMRL
         {
          IList<IIfcPropertySet> pSets = new List<IIfcPropertySet>();
          IList<IIfcPropertySetDefinition> psetDefs = new List<IIfcPropertySetDefinition>();
-         foreach (IIfcRelDefinesByProperties relDProp in typ.HasPropertySets)
+         foreach (IIfcPropertySetDefinition pDefSel in typ.HasPropertySets)
          {
-            IIfcPropertySetDefinitionSelect pDefSel = relDProp.RelatingPropertyDefinition;
             // IFC2x3:
             Xbim.Ifc2x3.Kernel.IfcPropertySetDefinition pDefSel2x3 = pDefSel as Xbim.Ifc2x3.Kernel.IfcPropertySetDefinition;
             if (pDefSel2x3 == null)
@@ -577,8 +576,8 @@ namespace BIMRL
                }
                catch (OracleException e)
                {
-                  string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+                  _refBIMRLCommon.StackPushIgnorableError(excStr);
                   // Ignore any error
                   arrEleGuid.Clear();
                   arrPGrpName.Clear();
@@ -592,7 +591,7 @@ namespace BIMRL
                catch (SystemException e)
                {
                   string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  _refBIMRLCommon.StackPushError(excStr);
                   throw;
                }
             }
@@ -623,14 +622,14 @@ namespace BIMRL
             }
             catch (OracleException e)
             {
-               string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+               _refBIMRLCommon.StackPushIgnorableError(excStr);
                // Ignore any error
             }
             catch (SystemException e)
             {
                string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               _refBIMRLCommon.StackPushError(excStr);
                throw;
             }
          }
@@ -766,8 +765,8 @@ namespace BIMRL
             }
             catch (OracleException e)
             {
-               string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+               _refBIMRLCommon.StackPushIgnorableError(excStr);
                // Ignore any error
                arrEleGuid.Clear();
                arrPGrpName.Clear();
@@ -781,7 +780,7 @@ namespace BIMRL
             catch (SystemException e)
             {
                string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               _refBIMRLCommon.StackPushError(excStr);
                throw;
             }
          }
@@ -812,14 +811,14 @@ namespace BIMRL
             }
             catch (OracleException e)
             {
-               string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+               _refBIMRLCommon.StackPushIgnorableError(excStr);
                // Ignore any error
             }
             catch (SystemException e)
             {
                string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               _refBIMRLCommon.StackPushError(excStr);
                throw;
             }
          }

@@ -45,13 +45,13 @@ namespace BIMRL
             // Initialize image
             if (_refBIMRLCommon != null)
             {
-                if (_refBIMRLCommon.BIMRlErrorStack.Count > 0)
+                if (_refBIMRLCommon.BIMRLErrorStackCount > 0)
                 {
                     string wholeStack = string.Empty;
                     while (true)
                     {
-                        wholeStack += _refBIMRLCommon.BIMRlErrorStack.Pop() + "\n";
-                        if (_refBIMRLCommon.BIMRlErrorStack.Count == 0) break;
+                        wholeStack += _refBIMRLCommon.StackPopError() + "\n";
+                        if (_refBIMRLCommon.BIMRLErrorStackCount == 0) break;
                     }
                     TextBox_Error_Box.Text = wholeStack;
                 }

@@ -21,10 +21,37 @@ namespace BIMRL.OctreeLib
             resetAll();
         }
 
-        public Stack<string> BIMRlErrorStack
-        {
-            get { return _bimrlErrorStack; }
-        }
+        //public Stack<string> BIMRlErrorStack
+        //{
+        //    get { return _bimrlErrorStack; }
+        //}
+
+      public int BIMRLErrorStackCount
+      {
+         get { return _bimrlErrorStack.Count; }
+      }
+
+      public void StackPushIgnorableError(string ignorableErrorMsg)
+      {
+#if DEBUG
+         StackPushError("(IGNORED) " + ignorableErrorMsg);
+#endif
+      }
+
+      public void StackPushError(string errorMsg)
+      {
+         _bimrlErrorStack.Push(errorMsg);
+      }
+
+      public string StackPopError()
+      {
+         return _bimrlErrorStack.Pop();
+      }
+
+      public void ErrorStackClear()
+      {
+         _bimrlErrorStack.Clear();
+      }
 
         public string ErrorMessages
         {

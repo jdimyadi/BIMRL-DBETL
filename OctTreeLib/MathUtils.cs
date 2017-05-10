@@ -15,7 +15,7 @@ namespace BIMRL.OctreeLib
 
         // Precision up to 0.000001 should be sufficient for use in BIM
         static double _default_doubleTol = 1e-6;
-        static float _default_floatTol = 1e-6F; 
+        //static float _default_floatTol = 1e-6F; 
         static double _doubleTol = 1e-6;
         static float _floatTol = 1e-6F;
         static public int _doubleDecimalPrecision = 6; // from the above

@@ -28,16 +28,6 @@ namespace BIMRL
 
       public void processMaterials()
       {
-         List<string> arrMatName = new List<string>();
-         List<string> arrSetName = new List<string>();
-         List<OracleParameterStatus> arrSetNPS = new List<OracleParameterStatus>();
-         List<int> arrMatSeq = new List<int>();
-         List<OracleParameterStatus> arrMatSPS = new List<OracleParameterStatus>();
-         List<double> arrMatThick = new List<double>();
-         List<OracleParameterStatus> arrMatTPS = new List<OracleParameterStatus>();
-         List<string> arrIsVentilated = new List<string>();
-         List<OracleParameterStatus> arrIsVPS = new List<OracleParameterStatus>();
-
          List<string> insTGuid = new List<string>();
          List<string> insTMatName = new List<string>();
          List<string> insTSetName = new List<string>();
@@ -99,6 +89,17 @@ namespace BIMRL
          IEnumerable<IIfcRelAssociatesMaterial> relMaterials = _model.Instances.OfType<IIfcRelAssociatesMaterial>();
          foreach (IIfcRelAssociatesMaterial relMat in relMaterials)
          {
+            // reset Relating material data at the start
+            List<string> arrMatName = new List<string>();
+            List<string> arrSetName = new List<string>();
+            List<OracleParameterStatus> arrSetNPS = new List<OracleParameterStatus>();
+            List<int> arrMatSeq = new List<int>();
+            List<OracleParameterStatus> arrMatSPS = new List<OracleParameterStatus>();
+            List<double> arrMatThick = new List<double>();
+            List<OracleParameterStatus> arrMatTPS = new List<OracleParameterStatus>();
+            List<string> arrIsVentilated = new List<string>();
+            List<OracleParameterStatus> arrIsVPS = new List<OracleParameterStatus>();
+
             // Handle various IfcMaterialSelect
             if (relMat.RelatingMaterial is IIfcMaterial)
             {
@@ -390,16 +391,6 @@ namespace BIMRL
                   }
 
                   DBOperation.commitTransaction();
-
-                  arrMatName.Clear();
-                  arrSetName.Clear();
-                  arrSetNPS.Clear();
-                  arrIsVentilated.Clear();
-                  arrIsVPS.Clear();
-                  arrMatSeq.Clear();
-                  arrMatSPS.Clear();
-                  arrMatThick.Clear();
-                  arrMatTPS.Clear();
                         
                   insTGuid.Clear();
                   insTMatName.Clear();
@@ -425,8 +416,8 @@ namespace BIMRL
                }
                catch (OracleException e)
                {
-                  string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+                  _refBIMRLCommon.StackPushIgnorableError(excStr);
 
                   arrMatName.Clear();
                   arrSetName.Clear();
@@ -465,7 +456,7 @@ namespace BIMRL
                catch (SystemException e)
                {
                   string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  _refBIMRLCommon.StackPushError(excStr);
                   throw;
                }
             }
@@ -521,13 +512,13 @@ namespace BIMRL
                }
                catch (OracleException e)
                {
-                  string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+                  _refBIMRLCommon.StackPushIgnorableError(excStr);
                }
                catch (SystemException e)
                {
                   string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  _refBIMRLCommon.StackPushError(excStr);
                   throw;
                }
          }

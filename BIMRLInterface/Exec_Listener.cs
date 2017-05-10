@@ -176,7 +176,7 @@ namespace BIMRLInterface
             base.EnterBimrl_rule(context);
             ColumnListManager.Init();
             TableListManager.Init();
-            m_BIMRLRefCommon.BIMRlErrorStack.Clear();
+            m_BIMRLRefCommon.ErrorStackClear();
         }
 
         public override void ExitBimrl_rule(bimrlParser.Bimrl_ruleContext context)
@@ -1839,10 +1839,15 @@ namespace BIMRLInterface
                 catch (OracleException e)
                 {
                     string excStr = "%%Error - " + e.Message + "\n" + currStmt;
-                    m_BIMRLRefCommon.BIMRlErrorStack.Push(excStr);
-                    BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLRefCommon);
-                    erroDlg.ShowDialog();
-                    cmd.Dispose();
+                    m_BIMRLRefCommon.StackPushError(excStr);
+                     if (DBOperation.UIMode)
+                     {
+                        BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLRefCommon);
+                        erroDlg.ShowDialog();
+                     }
+                     else
+                        Console.Write(m_BIMRLRefCommon.ErrorMessages);
+                     cmd.Dispose();
                     cmd2.Dispose();
                     //throw;
                 }

@@ -50,6 +50,7 @@ namespace BIMRL
          DBOperation.beginTransaction();
          string currStep = string.Empty;
          Xbim3DModelContext context = new Xbim3DModelContext(_model);
+         ConcurrentDictionary<int, XbimMatrix3D> RelTransform = new ConcurrentDictionary<int, XbimMatrix3D>();
 
          int commandStatus = -1;
          int currInsertCount = 0;
@@ -61,12 +62,77 @@ namespace BIMRL
          {
             //IEnumerable<XbimGeometryData> geomDataList = _model.GetGeometryData(productLabel, XbimGeometryType.TriangulatedMesh);
             IIfcProduct product = _model.Instances[productLabel] as IIfcProduct;
+            IEnumerable<XbimShapeInstance> shapeInstances;
 
-            IEnumerable<XbimShapeInstance> shapeInstances = context.ShapeInstancesOf(product).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded);
-            if (shapeInstances == null)
-               continue;
+            if (product is IIfcFeatureElement)
+               shapeInstances = context.ShapeInstancesOf(product).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsOnly);
+            else
+               shapeInstances = context.ShapeInstancesOf(product).Where(x => x.RepresentationType == XbimGeometryRepresentationType.OpeningsAndAdditionsIncluded);
+            //if (shapeInstances == null)
+            //   continue;
+
+            bool trfOnly = false;
+            XbimMatrix3D newRelTrf = XbimMatrix3D.Identity;
             if (shapeInstances.Count() == 0)
-               continue;         // SKip if the product has no geometry
+            {
+               //continue;         // SKip if the product has no geometry
+               // If the body is null, we will still process the other informationation, mainly the transformation information
+               trfOnly = true;
+               IIfcLocalPlacement locPlacement = product.ObjectPlacement as IIfcLocalPlacement;
+               if (locPlacement == null)
+                  continue;
+               IIfcLocalPlacement refPlacement = locPlacement.PlacementRelTo as IIfcLocalPlacement;
+               XbimMatrix3D refTransform;
+               if (refPlacement == null || !RelTransform.TryGetValue(refPlacement.EntityLabel, out refTransform))
+                  refTransform = XbimMatrix3D.Identity;
+
+               IIfcAxis2Placement3D placement3D = locPlacement.RelativePlacement as IIfcAxis2Placement3D;
+               XbimMatrix3D prodTrf = XbimMatrix3D.Identity;
+               IList<XbimVector3D> pVec = null;
+               if (placement3D != null)
+               {
+                  pVec = placement3D.P;
+                  prodTrf.M11 = pVec[0].X;
+                  prodTrf.M12 = pVec[0].Y;
+                  prodTrf.M13 = pVec[0].Z;
+                  prodTrf.M21 = pVec[1].X;
+                  prodTrf.M22 = pVec[1].Y;
+                  prodTrf.M23 = pVec[1].Z;
+                  prodTrf.M31 = pVec[2].X;
+                  prodTrf.M32 = pVec[2].Y;
+                  prodTrf.M33 = pVec[2].Z;
+
+                  IIfcCartesianPoint p = placement3D.Location;
+                  prodTrf.OffsetX = p.X;
+                  prodTrf.OffsetY = p.Y;
+                  prodTrf.OffsetZ = p.Z;
+               }
+               else
+               {
+                  IIfcAxis2Placement2D placement2D = locPlacement.RelativePlacement as IIfcAxis2Placement2D;
+                  if (placement2D == null)
+                     continue;
+                  pVec = placement2D.P;
+                  prodTrf.M11 = pVec[0].X;
+                  prodTrf.M12 = pVec[0].Y;
+                  prodTrf.M13 = pVec[0].Z;
+                  prodTrf.M21 = pVec[1].X;
+                  prodTrf.M22 = pVec[1].Y;
+                  prodTrf.M23 = pVec[1].Z;
+                  prodTrf.M31 = 0;
+                  prodTrf.M32 = 0;
+                  prodTrf.M33 = 0;
+
+                  IIfcCartesianPoint p = placement2D.Location;
+                  prodTrf.OffsetX = p.X;
+                  prodTrf.OffsetY = p.Y;
+                  prodTrf.OffsetZ = 0;
+               }
+
+               newRelTrf = XbimMatrix3D.Multiply(refTransform, prodTrf);
+               if (!RelTransform.ContainsKey(locPlacement.EntityLabel))
+                  RelTransform.TryAdd(locPlacement.EntityLabel, newRelTrf);
+            }
 
             string prodGuid = _refBIMRLCommon.guidLineNoMapping_Getguid(bimrlProcessModel.currModelID, productLabel);
             // foreach (var geomData in _model.GetGeometryData(XbimGeometryType.TriangulatedMesh))
@@ -78,6 +144,8 @@ namespace BIMRL
             List<int> elemInfoArr = new List<int>();
             List<double> arrCoord = new List<double>();
 
+            double totalSurfArea = 0.0;
+
             //foreach (XbimGeometryData geomData in geomDataList)
             foreach (XbimShapeInstance shapeInst in shapeInstances)
             {
@@ -85,6 +153,7 @@ namespace BIMRL
                XbimMeshGeometry3D prodGeom = new XbimMeshGeometry3D();
                IXbimShapeGeometryData shapeGeom = context.ShapeGeometry(shapeInst.ShapeGeometryLabel);
                XbimModelExtensions.Read(prodGeom, shapeGeom.ShapeData, shapeInst.Transformation);
+               m3D = shapeInst.Transformation;
 
                //m3D = XbimMatrix3D.FromArray(geomData.DataArray2);      // Xbim 3.0 removes Transform property!
                //     XbimTriangulatedModelStream triangleStream = new XbimTriangulatedModelStream(geomData.ShapeData);
@@ -111,6 +180,7 @@ namespace BIMRL
                   XbimPoint3D vOrig = new XbimPoint3D();
                   //XbimPoint3D v0 = new XbimPoint3D();
                   Point3D v0 = new Point3D();
+                  IList<Point3D> triangleCoords = new List<Point3D>();
                   for (int i = 0; i < 4; i++)
                   {
                      if (i < 3)
@@ -124,6 +194,7 @@ namespace BIMRL
                            v.Y = v.Y * _model.ModelFactors.LengthToMetresConversionFactor;
                            v.Z = v.Z * _model.ModelFactors.LengthToMetresConversionFactor;
                         }
+                        triangleCoords.Add(v);
                         arrCoord.Add(v.X);          // vertex i
                         arrCoord.Add(v.Y);
                         arrCoord.Add(v.Z);
@@ -154,35 +225,40 @@ namespace BIMRL
                      }
                      else
                      {
+                        double surfaceArea = CalculateAreaOfTriangle(triangleCoords);
+                        totalSurfArea += surfaceArea;
                         // Close the polygon with the starting point (i=0)
                         arrCoord.Add(v0.X);
                         arrCoord.Add(v0.Y);
                         arrCoord.Add(v0.Z);
                      }
                   }
-
                }
                startingOffset = startingOffset + prodGeom.TriangleIndexCount * 4;
                //polyHStartingOffset = currFVindex + 3;
             }
 
             SdoGeometry sdoGeomData = new SdoGeometry();
-            // Assume solid only for now
-            sdoGeomData.Dimensionality = 3;
-            sdoGeomData.LRS = 0;
-            if (shapeInstances.Count() == 1)
-               sdoGeomData.GeometryType = (int)SdoGeometryTypes.GTYPE.SOLID;
-            else
-               sdoGeomData.GeometryType = (int)SdoGeometryTypes.GTYPE.MULTISOLID;
-            int gType = sdoGeomData.PropertiesToGTYPE();
+            int gType = 0;
+            if (!trfOnly)
+            {
+               // Assume solid only for now
+               sdoGeomData.Dimensionality = 3;
+               sdoGeomData.LRS = 0;
+               if (shapeInstances.Count() == 1)
+                  sdoGeomData.GeometryType = (int)SdoGeometryTypes.GTYPE.SOLID;
+               else
+                  sdoGeomData.GeometryType = (int)SdoGeometryTypes.GTYPE.MULTISOLID;
+               gType = sdoGeomData.PropertiesToGTYPE();
 
-            sdoGeomData.ElemArrayOfInts = elemInfoArr.ToArray();
-            sdoGeomData.OrdinatesArrayOfDoubles = arrCoord.ToArray();
+               sdoGeomData.ElemArrayOfInts = elemInfoArr.ToArray();
+               sdoGeomData.OrdinatesArrayOfDoubles = arrCoord.ToArray();
+            }
 
             if (!string.IsNullOrEmpty(prodGuid))
             {
                // Found match, update the table with geometry data
-               string sqlStmt = "update BIMRL_ELEMENT_" + bimrlProcessModel.currFedID.ToString("X4") + " set GEOMETRYBODY=:1, TRANSFORM_COL1=:2, TRANSFORM_COL2=:3, TRANSFORM_COL3=:4, TRANSFORM_COL4=:5"
+               string sqlStmt = "update BIMRL_ELEMENT_" + bimrlProcessModel.currFedID.ToString("X4") + " set GEOMETRYBODY=:1, TRANSFORM_COL1=:2, TRANSFORM_COL2=:3, TRANSFORM_COL3=:4, TRANSFORM_COL4=:5, TOTAL_SURFACE_AREA=:6"
                               + " Where elementid = '" + prodGuid + "'";
                // int status = DBOperation.updateGeometry(sqlStmt, sdoGeomData);
                currStep = sqlStmt;
@@ -190,27 +266,15 @@ namespace BIMRL
 
                try
                {
-                  OracleParameter[] sdoGeom = new OracleParameter[5];
-                  for (int i = 0; i < sdoGeom.Count(); ++i)
+                  OracleParameter[] sdoGeom = new OracleParameter[6];
+                  for (int i = 0; i < sdoGeom.Count()-1; ++i)
                   {
                         sdoGeom[i] = command.Parameters.Add((i+1).ToString(), OracleDbType.Object);
                         sdoGeom[i].Direction = ParameterDirection.Input;
                         sdoGeom[i].UdtTypeName = "MDSYS.SDO_GEOMETRY";
                         sdoGeom[i].Size = 1;
                   }
-                  sdoGeom[0].Value = sdoGeomData;
-
-                  //SdoGeometry xAxis = new SdoGeometry();
-                  //xAxis.Dimensionality = 3;
-                  //xAxis.LRS = 0;
-                  //xAxis.GeometryType = (int)SdoGeometryTypes.GTYPE.POINT;
-                  //gType = xAxis.PropertiesToGTYPE();
-                  //SdoPoint xAxisV = new SdoPoint();
-                  //XbimVector3D axis = m3D.Right;
-                  //axis.Normalize();
-                  //xAxisV.XD = axis.X;
-                  //xAxisV.YD = axis.Y;
-                  //xAxisV.ZD = axis.Z;
+                  sdoGeom[0].Value = trfOnly ? null : sdoGeomData;
 
                   SdoGeometry trcol1 = new SdoGeometry();
                   trcol1.Dimensionality = 3;
@@ -218,9 +282,9 @@ namespace BIMRL
                   trcol1.GeometryType = (int)SdoGeometryTypes.GTYPE.POINT;
                   gType = trcol1.PropertiesToGTYPE();
                   SdoPoint trcol1V = new SdoPoint();
-                  trcol1V.XD = m3D.M11;
-                  trcol1V.YD = m3D.M12;
-                  trcol1V.ZD = m3D.M13;
+                  trcol1V.XD = trfOnly ? newRelTrf.M11 : m3D.M11;
+                  trcol1V.YD = trfOnly ? newRelTrf.M12 : m3D.M12;
+                  trcol1V.ZD = trfOnly ? newRelTrf.M13 : m3D.M13;
                   trcol1.SdoPoint = trcol1V;
                   sdoGeom[1].Value = trcol1;
 
@@ -230,9 +294,9 @@ namespace BIMRL
                   trcol2.GeometryType = (int)SdoGeometryTypes.GTYPE.POINT;
                   gType = trcol2.PropertiesToGTYPE();
                   SdoPoint trcol2V = new SdoPoint();
-                  trcol2V.XD = m3D.M21;
-                  trcol2V.YD = m3D.M22;
-                  trcol2V.ZD = m3D.M23;
+                  trcol2V.XD = trfOnly ? newRelTrf.M21 : m3D.M21;
+                  trcol2V.YD = trfOnly ? newRelTrf.M22 : m3D.M22;
+                  trcol2V.ZD = trfOnly ? newRelTrf.M23 : m3D.M23;
                   trcol2.SdoPoint = trcol2V;
                   sdoGeom[2].Value = trcol2;
 
@@ -242,9 +306,9 @@ namespace BIMRL
                   trcol3.GeometryType = (int)SdoGeometryTypes.GTYPE.POINT;
                   gType = trcol3.PropertiesToGTYPE();
                   SdoPoint trcol3V = new SdoPoint();
-                  trcol3V.XD = m3D.M31;
-                  trcol3V.YD = m3D.M32;
-                  trcol3V.ZD = m3D.M33;
+                  trcol3V.XD = trfOnly ? newRelTrf.M31 : m3D.M31;
+                  trcol3V.YD = trfOnly ? newRelTrf.M32 : m3D.M32;
+                  trcol3V.ZD = trfOnly ? newRelTrf.M33 : m3D.M33;
                   trcol3.SdoPoint = trcol3V;
                   sdoGeom[3].Value = trcol3;
 
@@ -254,11 +318,15 @@ namespace BIMRL
                   trcol4.GeometryType = (int)SdoGeometryTypes.GTYPE.POINT;
                   gType = trcol4.PropertiesToGTYPE();
                   SdoPoint trcol4V = new SdoPoint();
-                  trcol4V.XD = m3D.OffsetX;
-                  trcol4V.YD = m3D.OffsetY;
-                  trcol4V.ZD = m3D.OffsetZ;
+                  trcol4V.XD = trfOnly ? newRelTrf.OffsetX : m3D.OffsetX;
+                  trcol4V.YD = trfOnly ? newRelTrf.OffsetY : m3D.OffsetY;
+                  trcol4V.ZD = trfOnly ? newRelTrf.OffsetZ : m3D.OffsetZ;
                   trcol4.SdoPoint = trcol4V;
                   sdoGeom[4].Value = trcol4;
+
+                  sdoGeom[5] = command.Parameters.Add("6", OracleDbType.Double);
+                  sdoGeom[5].Direction = ParameterDirection.Input;
+                  sdoGeom[5].Value = totalSurfArea;
 
                   commandStatus = command.ExecuteNonQuery();
                   command.Parameters.Clear();
@@ -274,7 +342,7 @@ namespace BIMRL
                catch (OracleException e)
                {
                   string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  _refBIMRLCommon.StackPushError(excStr);
                   //command.Dispose();   // Log Oracle error and continue
                   command = new OracleCommand(" ", DBOperation.DBConn);
                   // throw;
@@ -282,7 +350,7 @@ namespace BIMRL
                catch (SystemException e)
                {
                   string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  _refBIMRLCommon.StackPushError(excStr);
                   throw;
                }
             }
@@ -290,6 +358,25 @@ namespace BIMRL
             DBOperation.commitTransaction();
             command.Dispose();
          }
+      }
+
+      private double CalculateAreaOfTriangle(IList<Point3D> triangleCoords)
+      {
+         double area = 0.0;
+         if (triangleCoords.Count >= 3)
+         {
+            Vector3D vAB = new Vector3D((triangleCoords[1].X - triangleCoords[0].X), (triangleCoords[1].Y - triangleCoords[0].Y), (triangleCoords[1].Z - triangleCoords[0].Z));
+            Vector3D vAC = new Vector3D((triangleCoords[2].X - triangleCoords[0].X), (triangleCoords[2].Y - triangleCoords[0].Y), (triangleCoords[2].Z - triangleCoords[0].Z));
+            Vector3D crossP = Vector3D.CrossProduct(vAB, vAC);
+            area = 0.5 * crossP.Length;
+            // Heron's formula
+            //double a = Point3D.distance(triangleCoords[0], triangleCoords[1]);
+            //double b = Point3D.distance(triangleCoords[1], triangleCoords[2]);
+            //double c = Point3D.distance(triangleCoords[2], triangleCoords[0]);
+            //double s = (a + b + c) / 2;
+            //area = Math.Sqrt(s * (s - a) * (s - b) * (s - c));
+         }
+         return area;
       }
 
       public void processElements()
@@ -471,14 +558,14 @@ namespace BIMRL
          catch (OracleException e)
          {
                string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               _refBIMRLCommon.StackPushError(excStr);
                command.Dispose();
                throw;
          }
          catch (SystemException e)
          {
                string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               _refBIMRLCommon.StackPushError(excStr);
                throw;
          }
 
@@ -1781,8 +1868,8 @@ namespace BIMRL
                }
                catch (OracleException e)
                {
-                  string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+                  _refBIMRLCommon.StackPushIgnorableError(excStr);
                   // Ignore any error
                   arrEleGuid.Clear();
                   arrPGrpName.Clear();
@@ -1797,13 +1884,10 @@ namespace BIMRL
                catch (SystemException e)
                {
                   string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-                  _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                  _refBIMRLCommon.StackPushError(excStr);
                   throw;
                }
             }
-
-            // Now Process all properties from property sets (and quantity sets) in one go for performance reason
-            bimrlProp.processAllElemProperties(_model);
          }
 
          if (arrEleGuid.Count > 0)
@@ -1831,20 +1915,23 @@ namespace BIMRL
             }
             catch (OracleException e)
             {
-               string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+               _refBIMRLCommon.StackPushIgnorableError(excStr);
                // Ignore any error
             }
             catch (SystemException e)
             {
                string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               _refBIMRLCommon.StackPushError(excStr);
                throw;
             }
          }
 
          DBOperation.commitTransaction();
          command.Dispose();
+
+         // Now Process all properties from property sets (and quantity sets) in one go for performance reason
+         bimrlProp.processAllElemProperties(_model);
       }
    }
 }

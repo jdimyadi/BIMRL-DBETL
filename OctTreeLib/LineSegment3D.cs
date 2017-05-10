@@ -54,7 +54,7 @@ namespace BIMRL.OctreeLib
     {
         private Point3D _pStart, _pEnd;
         private Line3D _baseLine;
-        private Vector3D _unNormalizedV;
+        //private Vector3D _unNormalizedV;
 
         /// <summary>
         /// Line segment is bounded by a start point and an end point

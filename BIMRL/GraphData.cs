@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Data;
+using System.Reflection;
+using System.IO;
 using System.Threading.Tasks;
 using Oracle.DataAccess.Types;
 using Oracle.DataAccess.Client;
@@ -109,8 +111,12 @@ namespace BIMRL.BIMRLGraph
                 DBOperation.commitTransaction();
                 commandPlSql.Dispose();
 
-                // Create the Circulation view
-                DBOperation.executeScript("script\\BIMRL_graphview.sql", FedID);
+               // Create the Circulation view
+               var location = new Uri(Assembly.GetEntryAssembly().GetName().CodeBase);
+               string exePath = new FileInfo(location.AbsolutePath).Directory.FullName;
+
+               // (Re)-Create the spatial indexes
+               DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_graphview.sql"), FedID);
 
                 // 
                 sqlStmt = "SELECT ELEMENTID,CONTAINER FROM BIMRL_ELEMENT_" + FedID.ToString("X4") + " WHERE ELEMENTTYPE IN ('IFCSPACE','IFCDOOR','IFCDOORSTANDARDCASE','IFCOPENINGELEMENT','IFCOPENINGELEMENTSTANDARDCASE','IFCSTAIR','IFCSTAIRFLIGHT','IFCRAMP','IFCRAMPFLIGHT','IFCTRANSPORTELEMENT')"
@@ -146,7 +152,7 @@ namespace BIMRL.BIMRLGraph
                             if (string.IsNullOrEmpty(container))
                             {
                                 // If still cannot identify the container even from the host, skip
-                                refBimrlCommon.BIMRlErrorStack.Push("%% Warning: Can't find container for ElementID: " + elemID);
+                                refBimrlCommon.StackPushError("%% Warning: Can't find container for ElementID: " + elemID);
                                 continue;               // Can't seem to find the appropriate container
                             }
                         }
@@ -159,7 +165,7 @@ namespace BIMRL.BIMRLGraph
 
                     if (string.IsNullOrEmpty(storeyID))
                     {
-                        refBimrlCommon.BIMRlErrorStack.Push("%% Warning: Can't find the appropriate Storey for ElementID: " + elemID);
+                        refBimrlCommon.StackPushError("%% Warning: Can't find the appropriate Storey for ElementID: " + elemID);
                         continue;               // Can't seem to find the appropriate container
                     }
 
@@ -281,7 +287,7 @@ namespace BIMRL.BIMRLGraph
                                 parentNodeId = parentNodeIdDict[boundID];
                             else
                             {
-                                refBimrlCommon.BIMRlErrorStack.Push("%%Warning: can't find the parent node id for " + boundType + "'" + boundID + "'");
+                                refBimrlCommon.StackPushError("%%Warning: can't find the parent node id for " + boundType + "'" + boundID + "'");
                                 continue;     // missing information, skip
                             }
                             boundNodeID = nodeID++;
@@ -418,7 +424,7 @@ namespace BIMRL.BIMRLGraph
                             if (string.IsNullOrEmpty(containerId))
                             {
                                 // If even after using geometry to get the space container it cannot get any, give it up
-                                refBimrlCommon.BIMRlErrorStack.Push("%%Warning: Can't find container for " + elemType + " '" + elemID + "'");
+                                refBimrlCommon.StackPushError("%%Warning: Can't find container for " + elemType + " '" + elemID + "'");
                                 continue;
                             }
                         }
@@ -464,7 +470,7 @@ namespace BIMRL.BIMRLGraph
                                 container = reader2.GetString(3);
                             else
                             {
-                                refBimrlCommon.BIMRlErrorStack.Push("%%Warning: Can't find container for space '" + spaceAbove + "'");
+                                refBimrlCommon.StackPushError("%%Warning: Can't find container for space '" + spaceAbove + "'");
                                 continue;
                             }
 
@@ -484,7 +490,7 @@ namespace BIMRL.BIMRLGraph
                                 storeyAbove = nodeProcessed[nextStoreyId];
                             if (storeyNode == 0 || storeyAbove == 0)
                             {
-                                refBimrlCommon.BIMRlErrorStack.Push("%%Warning: can't find the corresponding storey node ids (current or above) for '" + elemID + "'");
+                                refBimrlCommon.StackPushError("%%Warning: can't find the corresponding storey node ids (current or above) for '" + elemID + "'");
                                 continue;     // missing information, skip
                             }
 
@@ -521,7 +527,7 @@ namespace BIMRL.BIMRLGraph
                                     // if still cannot find the information, continue with 0
                                     if (parentNodeId == 0)
                                     {
-                                        refBimrlCommon.BIMRlErrorStack.Push("%%Warning: can't find the corresponding parent node id for '" + elemID + "'");
+                                        refBimrlCommon.StackPushError("%%Warning: can't find the corresponding parent node id for '" + elemID + "'");
                                         //continue;     // missing information, skip
                                     }
                                 }
@@ -581,7 +587,7 @@ namespace BIMRL.BIMRLGraph
                     else
                     {
                         // Missing space above, cannot determine the vertical circulation connectivity
-                        refBimrlCommon.BIMRlErrorStack.Push("%%Warning: Elementid '" + elemID + "' does not have a space above that it can connect to!");
+                        refBimrlCommon.StackPushError("%%Warning: Elementid '" + elemID + "' does not have a space above that it can connect to!");
                         continue;
                     }
                 }
@@ -672,7 +678,7 @@ namespace BIMRL.BIMRLGraph
                                     container = containerFromHost(FedID, objectAbove);
                                 if (string.IsNullOrEmpty(container))
                                 {
-                                    refBimrlCommon.BIMRlErrorStack.Push("%%Warning: can't find the container of '" + objectAbove + "' even from its host or details");
+                                    refBimrlCommon.StackPushError("%%Warning: can't find the container of '" + objectAbove + "' even from its host or details");
                                     continue;     // missing information, skip
                                 }
                             }
@@ -692,7 +698,7 @@ namespace BIMRL.BIMRLGraph
                                 storeyAbove = nodeProcessed[nextStoreyId];
                             if (storeyNode == 0 || storeyAbove == 0)
                             {
-                                refBimrlCommon.BIMRlErrorStack.Push("%%Warning: can't find the corresponding storey node ids (current or above) for '" + elemID + "'");
+                                refBimrlCommon.StackPushError("%%Warning: can't find the corresponding storey node ids (current or above) for '" + elemID + "'");
                                 continue;     // missing information, skip
                             }
 
@@ -794,12 +800,12 @@ namespace BIMRL.BIMRLGraph
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
 
@@ -822,12 +828,12 @@ namespace BIMRL.BIMRLGraph
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
             return status;
@@ -859,13 +865,13 @@ namespace BIMRL.BIMRLGraph
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 commandPlSql.Dispose();
             }
             catch (SystemException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
             return status;
@@ -893,13 +899,13 @@ namespace BIMRL.BIMRLGraph
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 command.Dispose();
             }
             catch (SystemException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
 
@@ -929,13 +935,13 @@ namespace BIMRL.BIMRLGraph
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 command.Dispose();
             }
             catch (SystemException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
 
@@ -962,13 +968,13 @@ namespace BIMRL.BIMRLGraph
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 command.Dispose();
             }
             catch (SystemException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
             command.Dispose();
@@ -1009,13 +1015,13 @@ namespace BIMRL.BIMRLGraph
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 command.Dispose();
             }
             catch (SystemException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
             command.Dispose();
@@ -1056,13 +1062,13 @@ namespace BIMRL.BIMRLGraph
                 catch (OracleException e)
                 {
                     string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                    refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                    refBimrlCommon.StackPushError(excStr);
                     command.Dispose();
                 }
                 catch (SystemException e)
                 {
                     string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                    refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                    refBimrlCommon.StackPushError(excStr);
                     throw;
                 }
             }
@@ -1124,13 +1130,13 @@ namespace BIMRL.BIMRLGraph
                 catch (OracleException e)
                 {
                     string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                    refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                    refBimrlCommon.StackPushError(excStr);
                     command.Dispose();
                 }
                 catch (SystemException e)
                 {
                     string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                    refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                    refBimrlCommon.StackPushError(excStr);
                     throw;
                 }
             }

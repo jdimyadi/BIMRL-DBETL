@@ -490,7 +490,7 @@ namespace BIMRL.OctreeLib
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-                refCellBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refCellBIMRLCommon.StackPushError(excStr);
             }
         }
 
@@ -544,7 +544,7 @@ namespace BIMRL.OctreeLib
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-                refCellBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refCellBIMRLCommon.StackPushError(excStr);
             }
         }
 
@@ -1063,12 +1063,12 @@ namespace BIMRL.OctreeLib
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
         }
@@ -1123,12 +1123,12 @@ namespace BIMRL.OctreeLib
         //    catch (OracleException e)
         //    {
         //        string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-        //        refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+        //        refBIMRLCommon.StackPushError(excStr);
         //    }
         //    catch (SystemException e)
         //    {
         //        string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-        //        refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+        //        refBIMRLCommon.StackPushError(excStr);
         //        throw;
         //    }
         //}

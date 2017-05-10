@@ -78,12 +78,12 @@ namespace BIMRL
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + currStep;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + currStep;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
 
@@ -126,12 +126,12 @@ namespace BIMRL
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + currStep;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + currStep;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
 
@@ -156,7 +156,7 @@ namespace BIMRL
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + currStep;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
             }
         }
 
@@ -175,7 +175,7 @@ namespace BIMRL
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + SqlStmt;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
             }
         }
 
@@ -200,7 +200,7 @@ namespace BIMRL
             DataTable qResult = new DataTable();
             modelInfo = qResult;
 
-            string SqlStmt = "Select * from BIMRL_FEDERATEDMODEL where '" + whereClause;
+            string SqlStmt = "Select * from BIMRL_FEDERATEDMODEL where " + whereClause;
             try
             {
                 OracleCommand command = new OracleCommand(SqlStmt, DBOperation.DBConn);
@@ -214,7 +214,7 @@ namespace BIMRL
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + SqlStmt;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
                 return false;
             }
         }

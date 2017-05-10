@@ -158,11 +158,11 @@ namespace BIMRLMisc
                         }
                         catch (OracleException er)
                         {
-                            string excStr = "%%Insert Error (IGNORED) - " + er.Message + "\n\t" + currStep;
-                            // _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
-                            // Ignore any error
-                        }
-                    }
+                            string excStr = "%%Insert Error - " + er.Message + "\n\t" + currStep;
+                           // _refBIMRLCommon.StackPushIgnorableError(excStr);
+                           // Ignore any error
+                  }
+               }
                 }
 
                 trx.Commit();

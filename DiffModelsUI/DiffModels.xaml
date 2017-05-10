@@ -1,0 +1,55 @@
+﻿<Window x:Class="DiffModelsUI.DiffModels"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DiffModelsUI"
+        mc:Ignorable="d"
+        Title="BIMRL - Compare Two Models" Height="468.059" Width="780.257">
+   <Grid>
+      <Grid.RowDefinitions>
+         <RowDefinition Height="285*"/>
+         <RowDefinition Height="34*"/>
+      </Grid.RowDefinitions>
+      <DataGrid x:Name="dataGrid_ModelList" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" Height="269" Width="344" SelectionChanged="dataGrid_ModelList_SelectionChanged"/>
+      <Button x:Name="button_1stModel" Content="Model (New)" HorizontalAlignment="Left" Margin="365,40,0,0" VerticalAlignment="Top" Width="75" Click="button_1stModel_Click"/>
+      <Button x:Name="button_2ndModel" Content="Model (Ref)" HorizontalAlignment="Left" Margin="365,68,0,0" VerticalAlignment="Top" Width="75" Click="button_2ndModel_Click"/>
+      <TextBox x:Name="textBox_1stModel" Height="23" Margin="468,37,10,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+      <TextBox x:Name="textBox_2ndModel" Height="23" Margin="468,65,10,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+      <Rectangle Fill="#FFF4F4F5" Height="174" Margin="365,126,10,0" Stroke="Black" VerticalAlignment="Top"/>
+      <Button x:Name="button_Run" Content="Run" Margin="0,10,10,0" Grid.Row="1" VerticalAlignment="Top" Click="button_Run_Click" HorizontalAlignment="Right" Width="75"/>
+      <Button x:Name="button_Cancel" Content="Cancel" Height="20" Margin="0,10,93,0" VerticalAlignment="Top" Grid.Row="1" RenderTransformOrigin="0.199,0.514" Click="button_Cancel_Click" HorizontalAlignment="Right" Width="75"/>
+      <Label x:Name="label" Content="Models:" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top"/>
+      <Label x:Name="label1" Content="Options:" HorizontalAlignment="Left" Margin="365,100,0,0" VerticalAlignment="Top"/>
+      <Label x:Name="label2" Content="Models to Compare:" HorizontalAlignment="Left" Margin="468,6,0,0" VerticalAlignment="Top"/>
+      <CheckBox x:Name="checkBox_NewDelObjects" Content="Check New/Deleted Objects" HorizontalAlignment="Left" Margin="369,134,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_CheckGeometryBySignature" Content="Check Geometry Changes" HorizontalAlignment="Left" Margin="369,234,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_CheckTypeAssignments" Content="Check Type Assignments" HorizontalAlignment="Left" Margin="369,154,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_CheckContainmentRelations" Content="Check Containment Relations" HorizontalAlignment="Left" Margin="369,174,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_CheckOwnerHistory" Content="Check OwnerHistory" HorizontalAlignment="Left" Margin="369,194,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_CheckProperties" Content="Check Properties" HorizontalAlignment="Left" Margin="369,214,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_CheckMaterials" Content="Check Materials" HorizontalAlignment="Left" Margin="574,134,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_Classifications" Content="Check Classifications" HorizontalAlignment="Left" Margin="574,154,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_CheckGroupMemberships" Content="Check Group Memberships" HorizontalAlignment="Left" Margin="574,174,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_CheckAggregations" Content="Check Aggregations" HorizontalAlignment="Left" Margin="574,194,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_CheckConnections" Content="Check Connections" HorizontalAlignment="Left" Margin="574,214,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_CheckElementDependencies" Content="Check Element Dependencies" HorizontalAlignment="Left" Margin="574,234,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <CheckBox x:Name="checkBox_CheckSpaceBoundaries" Content="Check Space Boundaries" HorizontalAlignment="Left" Margin="574,254,0,0" VerticalAlignment="Top" IsChecked="True"/>
+      <TextBox x:Name="textBox_Tolerance" HorizontalAlignment="Left" Height="23" Margin="445,255,0,0" TextWrapping="Wrap" Text="0.0001" VerticalAlignment="Top" Width="75" IsReadOnly="True" TextAlignment="Right"/>
+      <Label x:Name="label3" Content="Tolerance:" HorizontalAlignment="Left" Margin="382,249,0,0" VerticalAlignment="Top"/>
+      <Label x:Name="label4" Content="Output Json file:" HorizontalAlignment="Left" Margin="7,312,0,0" VerticalAlignment="Top"/>
+      <TextBox x:Name="textBox_OutputJson" HorizontalAlignment="Left" Height="23" Margin="117,316,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="548" TextChanged="textBox_TextChanged" LostFocus="textBox_OutputJson_LostFocus"/>
+      <Button x:Name="button_Browse" Content="Browse ..." Margin="0,315,10,0" VerticalAlignment="Top" Click="button_Browse_Click" HorizontalAlignment="Right" Width="75"/>
+      <TextBlock x:Name="textBlock_Message" HorizontalAlignment="Left" Margin="10,348,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="36" Width="752" RenderTransformOrigin="0.5,0.5">
+         <TextBlock.RenderTransform>
+            <TransformGroup>
+               <ScaleTransform/>
+               <SkewTransform AngleY="0.077"/>
+               <RotateTransform/>
+               <TranslateTransform Y="-0.499"/>
+            </TransformGroup>
+         </TextBlock.RenderTransform>
+      </TextBlock>
+
+   </Grid>
+</Window>

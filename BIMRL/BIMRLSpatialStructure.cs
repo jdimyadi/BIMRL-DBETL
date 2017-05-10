@@ -105,7 +105,7 @@ namespace BIMRL
          catch (OracleException e)
          {
             string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-            _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+            _refBIMRLCommon.StackPushError(excStr);
             command.Dispose();
             throw;
          }
@@ -202,7 +202,7 @@ namespace BIMRL
          catch (OracleException e)
          {
             string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-            _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+            _refBIMRLCommon.StackPushError(excStr);
             command.Dispose();
             throw;
          }

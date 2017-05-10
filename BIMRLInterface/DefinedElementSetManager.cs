@@ -36,9 +36,14 @@ namespace BIMRLInterface
             DBOperation.refBIMRLCommon = m_BIMRLCommonRef;      // important to ensure DBoperation has reference to this object!!
             if (DBOperation.Connect() == null)
             {
-                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
-                erroDlg.ShowDialog();
-                return;
+               if (DBOperation.UIMode)
+               {
+                  BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
+                  erroDlg.ShowDialog();
+               }
+               else
+                  Console.Write(m_BIMRLCommonRef.ErrorMessages);
+               return;
             }
             DBOperation.beginTransaction();
             initialized = true;
@@ -107,10 +112,15 @@ namespace BIMRLInterface
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t in Creating Elementset " + elementset.ToUpper();
-                m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
-                erroDlg.ShowDialog();
-                command.Dispose();
+                m_BIMRLCommonRef.StackPushError(excStr);
+               if (DBOperation.UIMode)
+               {
+                  BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
+                  erroDlg.ShowDialog();
+               }
+               else
+                  Console.Write(m_BIMRLCommonRef.ErrorMessages);
+               command.Dispose();
                 return false;
             }
         }
@@ -149,10 +159,15 @@ namespace BIMRLInterface
                     return true;
                 }
                 string excStr = "%%Error - " + e.Message + "\n\t in Creating Elementset " + elementset.ToUpper();
-                m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
-                erroDlg.ShowDialog();
-                command.Dispose();
+                m_BIMRLCommonRef.StackPushError(excStr);
+               if (DBOperation.UIMode)
+               {
+                  BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
+                  erroDlg.ShowDialog();
+               }
+               else
+                  Console.Write(m_BIMRLCommonRef.ErrorMessages);
+               command.Dispose();
                 return false;
             }
         }
@@ -204,9 +219,14 @@ namespace BIMRLInterface
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t in deleting Elementset " + elementset.ToUpper();
-                m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
-                erroDlg.ShowDialog();
+                m_BIMRLCommonRef.StackPushError(excStr);
+               if (DBOperation.UIMode)
+               {
+                  BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
+                  erroDlg.ShowDialog();
+               }
+               else
+                  Console.Write(m_BIMRLCommonRef.ErrorMessages);
                 DBOperation.rollbackTransaction();
                 command.Dispose();
                 return false;
@@ -236,10 +256,15 @@ namespace BIMRLInterface
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t in drop Elementset " + elementset.ToUpper();
-                m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
-                erroDlg.ShowDialog();
-                command.Dispose();
+                m_BIMRLCommonRef.StackPushError(excStr);
+               if (DBOperation.UIMode)
+               {
+                  BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
+                  erroDlg.ShowDialog();
+               }
+               else
+                  Console.Write(m_BIMRLCommonRef.ErrorMessages);
+               command.Dispose();
                 return false;
             }
         }

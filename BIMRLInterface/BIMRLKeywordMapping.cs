@@ -87,7 +87,7 @@ namespace BIMRLInterface
 
                 // We will not replace a table name if it is already fully qualified with the hex id extension
                 //if (!sqlStmt.ToUpper().Contains(extTabName))
-                    tmpStmt = Regex.Replace(tmpStmt, tabName + "[\\s]", extTabName + " ", RegexOptions.IgnoreCase);
+                    tmpStmt = Regex.Replace(tmpStmt, tabName + @"([\s;]+|\z)", extTabName + " ", RegexOptions.IgnoreCase);
                     tmpStmt = Regex.Replace(tmpStmt, tabName + "[)]", extTabName + ")", RegexOptions.IgnoreCase);
                     tmpStmt = Regex.Replace(tmpStmt, tabName + "[\"]", extTabName + "\"", RegexOptions.IgnoreCase);
                     tmpStmt = Regex.Replace(tmpStmt, tabName + "[\']", extTabName + "\'", RegexOptions.IgnoreCase);
@@ -152,10 +152,10 @@ namespace BIMRLInterface
 
         /* General format for the parameters
          * Two special paramaters can be included for all the builtin functions:
-         *      - alias: the param value should be prefixed with 'ALIAS:' substring
-         *      - where clause like expression: the param value should be prefixed with 'WHERE'. User is responsible in using the correct alias in here, only when it is a single ref we can add the alias
-         *      - return value test (e.g. CONTAINS(S, E)=.F.): the param should be prefixed with 'RETVAL:'
-         *      - return value operator (e.g. function(A) > number): the param should be prefixed with 'RETVALOP:'
+         *     - alias: the param value should be prefixed with 'ALIAS:' substring
+         *     - where clause like expression: the param value should be prefixed with 'WHERE'. User is responsible in using the correct alias in here, only when it is a single ref we can add the alias
+         *     - return value test (e.g. CONTAINS(S, E)=.F.): the param should be prefixed with 'RETVAL:'
+         *     - return value operator (e.g. function(A) > number): the param should be prefixed with 'RETVALOP:'
          */
 
         /// <summary>

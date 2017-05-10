@@ -30,9 +30,14 @@ namespace BIMRLInterface
             DBOperation.refBIMRLCommon = m_BIMRLCommonRef;      // important to ensure DBoperation has reference to this object!!
             if (DBOperation.Connect() == null)
             {
-                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
-                erroDlg.ShowDialog();
-                return false;
+               if (DBOperation.UIMode)
+               {
+                  BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
+                  erroDlg.ShowDialog();
+               }
+               else
+                  Console.Write(m_BIMRLCommonRef.ErrorMessages);
+               return false;
             }
             DBOperation.beginTransaction();
             return true;
@@ -58,10 +63,15 @@ namespace BIMRLInterface
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n" + command.CommandText;
-                m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
-                erroDlg.ShowDialog();
-                command.Dispose();
+                m_BIMRLCommonRef.StackPushError(excStr);
+               if (DBOperation.UIMode)
+               {
+                  BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
+                  erroDlg.ShowDialog();
+               }
+               else
+                  Console.Write(m_BIMRLCommonRef.ErrorMessages);
+               command.Dispose();
                 return null;
             }
         }
@@ -81,24 +91,29 @@ namespace BIMRLInterface
             // The * seems to "remember" the earlier one. If the number of columns are shorter than the previous one, it will throw OracleException for the "missing"/unrecognized column name
             try
             {
-                command.CommandText = m_SqlStmt;
-                OracleDataReader reader = command.ExecuteReader();
-                queryDataTableBuffer.Load(reader);
+               command.CommandText = m_SqlStmt;
+               OracleDataReader reader = command.ExecuteReader();
+               queryDataTableBuffer.Load(reader);
 
-                //OracleDataAdapter qAdapter = new OracleDataAdapter(command);
+               //OracleDataAdapter qAdapter = new OracleDataAdapter(command);
 
-                //qAdapter.Fill(queryDataTableBuffer);
-                //command.Dispose();
-                //qAdapter.Dispose();
+               //qAdapter.Fill(queryDataTableBuffer);
+               //command.Dispose();
+               //qAdapter.Dispose();
 
             }
             catch (OracleException e)
             {
-                string excStr = "%%Error - " + e.Message + "\n" + command.CommandText;
-                m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
-                erroDlg.ShowDialog();
-            }
+               string excStr = "%%Error - " + e.Message + "\n" + command.CommandText;
+               m_BIMRLCommonRef.StackPushError(excStr);
+               if (DBOperation.UIMode)
+               {
+                  BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
+                  erroDlg.ShowDialog();
+               }
+               else
+                  Console.Write(m_BIMRLCommonRef.ErrorMessages);
+         }
 
             command.Dispose();
             return queryDataTableBuffer;
@@ -137,8 +152,8 @@ namespace BIMRLInterface
             }
             catch (OracleException e)
             {
-                string excStr = "%%Information(Ignored) - " + e.Message + "\n" + command.CommandText;
-                m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
+                string excStr = "%%Information - " + e.Message + "\n" + command.CommandText;
+                m_BIMRLCommonRef.StackPushIgnorableError(excStr);
             }
 
             try
@@ -155,7 +170,7 @@ namespace BIMRLInterface
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n" + command.CommandText;
-                m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
+                m_BIMRLCommonRef.StackPushError(excStr);
                 errorMsg = m_BIMRLCommonRef.ErrorMessages;
                 command.Dispose();
                 return retCount;
@@ -191,7 +206,7 @@ namespace BIMRLInterface
                     return 0;
                 }
                 string excStr = "%%Error - " + e.Message + "\n" + command.CommandText;
-                m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
+                m_BIMRLCommonRef.StackPushError(excStr);
                 errorMsg = m_BIMRLCommonRef.ErrorMessages;
                 command.Dispose();
                 return 0;
@@ -212,10 +227,15 @@ namespace BIMRLInterface
                 catch (OracleException e)
                 {
                     string excStr = "%%Error - " + e.Message + "\n" + "Inserting into " + tableName;
-                    m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                    BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
-                    erroDlg.ShowDialog();
-                    return false;
+                    m_BIMRLCommonRef.StackPushError(excStr);
+                     if (DBOperation.UIMode)
+                     {
+                        BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(m_BIMRLCommonRef);
+                        erroDlg.ShowDialog();
+                     }
+                     else
+                        Console.Write(m_BIMRLCommonRef.ErrorMessages);
+                     return false;
                 }
             }
             return true;
@@ -340,15 +360,15 @@ namespace BIMRLInterface
                 }
                 catch (OracleException e)
                 {
-                    string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + command.CommandText;
-                    m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
+                    string excStr = "%%Insert Error - " + e.Message + "\n\t" + command.CommandText;
+                    m_BIMRLCommonRef.StackPushIgnorableError(excStr);
                     errorMsg = m_BIMRLCommonRef.ErrorMessages;
                     // Ignore any error
                 }
                 catch (SystemException e)
                 {
                     string excStr = "%%Insert Error - " + e.Message + "\n\t" + command.CommandText;
-                    m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
+                    m_BIMRLCommonRef.StackPushError(excStr);
                     errorMsg = m_BIMRLCommonRef.ErrorMessages;
                     throw;
                 }

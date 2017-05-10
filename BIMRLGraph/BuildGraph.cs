@@ -91,13 +91,13 @@ namespace BIMRLGraph
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 command.Dispose();
             }
             catch (SystemException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
         }
@@ -152,13 +152,13 @@ namespace BIMRLGraph
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 command.Dispose();
             }
             catch (SystemException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
         }
@@ -201,7 +201,7 @@ namespace BIMRLGraph
             catch (SystemException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t";
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
 
@@ -247,7 +247,7 @@ namespace BIMRLGraph
             catch (SystemException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t";
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
 

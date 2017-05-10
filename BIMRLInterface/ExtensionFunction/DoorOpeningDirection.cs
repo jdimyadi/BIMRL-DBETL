@@ -114,12 +114,12 @@ namespace BIMRLInterface.ExtensionFunction
                 catch (OracleException e)
                 {
                     string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlstmt;
-                    _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                    _refBIMRLCommon.StackPushError(excStr);
                 }
                 catch (SystemException e)
                 {
                     string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlstmt;
-                    _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                    _refBIMRLCommon.StackPushError(excStr);
                     throw;
                 }
             }

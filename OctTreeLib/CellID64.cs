@@ -15,10 +15,10 @@ namespace BIMRL.OctreeLib
            64 bit ID.
            Each spatial index cell is coded by 3 bit number: Cz*2^2 + Cy*2^1 + Cx
                        110 / 111
-                      ---------
+                     ---------
                      100 / 101       Upper part of the octants
                        010 / 011
-                      ---------
+                     ---------
                      000 / 001       Lower part of the octants
          
            The ID will be encoded in a 12 character long encoding and is orgnized the following way:
@@ -103,7 +103,7 @@ namespace BIMRL.OctreeLib
         /// Return the encoded string of Cell ID based on the prior initialized Cell ID (default is 0)
         /// </summary>
         /// <returns></returns>
-        public string ToString()
+        public override string ToString()
         {
             char[] tmpCellIDStr = new char[12];
 

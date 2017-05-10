@@ -66,10 +66,15 @@ namespace BIMRLInterface.ExtensionFunction
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n" + command.CommandText;
-                this.m_BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(this.m_BIMRLCommonRef);
-                erroDlg.ShowDialog();
-                command.Dispose();
+                this.m_BIMRLCommonRef.StackPushError(excStr);
+               if (DBOperation.UIMode)
+               {
+                  BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(this.m_BIMRLCommonRef);
+                  erroDlg.ShowDialog();
+               }
+               else
+                  Console.Write(m_BIMRLCommonRef.ErrorMessages);
+               command.Dispose();
                 return null;
             }
         }

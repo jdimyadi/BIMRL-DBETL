@@ -77,7 +77,12 @@ namespace BIMRL
 
             if (ownH.OwningUser.ThePerson.Addresses != null)
             {
-               string owningPersonAddresses = ownH.OwningUser.ThePerson.Addresses.ToString();
+               string owningPersonAddresses = "";
+               foreach (IIfcAddress addr in ownH.OwningUser.ThePerson.Addresses)
+               {
+                  owningPersonAddresses += addr + ", ";
+               }
+
                if (!string.IsNullOrEmpty(owningPersonAddresses))
                {
                   columnSpec += ", OwningPersonAddresses";
@@ -129,7 +134,11 @@ namespace BIMRL
 
             if (ownH.OwningUser.TheOrganization.Addresses != null)
             {
-               string owningOrganizationAddresses = ownH.OwningUser.TheOrganization.Addresses.ToString();
+               string owningOrganizationAddresses = "";
+               foreach (IIfcAddress addr in ownH.OwningUser.TheOrganization.Addresses)
+               {
+                  owningOrganizationAddresses += addr + ", ";
+               }
                if (!string.IsNullOrEmpty(owningOrganizationAddresses))
                {
                   columnSpec += ", OwningOrganizationAddresses";
@@ -190,13 +199,13 @@ namespace BIMRL
             }
             catch (OracleException e)
             {
-               string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
+               _refBIMRLCommon.StackPushIgnorableError(excStr);
             }
             catch (SystemException e)
             {
                string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-               _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+               _refBIMRLCommon.StackPushError(excStr);
                throw;
             }
          }

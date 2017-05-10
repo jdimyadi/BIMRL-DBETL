@@ -179,7 +179,7 @@ namespace BIMRL
             _transformMatrix = new Matrix3D(majorAxes[0].X, majorAxes[1].X, majorAxes[2].X, 0,
                                             majorAxes[0].Y, majorAxes[1].Y, majorAxes[2].Y, 0,
                                             majorAxes[0].Z, majorAxes[1].Z, majorAxes[2].Z, 0,
-                                            -Centroid.X, -Centroid.Y, -Centroid.Z, 1);
+                                           -Centroid.X, -Centroid.Y, -Centroid.Z, 1);
 
             List<Point3D> trOBBV = transformPointSet();
             BoundingBox3D trOBB = new BoundingBox3D(trOBBV);
@@ -294,7 +294,7 @@ namespace BIMRL
             transformMatrix = new Matrix3D(modAxes[0].X, modAxes[1].X, modAxes[2].X, 0,
                                 modAxes[0].Y, modAxes[1].Y, modAxes[2].Y, 0,
                                 modAxes[0].Z, modAxes[1].Z, modAxes[2].Z, 0,
-                                -centroid.X, -centroid.Y, -centroid.Z, 1);
+                               -centroid.X, -centroid.Y, -centroid.Z, 1);
             List<Point3D> transfPoints = transformPointSet();
             //BoundingBox3D trOBB = new BoundingBox3D(transfPoints);
             //List<Point3D> modOBB = transformBackPointSet(trOBB.BBVertices);

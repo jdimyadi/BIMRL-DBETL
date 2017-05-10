@@ -117,13 +117,13 @@ namespace BIMRLInterface.ExtensionFunction
                         catch (OracleException e)
                         {
                             string excStr = "%%Error - " + e.Message + "\n\t" + avoidCmd;
-                            DBOperation.refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                            DBOperation.refBIMRLCommon.StackPushError(excStr);
                             cmd.Dispose();
                         }
                         catch (SystemException e)
                         {
                             string excStr = "%%Error - " + e.Message + "\n\t" + avoidCmd;
-                            DBOperation.refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                            DBOperation.refBIMRLCommon.StackPushError(excStr);
                             throw;
                         }
                     }

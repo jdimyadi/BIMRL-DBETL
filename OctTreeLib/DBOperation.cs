@@ -6,29 +6,31 @@ using System.Threading.Tasks;
 using System.Data;
 using System.Collections;
 using System.IO;
+using System.Reflection;
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
 using NetSdoGeometry;
 
 namespace BIMRL.OctreeLib
 {
-    public static class DBOperation
-    {
-        private static string m_connStr;
-        private static OracleTransaction m_longTrans;
-        private static bool transactionActive = false;
-        private static int currInsertCount = 0;
-        public static int commitInterval { get; set; }
-        public static string operatorToUse { get; set; }
-        public static string DBUserID { get; set; }
-        public static string DBPassword { get; set; }
-        public static string DBConnecstring { get; set; }
-        public static BIMRLCommon refBIMRLCommon { get; set; }
-        public static projectUnit currModelProjectUnitLength = projectUnit.SIUnit_Length_Meter;
-        public static Dictionary<string, bool> objectForSpaceBoundary = new Dictionary<string, bool>();
-        public static Dictionary<string, bool> objectForConnection = new Dictionary<string, bool>();
-        public static int currSelFedID { get; set; }
-        private static Dictionary<int, Tuple<Point3D, Point3D, int>> worldBBInfo = new Dictionary<int, Tuple<Point3D, Point3D, int>>();
+   public static class DBOperation
+   {
+      private static string m_connStr;
+      private static OracleTransaction m_longTrans;
+      private static bool transactionActive = false;
+      private static int currInsertCount = 0;
+      public static int commitInterval { get; set; }
+      public static string operatorToUse { get; set; }
+      public static string DBUserID { get; set; }
+      public static string DBPassword { get; set; }
+      public static string DBConnecstring { get; set; }
+      public static BIMRLCommon refBIMRLCommon { get; set; }
+      public static projectUnit currModelProjectUnitLength = projectUnit.SIUnit_Length_Meter;
+      public static Dictionary<string, bool> objectForSpaceBoundary = new Dictionary<string, bool>();
+      public static Dictionary<string, bool> objectForConnection = new Dictionary<string, bool>();
+      public static int currSelFedID { get; set; }
+      private static Dictionary<int, Tuple<Point3D, Point3D, int>> worldBBInfo = new Dictionary<int, Tuple<Point3D, Point3D, int>>();
+      public static bool UIMode {get; set;} = true;
 
         public static OracleConnection Connect(string username, string password, string DBconnectstring)
         {
@@ -58,7 +60,7 @@ namespace BIMRL.OctreeLib
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
             return m_DBconn;
@@ -97,7 +99,7 @@ namespace BIMRL.OctreeLib
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
             return m_DBconn;
@@ -119,7 +121,7 @@ namespace BIMRL.OctreeLib
         // there is a need to execute a DDL statement in the middle of transaction, or commit certian change
         // Should be kept very short
         //private static OracleConnection m_DBconnShort;
-        private static OracleTransaction m_ShortTransaction;
+        //private static OracleTransaction m_ShortTransaction;
         //public static OracleConnection DBconnShort
         //{
         //    get {
@@ -166,7 +168,7 @@ namespace BIMRL.OctreeLib
                 // Ignore error
                 // txn.Rollback();
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 command.Dispose();
                 // throw;
             }
@@ -229,7 +231,7 @@ namespace BIMRL.OctreeLib
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 command.Dispose();
                 throw;
             }
@@ -273,7 +275,7 @@ namespace BIMRL.OctreeLib
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 command.Dispose();
                 throw;
             }
@@ -339,7 +341,7 @@ namespace BIMRL.OctreeLib
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 command.Dispose();
                 throw;
             }
@@ -362,7 +364,10 @@ namespace BIMRL.OctreeLib
 
         public static int createModelTables (int ID)
         {
-            return executeScript("script\\BIMRL_crtab.sql", ID);
+            var location = new Uri(Assembly.GetEntryAssembly().GetName().CodeBase);
+            string exePath = new FileInfo(location.AbsolutePath).Directory.FullName;
+            string crtabScript = Path.Combine(exePath, "script", "BIMRL_crtab.sql");
+            return executeScript(crtabScript, ID);
         }
 
         public static int executeScript (string filename, int ID)
@@ -404,8 +409,8 @@ namespace BIMRL.OctreeLib
                     }
                     catch (OracleException e)
                     {
-                        string excStr = "%%(IGNORED)Error - " + e.Message + "\n\t" + currStep;
-                        refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                        string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
+                        refBIMRLCommon.StackPushIgnorableError(excStr);
                         stmt = string.Empty;    // reset stmt
                         continue;
                     }
@@ -418,7 +423,10 @@ namespace BIMRL.OctreeLib
 
         public static int dropModelTables(int ID)
         {
-            return executeScript("script\\BIMRL_drtab.sql", ID);
+         var location = new Uri(Assembly.GetEntryAssembly().GetName().CodeBase);
+         string exePath = new FileInfo(location.AbsolutePath).Directory.FullName;
+         string drtabScript = Path.Combine(exePath, "script", "BIMRL_drtab.sql");
+         return executeScript(drtabScript, ID);
         }
 
         public static projectUnit getProjectUnitLength(int fedID)
@@ -448,7 +456,7 @@ namespace BIMRL.OctreeLib
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 command.Dispose();
             }
             command.Dispose();
@@ -508,12 +516,12 @@ namespace BIMRL.OctreeLib
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
             return false;

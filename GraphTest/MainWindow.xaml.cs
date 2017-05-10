@@ -45,14 +45,14 @@ namespace GraphTest
             GraphData graphData = new GraphData();
             //graphData.createCirculationGraph(fedID);
             graphData.createCirculationGraph(fedID);
-            if (GraphData.refBimrlCommon.BIMRlErrorStack.Count > 0)
+            if (GraphData.refBimrlCommon.BIMRLErrorStackCount > 0)
             {
                 TextBox_Output.Clear();
                 string wholeStack = string.Empty;
                 while (true)
                 {
-                    wholeStack += GraphData.refBimrlCommon.BIMRlErrorStack.Pop() + "\n";
-                    if (GraphData.refBimrlCommon.BIMRlErrorStack.Count == 0) break;
+                    wholeStack += GraphData.refBimrlCommon.StackPopError() + "\n";
+                    if (GraphData.refBimrlCommon.BIMRLErrorStackCount == 0) break;
                 }
                 TextBox_Output.Text = wholeStack;
             }

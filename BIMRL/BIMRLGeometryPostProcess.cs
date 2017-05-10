@@ -102,14 +102,14 @@ namespace BIMRL
             }
             catch (OracleException e)
             {
-                string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + sqlStmt;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                string excStr = "%%Insert Error - " + e.Message + "\n\t" + sqlStmt;
+                _refBIMRLCommon.StackPushIgnorableError(excStr);
                 // Ignore any error
             }
             catch (SystemException e)
             {
                 string excStr = "%%Insert Error - " + e.Message + "\n\t" + sqlStmt;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
         }
@@ -863,7 +863,7 @@ namespace BIMRL
                 {
                     // In some cases for unknown reason, we may get a face with all vertices aligned in a straight line, resulting in invalid normal vector
                     // for this case, we will simply skip the face
-                    _refBIMRLCommon.BIMRlErrorStack.Push("%Warning (ElementID: '" + _elementid + "'): Skipping face#  " + fIdx.ToString() + " because it is an invalid face!");
+                    _refBIMRLCommon.StackPushError("%Warning (ElementID: '" + _elementid + "'): Skipping face#  " + fIdx.ToString() + " because it is an invalid face!");
                     continue;
                 }
 
@@ -1053,7 +1053,7 @@ namespace BIMRL
                     catch (OracleException e)
                     {
                         string excStr = "%%Insert Error - " + e.Message + "\n\t" + sqlStmt;
-                        _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                        _refBIMRLCommon.StackPushError(excStr);
                         arrElementID.Clear();
                         arrFaceID.Clear();
                         arrType.Clear();
@@ -1066,7 +1066,7 @@ namespace BIMRL
                     catch (SystemException e)
                     {
                         string excStr = "%%Insert Error - " + e.Message + "\n\t" + sqlStmt;
-                        _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                        _refBIMRLCommon.StackPushError(excStr);
                         throw;
                     }
                 }
@@ -1098,14 +1098,14 @@ namespace BIMRL
                 }
                 catch (OracleException e)
                 {
-                    string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + sqlStmt;
-                    _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                    string excStr = "%%Insert Error - " + e.Message + "\n\t" + sqlStmt;
+                    _refBIMRLCommon.StackPushIgnorableError(excStr);
                     // Ignore any error
                 }
                 catch (SystemException e)
                 {
                     string excStr = "%%Insert Error - " + e.Message + "\n\t" + sqlStmt;
-                    _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                    _refBIMRLCommon.StackPushError(excStr);
                     throw;
                 }
             }
@@ -1203,14 +1203,14 @@ namespace BIMRL
             }
             catch (OracleException e)
             {
-                string excStr = "%%Insert Error (IGNORED) - " + e.Message + "\n\t" + sqlStmt;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                string excStr = "%%Insert Error - " + e.Message + "\n\t" + sqlStmt;
+                _refBIMRLCommon.StackPushIgnorableError(excStr);
                 // Ignore any error
             }
             catch (SystemException e)
             {
                 string excStr = "%%Insert Error - " + e.Message + "\n\t" + sqlStmt;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
 
@@ -1403,7 +1403,7 @@ namespace BIMRL
         //    pca.transformMatrix = new Matrix3D(modAxes[0].X, modAxes[1].X, modAxes[2].X, 0,
         //                        modAxes[0].Y, modAxes[1].Y, modAxes[2].Y, 0,
         //                        modAxes[0].Z, modAxes[1].Z, modAxes[2].Z, 0,
-        //                        -centroid.X, -centroid.Y, -centroid.Z, 1);
+        //                       -centroid.X, -centroid.Y, -centroid.Z, 1);
         //    List<Point3D> transfPoints = pca.transformPointSet();
         //    BoundingBox3D trOBB = new BoundingBox3D(transfPoints);
         //    List<Point3D> modOBB = pca.transformBackPointSet(trOBB.BBVertices);

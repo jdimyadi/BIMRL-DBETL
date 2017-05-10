@@ -109,7 +109,7 @@ namespace BIMRL.OctreeLib
             }
         }
 
-        public string ToString()
+        public override string ToString()
         {
             string pr = "LLB" + this.LLB.ToString() + "\nURT" + this.URT.ToString();
             return pr;

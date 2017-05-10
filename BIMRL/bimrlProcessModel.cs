@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Data;
+using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
@@ -45,9 +47,14 @@ namespace BIMRL
          DBOperation.refBIMRLCommon = _bimrlCommon;      // important to ensure DBoperation has reference to this object!!
          if (DBOperation.Connect() == null)
          {
+            if (DBOperation.UIMode)
+            {
                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(_bimrlCommon);
                erroDlg.ShowDialog();
-               return;
+            }
+            else
+               Console.Write(_bimrlCommon.ErrorMessages);
+            return;
          }
 
          DBOperation.commitInterval = 5000;
@@ -122,7 +129,7 @@ namespace BIMRL
          catch (Exception e)
          {
             string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-            _bimrlCommon.BIMRlErrorStack.Push(excStr);
+            _bimrlCommon.StackPushError(excStr);
             DBOperation.endTransaction(false);  // rollback
          }
 
@@ -246,9 +253,9 @@ namespace BIMRL
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
                            + "('BIMRL_TOPO_FACE_" + currFedID.ToString("X4") + "','NORMAL',"
-                           + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X',  -1.01, 1.01, 0.000001),"
-                           + "SDO_DIM_ELEMENT('Y',  -1.01, 1.01, 0.000001),"
-                           + "SDO_DIM_ELEMENT('Z',  -1.01, 1.01, 0.000001)),"
+                           + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', -1.01, 1.01, 0.000001),"
+                           + "SDO_DIM_ELEMENT('Y', -1.01, 1.01, 0.000001),"
+                           + "SDO_DIM_ELEMENT('Z', -1.01, 1.01, 0.000001)),"
                            + "NULL)";
             currStep = sqlStmt;
             cmd.CommandText = sqlStmt;
@@ -276,8 +283,8 @@ namespace BIMRL
             Bbox.LRS = 0;
             Bbox.GeometryType = (int)SdoGeometryTypes.GTYPE.POINT;
             int gType = Bbox.PropertiesToGTYPE();
-                
-            int[] elemInfoArr = {1, (int)SdoGeometryTypes.ETYPE_SIMPLE.POLYGON_EXTERIOR, 1};
+
+            int[] elemInfoArr = { 1, (int)SdoGeometryTypes.ETYPE_SIMPLE.POLYGON_EXTERIOR, 1 };
             Bbox.ElemArrayOfInts = elemInfoArr;
 
             double[] coordArr = new double[6];
@@ -345,10 +352,13 @@ namespace BIMRL
                DBOperation.executeSingleStmt(sqlStmt);
             }
 
+            var location = new Uri(Assembly.GetEntryAssembly().GetName().CodeBase);
+            string exePath = new FileInfo(location.AbsolutePath).Directory.FullName;
+
             // (Re)-Create the spatial indexes
-            DBOperation.executeScript("script\\BIMRL_Idx_SpatialIndexes.sql", currFedID);
-            DBOperation.executeScript("script\\BIMRL_Idx_TopoFace.sql", currFedID);
-            DBOperation.executeScript("script\\BIMRL_Idx_MajorAxes.sql", currFedID);
+            DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_SpatialIndexes.sql"), currFedID);
+            DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_TopoFace.sql"), currFedID);
+            DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_MajorAxes.sql"), currFedID);
 
             //sqlStmt = "Create Index IDX_BIMRLELEM_GEOM_" + currFedID.ToString("X4") + " on BIMRL_ELEMENT_" + currFedID.ToString("X4")
             //            + " (GEOMETRYBODY) INDEXTYPE is MDSYS.SPATIAL_INDEX PARAMETERS ('sdo_indx_dims=3')";
@@ -367,13 +377,13 @@ namespace BIMRL
             //currStep = sqlStmt;
             //cmd.CommandText = sqlStmt;
             //cmd.ExecuteNonQuery();
-                
+
             //sqlStmt = "Create Index IDX_BIMRLELEM_GEOMFP_" + currFedID.ToString("X4") + " on BIMRL_ELEMENT_" + currFedID.ToString("X4")
             //            + " (GeometryFootprint) INDEXTYPE is MDSYS.SPATIAL_INDEX PARAMETERS ('sdo_indx_dims=3')";
             //currStep = sqlStmt;
             //cmd.CommandText = sqlStmt;
             //cmd.ExecuteNonQuery();
-                
+
             //sqlStmt = "Create Index IDX_BIMRLELEM_GEOMAX_" + currFedID.ToString("X4") + " on BIMRL_ELEMENT_" + currFedID.ToString("X4")
             //            + " (GeometryAxis) INDEXTYPE is MDSYS.SPATIAL_INDEX PARAMETERS ('sdo_indx_dims=3')";
             //currStep = sqlStmt;
@@ -428,17 +438,26 @@ namespace BIMRL
          catch (Exception e)
          {
             string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-            _bimrlCommon.BIMRlErrorStack.Push(excStr);
-
-            BIMRLErrorDialog errorDlg = new BIMRLErrorDialog(_bimrlCommon);
-            errorDlg.ShowDialog();
+            _bimrlCommon.StackPushError(excStr);
+            if (DBOperation.UIMode)
+            {
+               BIMRLErrorDialog errorDlg = new BIMRLErrorDialog(_bimrlCommon);
+               errorDlg.ShowDialog();
+            }
+            else
+               Console.Write(_bimrlCommon.ErrorMessages);
          }
 
          // There are entries in the error stack, show them at the end
-         if (_bimrlCommon.BIMRlErrorStack.Count > 0)
+         if (_bimrlCommon.BIMRLErrorStackCount > 0)
          {
-            BIMRLErrorDialog errorDlg = new BIMRLErrorDialog(_bimrlCommon);
-            errorDlg.ShowDialog();
+            if (DBOperation.UIMode)
+            {
+               BIMRLErrorDialog errorDlg = new BIMRLErrorDialog(_bimrlCommon);
+               errorDlg.ShowDialog();
+            }
+            else
+               Console.Write(_bimrlCommon.ErrorMessages);
          }
       }
 
@@ -496,7 +515,7 @@ namespace BIMRL
          catch (SystemException e)
          {
             string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-            _bimrlCommon.BIMRlErrorStack.Push(excStr);
+            _bimrlCommon.StackPushError(excStr);
             throw;
          }
          m.StopCaching();

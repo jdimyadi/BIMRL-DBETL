@@ -157,12 +157,12 @@ namespace BIMRLInterface
             catch (OracleException e)
             {
                 string excStr = "%%SQL Error - " + e.Message + "\n\t" + sqlGeom;
-                DBOperation.refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                DBOperation.refBIMRLCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%SQL Error - " + e.Message + "\n\t" + sqlGeom;
-                DBOperation.refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                DBOperation.refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
             cmd.Dispose();
@@ -603,12 +603,12 @@ namespace BIMRLInterface
             catch (OracleException e)
             {
                 string excStr = "%%SQL Error Getting the next Geometry ID from Sequence SEQ_GEOMID - " + e.Message + "\n\t";
-                DBOperation.refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                DBOperation.refBIMRLCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%SQL Error Getting the next Geometry ID from Sequence SEQ_GEOMID - " + e.Message + "\n\t";
-                DBOperation.refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                DBOperation.refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
             return null;
@@ -1303,18 +1303,18 @@ namespace BIMRLInterface
                 {
                     // Something is not right that it does not return any Octree?
                     string msg = "%Warning: Octree master does not return anything";
-                    refBimrlCommon.BIMRlErrorStack.Push(msg);
+                    refBimrlCommon.StackPushError(msg);
                 }
             }
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + currStep;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + currStep;
-                refBimrlCommon.BIMRlErrorStack.Push(excStr);
+                refBimrlCommon.StackPushError(excStr);
                 throw;
             }
 
@@ -1394,7 +1394,7 @@ namespace BIMRLInterface
             Matrix3D reorgMat = new Matrix3D(reorgMjAxes[0].X, reorgMjAxes[1].X, reorgMjAxes[2].X, 0,
                                             reorgMjAxes[0].Y, reorgMjAxes[1].Y, reorgMjAxes[2].Y, 0,
                                             reorgMjAxes[0].Z, reorgMjAxes[1].Z, reorgMjAxes[2].Z, 0,
-                                            -pca.Centroid.X, -pca.Centroid.Y, -pca.Centroid.Z, 1);
+                                           -pca.Centroid.X, -pca.Centroid.Y, -pca.Centroid.Z, 1);
             pca.transformMatrix = reorgMat;         // Update the transform materix following the reorganized axes
             return pca;
         }

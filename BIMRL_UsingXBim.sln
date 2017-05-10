@@ -51,7 +51,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BIMRL_ETLConfig.XplorerPlug
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BIMRL_ETL.XplorerPlugin", "BIMRL_ETL.XplorerPlugin\BIMRL_ETL.XplorerPlugin.csproj", "{6DE73A7B-1C3B-494D-868C-66C43EB43C3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BIMRL_Main.XbimXplorerPlugin", "BIMRL_Main.XbimXplorerPlugin\BIMRL_Main.XbimXplorerPlugin.csproj", "{DF48237B-5225-45C2-88E3-BEF1BD4A2852}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BIMRL_Main.XplorerPlugin", "BIMRL_Main.XplorerPlugin\BIMRL_Main.XplorerPlugin.csproj", "{DF48237B-5225-45C2-88E3-BEF1BD4A2852}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BIMRLDiffModelsUI", "DiffModelsUI\BIMRLDiffModelsUI.csproj", "{4FDC3B61-1B59-45D8-8B4F-C65288560C13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BIMRLDiffModelsCmd", "BIMRLDiffModelsCmd\BIMRLDiffModelsCmd.csproj", "{7642CB36-5718-429D-93D7-1E106D3FFD3E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -289,12 +293,12 @@ Global
 		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.Debug|x64.ActiveCfg = Debug|x64
 		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.Debug|x64.Build.0 = Debug|x64
-		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|Any CPU.ActiveCfg = Release|Any CPU
-		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|Any CPU.Build.0 = Release|Any CPU
-		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|Mixed Platforms.Build.0 = Release|Any CPU
-		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|x64.ActiveCfg = Release|x64
-		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|x64.Build.0 = Release|x64
+		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|Any CPU.ActiveCfg = ReleaseWithPDB|Any CPU
+		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|Any CPU.Build.0 = ReleaseWithPDB|Any CPU
+		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|Mixed Platforms.ActiveCfg = ReleaseWithPDB|Any CPU
+		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|Mixed Platforms.Build.0 = ReleaseWithPDB|Any CPU
+		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|x64.ActiveCfg = ReleaseWithPDB|x64
+		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.NugetDistribution|x64.Build.0 = ReleaseWithPDB|x64
 		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
@@ -307,6 +311,54 @@ Global
 		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.ReleaseWithPDB|Mixed Platforms.Build.0 = ReleaseWithPDB|Any CPU
 		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.ReleaseWithPDB|x64.ActiveCfg = ReleaseWithPDB|x64
 		{DF48237B-5225-45C2-88E3-BEF1BD4A2852}.ReleaseWithPDB|x64.Build.0 = ReleaseWithPDB|x64
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Debug|x64.Build.0 = Debug|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.NugetDistribution|Any CPU.ActiveCfg = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.NugetDistribution|Any CPU.Build.0 = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.NugetDistribution|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.NugetDistribution|Mixed Platforms.Build.0 = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.NugetDistribution|x64.ActiveCfg = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.NugetDistribution|x64.Build.0 = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Release|x64.ActiveCfg = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.Release|x64.Build.0 = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.ReleaseWithPDB|Any CPU.ActiveCfg = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.ReleaseWithPDB|Any CPU.Build.0 = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.ReleaseWithPDB|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.ReleaseWithPDB|Mixed Platforms.Build.0 = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.ReleaseWithPDB|x64.ActiveCfg = Release|Any CPU
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13}.ReleaseWithPDB|x64.Build.0 = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Debug|x64.Build.0 = Debug|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.NugetDistribution|Any CPU.ActiveCfg = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.NugetDistribution|Any CPU.Build.0 = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.NugetDistribution|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.NugetDistribution|Mixed Platforms.Build.0 = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.NugetDistribution|x64.ActiveCfg = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.NugetDistribution|x64.Build.0 = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Release|x64.ActiveCfg = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.Release|x64.Build.0 = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.ReleaseWithPDB|Any CPU.ActiveCfg = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.ReleaseWithPDB|Any CPU.Build.0 = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.ReleaseWithPDB|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.ReleaseWithPDB|Mixed Platforms.Build.0 = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.ReleaseWithPDB|x64.ActiveCfg = Release|Any CPU
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E}.ReleaseWithPDB|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -319,6 +371,8 @@ Global
 		{C435BA8A-CE7F-446F-BA2E-6E745EE836AF} = {7ECDCF15-95BB-4D2B-8C0D-8615D6E3BAB1}
 		{179CD0ED-DA22-4D61-BE50-E4A02ADD07D4} = {0E5E23D6-ECCE-4575-9BB1-1666D1B0A106}
 		{4D67E703-9EBD-489D-80FB-06514B98CB88} = {7ECDCF15-95BB-4D2B-8C0D-8615D6E3BAB1}
+		{4FDC3B61-1B59-45D8-8B4F-C65288560C13} = {0E5E23D6-ECCE-4575-9BB1-1666D1B0A106}
+		{7642CB36-5718-429D-93D7-1E106D3FFD3E} = {0E5E23D6-ECCE-4575-9BB1-1666D1B0A106}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = XbimComplete.vsmdi

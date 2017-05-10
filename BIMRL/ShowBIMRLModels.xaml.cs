@@ -5,13 +5,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.IO;
+using System.Reflection;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using BIMRL.OctreeLib;
 using BIMRL.BIMRLGraph;
 
@@ -105,8 +106,8 @@ namespace BIMRL
             catch (SystemException excp)
             {
                 string excStr = "%% Error - " + excp.Message + "\n\t";
-                BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                if (BIMRLCommonRef.BIMRlErrorStack.Count > 0)
+                BIMRLCommonRef.StackPushError(excStr);
+                if (BIMRLCommonRef.BIMRLErrorStackCount > 0)
                     showError(null);
             }
         }
@@ -215,6 +216,8 @@ namespace BIMRL
             BIMRLSpatialIndex spIdx = new BIMRLSpatialIndex(BIMRLCommonRef);
             DBOperation.commitInterval = 5000;
             double currentTol = MathUtils.tol;
+            var location = new Uri(Assembly.GetEntryAssembly().GetName().CodeBase);
+            string exePath = new FileInfo(location.AbsolutePath).Directory.FullName;
 
             // Temporarily change the tolerance if it is set in the UI
             if (!string.IsNullOrEmpty(TextBox_Tolerance.Text))
@@ -274,16 +277,16 @@ namespace BIMRL
                     {
                         spIdx.createSpatialIndexFromBIMRLElement(FedID, whereCond, true);
                         BIMRLUtils.updateMajorAxesAndOBB(FedID, whereCond);
-                        DBOperation.executeScript("script\\BIMRL_Idx_SpatialIndexes.sql", FedID);
-                        DBOperation.executeScript("script\\BIMRL_Idx_TopoFace.sql", FedID);
-                        DBOperation.executeScript("script\\BIMRL_Idx_MajorAxes.sql", FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_SpatialIndexes.sql"), FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_TopoFace.sql"), FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_MajorAxes.sql"), FedID);
                         updOctreeLevel = "MAXOCTREELEVEL=" + DBOperation.OctreeSubdivLevel;
                     }
                     else if (regenSpatialIndex && regenBoundaryFaces && !_majorAxes)
                     {
                         spIdx.createSpatialIndexFromBIMRLElement(FedID, whereCond, true);
-                        DBOperation.executeScript("script\\BIMRL_Idx_SpatialIndexes.sql", FedID);
-                        DBOperation.executeScript("script\\BIMRL_Idx_TopoFace.sql", FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_SpatialIndexes.sql"), FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_TopoFace.sql"), FedID);
                         updOctreeLevel = "MAXOCTREELEVEL=" + DBOperation.OctreeSubdivLevel;
                     }
                     // Update Spatial index (including major axes and OBB) only
@@ -291,36 +294,36 @@ namespace BIMRL
                     {
                         spIdx.createSpatialIndexFromBIMRLElement(FedID, whereCond, false);
                         BIMRLUtils.updateMajorAxesAndOBB(FedID, whereCond);
-                        DBOperation.executeScript("script\\BIMRL_Idx_SpatialIndexes.sql", FedID);
-                        DBOperation.executeScript("script\\BIMRL_Idx_MajorAxes.sql", FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_SpatialIndexes.sql"), FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_MajorAxes.sql"), FedID);
                         updOctreeLevel = "MAXOCTREELEVEL=" + DBOperation.OctreeSubdivLevel;
                     }
                     // Update Boundary faces and MajorAxes
                     else if (!regenSpatialIndex && regenBoundaryFaces && _majorAxes)
                     {
                         spIdx.createFacesFromBIMRLElement(FedID, whereCond);
-                        DBOperation.executeScript("script\\BIMRL_Idx_TopoFace.sql", FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_TopoFace.sql"), FedID);
                         BIMRLUtils.updateMajorAxesAndOBB(FedID, whereCond);
-                        DBOperation.executeScript("script\\BIMRL_Idx_MajorAxes.sql", FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_MajorAxes.sql"), FedID);
                     }
                     // Update Spatial Index only
                     else if (regenSpatialIndex && !regenBoundaryFaces && !_majorAxes)
                     {
                         spIdx.createSpatialIndexFromBIMRLElement(FedID, whereCond, false);
-                        DBOperation.executeScript("script\\BIMRL_Idx_SpatialIndexes.sql", FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_SpatialIndexes.sql"), FedID);
                         updOctreeLevel = "MAXOCTREELEVEL=" + DBOperation.OctreeSubdivLevel;
                     }
                     // update faces only
                     else if (!regenSpatialIndex && regenBoundaryFaces && !_majorAxes)
                     {
                         spIdx.createFacesFromBIMRLElement(FedID, whereCond);
-                        DBOperation.executeScript("script\\BIMRL_Idx_TopoFace.sql", FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_TopoFace.sql"), FedID);
                     }
                     // Update only the major axes and OBB only
                     else if (!regenSpatialIndex && !regenBoundaryFaces && _majorAxes)
                     {
                         BIMRLUtils.updateMajorAxesAndOBB(FedID, whereCond);
-                        DBOperation.executeScript("script\\BIMRL_Idx_MajorAxes.sql", FedID);
+                        DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_MajorAxes.sql"), FedID);
                     }
                     else
                     {
@@ -336,8 +339,8 @@ namespace BIMRL
             catch (SystemException excp)
             {
                 string excStr = "%% Error - " + excp.Message + "\n\t";
-                BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                if (BIMRLCommonRef.BIMRlErrorStack.Count > 0)
+                BIMRLCommonRef.StackPushError(excStr);
+                if (BIMRLCommonRef.BIMRLErrorStackCount > 0)
                     showError(null);
             }
             MathUtils.tol = currentTol;
@@ -422,8 +425,8 @@ namespace BIMRL
             catch (SystemException excp)
             {
                 string excStr = "%% Error - " + excp.Message + "\n\t" ;
-                BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                if (BIMRLCommonRef.BIMRlErrorStack.Count > 0)
+                BIMRLCommonRef.StackPushError(excStr);
+                if (BIMRLCommonRef.BIMRLErrorStackCount > 0)
                     showError(null);
             }
         }
@@ -494,8 +497,8 @@ namespace BIMRL
             catch (SystemException excp)
             {
                 string excStr = "%% Error - " + excp.Message + "\n\t";
-                BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                if (BIMRLCommonRef.BIMRlErrorStack.Count > 0)
+                BIMRLCommonRef.StackPushError(excStr);
+                if (BIMRLCommonRef.BIMRLErrorStackCount > 0)
                     showError(null);
             }
             MathUtils.tol = currentTol;
@@ -554,8 +557,8 @@ namespace BIMRL
             catch (SystemException excp)
             {
                 string excStr = "%% Error - " + excp.Message + "\n\t";
-                BIMRLCommonRef.BIMRlErrorStack.Push(excStr);
-                if (BIMRLCommonRef.BIMRlErrorStack.Count > 0)
+                BIMRLCommonRef.StackPushError(excStr);
+                if (BIMRLCommonRef.BIMRLErrorStackCount > 0)
                     showError(null);
             }
         }
@@ -563,7 +566,7 @@ namespace BIMRL
         public void showError(string message)
         {
             if (!string.IsNullOrEmpty(message))
-                BIMRLCommonRef.BIMRlErrorStack.Push(message);
+                BIMRLCommonRef.StackPushError(message);
             BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(BIMRLCommonRef);
             erroDlg.ShowDialog();
         }
@@ -588,26 +591,26 @@ namespace BIMRL
 
             GraphData graphData = new GraphData();
             graphData.createCirculationGraph(FedID);
-            if (GraphData.refBimrlCommon.BIMRlErrorStack.Count > 0)
+            if (GraphData.refBimrlCommon.BIMRLErrorStackCount > 0)
             {
                 string wholeStack = string.Empty;
                 while (true)
                 {
-                    wholeStack += GraphData.refBimrlCommon.BIMRlErrorStack.Pop() + "\n";
-                    if (GraphData.refBimrlCommon.BIMRlErrorStack.Count == 0) break;
+                    wholeStack += GraphData.refBimrlCommon.StackPopError() + "\n";
+                    if (GraphData.refBimrlCommon.BIMRLErrorStackCount == 0) break;
                 }
                 return;
             }
 
             // 2. (TODO) Generate Adjacency graph data in the database
             graphData.createSpaceAdjacencyGraph(FedID);
-            if (GraphData.refBimrlCommon.BIMRlErrorStack.Count > 0)
+            if (GraphData.refBimrlCommon.BIMRLErrorStackCount > 0)
             {
                 string wholeStack = string.Empty;
                 while (true)
                 {
-                    wholeStack += GraphData.refBimrlCommon.BIMRlErrorStack.Pop() + "\n";
-                    if (GraphData.refBimrlCommon.BIMRlErrorStack.Count == 0) break;
+                    wholeStack += GraphData.refBimrlCommon.StackPopError() + "\n";
+                    if (GraphData.refBimrlCommon.BIMRLErrorStackCount == 0) break;
                 }
                 return;
             }

@@ -326,18 +326,12 @@ namespace BIMRL
                                 SFpolygonList.Add(tf.polygon);
                                 SFnormalList.Add(tf.sdoNormal);
                                 SFanglefromnorthList.Add(tf.angleFromNorth);
-                                if (tf.angleFromNorth == null)
-                                    SFanglefromnorthStatus.Add(OracleParameterStatus.NullInsert);
-                                else
-                                    SFanglefromnorthStatus.Add(OracleParameterStatus.Success);
+                                SFanglefromnorthStatus.Add(OracleParameterStatus.Success);
                                 SFcentroidList.Add(tf.sdoCentroid);
                                 BFpolygonList.Add(bTF.polygon);
                                 BFnormalList.Add(bTF.sdoNormal);
                                 BFanglefromnorthList.Add(bTF.angleFromNorth);
-                                if (bTF.angleFromNorth == null)
-                                    BFanglefromnorthStatus.Add(OracleParameterStatus.NullInsert);
-                                else
-                                    BFanglefromnorthStatus.Add(OracleParameterStatus.Success);
+                                BFanglefromnorthStatus.Add(OracleParameterStatus.Success);
                                 BFcentroidList.Add(bTF.sdoCentroid);
 
                                 processedFace.Add(new Tuple<string, string>(boundTF.Key, bTF.ID));
@@ -460,13 +454,13 @@ namespace BIMRL
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
             catch (SystemException e)
             {
                 string excStr = "%%Insert Error - " + e.Message + "\n\t" + currStep;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
         }
@@ -541,12 +535,12 @@ namespace BIMRL
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
         }
@@ -844,12 +838,12 @@ namespace BIMRL
             catch (OracleException e)
             {
                 string excStr = "%%Update Orientation Error - " + e.Message + "\n\t" + "; elementId: " + elemid + "; faceid: " + idlist;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%Update Orientation Error - " + e.Message + "\n\t" + "; elementId: " + elemid + "; faceid: " + idlist;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
         }
@@ -1059,12 +1053,12 @@ namespace BIMRL
             catch (OracleException e)
             {
                 string excStr = "%%Update Orientation Error - " + e.Message + "\n\t" + currStmt;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%Update Orientation Error - " + e.Message + "\n\t" + currStmt;
-                _refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                _refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
         }
