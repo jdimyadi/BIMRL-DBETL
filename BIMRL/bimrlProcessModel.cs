@@ -1,4 +1,23 @@
-﻿using System;
+﻿//
+// BIMRL (BIM Rule Language) Simplified Schema ETL (Extract, Transform, Load) library: this library transforms IFC data into BIMRL Simplified Schema for RDBMS. 
+// This work is part of the original author's Ph.D. thesis work on the automated rule checking in Georgia Institute of Technology
+// Copyright (C) 2013 Wawan Solihin (borobudurws@hotmail.com)
+// 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 3 of the License, or any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; If not, see <http://www.gnu.org/licenses/>.
+//
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Data;
@@ -83,8 +102,14 @@ namespace BIMRL
             else
                projLName = firstProject.LongName;
 
-            currStep = "Getting Federated ID from BIMRL_FEDERATEDMODEL - Project name and longname: " + firstProject.Name + "; " + firstProject.LongName;
-            FedIDStatus stat = DBOperation.getFederatedID(projLName, firstProject.Name, out _FederatedID);
+            string modelNameFromFile;
+            if (!string.IsNullOrEmpty(modelStore.FileName))
+               modelNameFromFile = Path.GetFileNameWithoutExtension(modelStore.FileName);
+            else
+               modelNameFromFile = firstProject.Name + " - " + firstProject.LongName;
+
+            currStep = "Getting Federated ID from BIMRL_FEDERATEDMODEL - Model name, Project name and longname: " + modelNameFromFile + "; " + firstProject.Name + "; " + firstProject.LongName;
+            FedIDStatus stat = DBOperation.getFederatedID(modelNameFromFile, projLName, firstProject.Name, out _FederatedID);
             if (stat == FedIDStatus.FedIDNew)
             {
                // Create new set of tables using the fedID as suffix

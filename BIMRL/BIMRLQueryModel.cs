@@ -1,4 +1,23 @@
-﻿using System;
+﻿//
+// BIMRL (BIM Rule Language) Simplified Schema ETL (Extract, Transform, Load) library: this library transforms IFC data into BIMRL Simplified Schema for RDBMS. 
+// This work is part of the original author's Ph.D. thesis work on the automated rule checking in Georgia Institute of Technology
+// Copyright (C) 2013 Wawan Solihin (borobudurws@hotmail.com)
+// 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 3 of the License, or any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; If not, see <http://www.gnu.org/licenses/>.
+//
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,11 +33,14 @@ namespace BIMRL
     public struct BIMRLFedModel
     {
         public int FederatedID { get; set; }
+        public string ModelName { get; set; }
         public string ProjectNumber { get; set; }
         public string ProjectName { get; set; }
         public string WorldBoundingBox { get; set; }
         public int OctreeMaxDepth { get; set; }
         public DateTime? LastUpdateDate { get; set; }
+        public string Owner { get; set; }
+        public string DBConnection { get; set; }
     }
 
     public struct BIMRLModelInfo
@@ -51,28 +73,33 @@ namespace BIMRL
             
             try
             {
-                string sqlStmt = "select federatedID, ProjectNumber, ProjectName, WORLDBBOX, MAXOCTREELEVEL, LastUpdateDate from BIMRL_FEDERATEDMODEL order by federatedID";
+                string sqlStmt = "select federatedID, ModelName, ProjectNumber, ProjectName, WORLDBBOX, MAXOCTREELEVEL, LastUpdateDate, Owner, DBConnection from BIMRL_FEDERATEDMODEL order by federatedID";
                 OracleCommand command = new OracleCommand(sqlStmt, DBOperation.DBConn);
                 OracleDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     BIMRLFedModel fedModel = new BIMRLFedModel();
                     fedModel.FederatedID = reader.GetInt32(0);
-                    fedModel.ProjectNumber = reader.GetString(1);
-                    fedModel.ProjectName = reader.GetString(2);
-                    if (!reader.IsDBNull(3))
+                    fedModel.ModelName = reader.GetString(1);
+                    fedModel.ProjectNumber = reader.GetString(2);
+                    fedModel.ProjectName = reader.GetString(3);
+                    if (!reader.IsDBNull(4))
                     {
-                        worldBB = reader.GetValue(3) as SdoGeometry;
+                        worldBB = reader.GetValue(4) as SdoGeometry;
                         Point3D LLB = new Point3D(worldBB.OrdinatesArrayOfDoubles[0], worldBB.OrdinatesArrayOfDoubles[1], worldBB.OrdinatesArrayOfDoubles[2]);
                         Point3D URT = new Point3D(worldBB.OrdinatesArrayOfDoubles[3], worldBB.OrdinatesArrayOfDoubles[4], worldBB.OrdinatesArrayOfDoubles[5]);
                         fedModel.WorldBoundingBox = LLB.ToString() + " " + URT.ToString();
                     }
-                    if (!reader.IsDBNull(4))
-                        fedModel.OctreeMaxDepth = reader.GetInt16(4);
                     if (!reader.IsDBNull(5))
-                        fedModel.LastUpdateDate = reader.GetDateTime(5);
+                        fedModel.OctreeMaxDepth = reader.GetInt16(5);
+                    if (!reader.IsDBNull(6))
+                        fedModel.LastUpdateDate = reader.GetDateTime(6);
+                     if (!reader.IsDBNull(7))
+                        fedModel.Owner = reader.GetString(7);
+                     if (!reader.IsDBNull(8))
+                        fedModel.DBConnection = reader.GetString(8);
 
-                    fedModels.Add(fedModel);
+                     fedModels.Add(fedModel);
                 }
             }
             catch (OracleException e)
@@ -160,10 +187,10 @@ namespace BIMRL
             }
         }
 
-        public void deleteModel (string projectName, string projectNumber)
+        public void deleteModel (string modelName, string projectName, string projectNumber)
         {
             object federatedModelID = null;
-            string SqlStmt = "Select FEDERATEDID from BIMRL_FEDERATEDMODEL where PROJECTNAME = '" + projectName + "' and PROJECTNUMBER = '" + projectNumber + "'";
+            string SqlStmt = "Select FEDERATEDID from BIMRL_FEDERATEDMODEL where MODELNAME = '" + modelName + "' and PROJECTNAME = '" + projectName + "' and PROJECTNUMBER = '" + projectNumber + "'";
             try
             {
                 OracleCommand command = new OracleCommand(SqlStmt, DBOperation.DBConn);

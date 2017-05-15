@@ -133,6 +133,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <AdditionalFiles Include="options.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </AdditionalFiles>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

@@ -1,4 +1,23 @@
-﻿using System;
+﻿//
+// BIMRL (BIM Rule Language) Simplified Schema ETL (Extract, Transform, Load) library: this library transforms IFC data into BIMRL Simplified Schema for RDBMS. 
+// This work is part of the original author's Ph.D. thesis work on the automated rule checking in Georgia Institute of Technology
+// Copyright (C) 2013 Wawan Solihin (borobudurws@hotmail.com)
+// 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 3 of the License, or any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; If not, see <http://www.gnu.org/licenses/>.
+//
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -499,10 +518,10 @@ namespace BIMRL
                }
             }
 
-            // Process Group objects (IfcSystem and IfcZone)
-
-            IEnumerable<IIfcGroup> groups = _model.Instances.OfType<IIfcGroup>(true).Where
-               (et => (et is IIfcSystem || et is IIfcZone));
+            //// Process Group objects (IfcSystem and IfcZone)
+            //IEnumerable<IIfcGroup> groups = _model.Instances.OfType<IIfcGroup>(true).Where
+            //   (et => (et is IIfcSystem || et is IIfcZone));
+            IEnumerable<IIfcGroup> groups = _model.Instances.OfType<IIfcGroup>(true);
             foreach (IIfcGroup el in groups)
             {
                string guid = el.GlobalId;
@@ -795,7 +814,9 @@ namespace BIMRL
                arrPropVal.Add(BIMRLUtils.checkSingleQuote(sse_s.LandTitleNumber.ToString()));
                if (sse_s.SiteAddress != null)
                {
-                  arrPropVal.Add(BIMRLUtils.checkSingleQuote(sse_s.SiteAddress.ToString()));
+                  //arrPropVal.Add(BIMRLUtils.checkSingleQuote(sse_s.SiteAddress.ToString()));
+                  BIMRLAddressData addrData = new BIMRLAddressData(sse_s.SiteAddress);
+                  arrPropVal.Add(addrData.ToString());
                   arrPropValBS.Add(OracleParameterStatus.Success);
                }
                else
@@ -832,8 +853,10 @@ namespace BIMRL
                arrPropValBS.Add(OracleParameterStatus.Success);
                if (sse_b.BuildingAddress != null)
                {
-                  arrPropVal.Add(BIMRLUtils.checkSingleQuote(sse_b.BuildingAddress.ToString()));
-                  arrPropValBS.Add(OracleParameterStatus.NullInsert);
+                  //arrPropVal.Add(BIMRLUtils.checkSingleQuote(sse_b.BuildingAddress.ToString()));
+                  BIMRLAddressData addrData = new BIMRLAddressData(sse_b.BuildingAddress);
+                  arrPropVal.Add(addrData.ToString());
+                  arrPropValBS.Add(OracleParameterStatus.Success);
                }
                else
                {

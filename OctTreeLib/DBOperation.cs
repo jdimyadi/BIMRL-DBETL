@@ -1,4 +1,23 @@
-﻿using System;
+﻿//
+// BIMRL (BIM Rule Language) Simplified Schema ETL (Extract, Transform, Load) library: this library transforms IFC data into BIMRL Simplified Schema for RDBMS. 
+// This work is part of the original author's Ph.D. thesis work on the automated rule checking in Georgia Institute of Technology
+// Copyright (C) 2013 Wawan Solihin (borobudurws@hotmail.com)
+// 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 3 of the License, or any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; If not, see <http://www.gnu.org/licenses/>.
+//
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,6 +50,20 @@ namespace BIMRL.OctreeLib
       public static int currSelFedID { get; set; }
       private static Dictionary<int, Tuple<Point3D, Point3D, int>> worldBBInfo = new Dictionary<int, Tuple<Point3D, Point3D, int>>();
       public static bool UIMode {get; set;} = true;
+
+      public static void ConnectToDB(string username, string password, string connectstring)
+      {
+         try
+         {
+            m_DBconn = Connect(username, password, connectstring);
+         }
+         catch (OracleException e)
+         {
+            string excStr = "%%Error - " + e.Message + "\n\t";
+            refBIMRLCommon.StackPushError(excStr);
+            throw;
+         }
+      }
 
         public static OracleConnection Connect(string username, string password, string DBconnectstring)
         {
@@ -309,14 +342,14 @@ namespace BIMRL.OctreeLib
             }
         }
 
-        public static FedIDStatus getFederatedID (string projName, string projNumber, out int fedID)
+        public static FedIDStatus getFederatedID (string modelName, string projName, string projNumber, out int fedID)
         {
             FedIDStatus stat = FedIDStatus.FedIDExisting;
             string currStep = "Getting federated ID";
 
             // Create separate connection with a short duration
 
-            string SqlStmt = "Select FEDERATEDID from BIMRL_FEDERATEDMODEL where PROJECTNAME = '" + projName + "' and PROJECTNUMBER = '" + projNumber + "'";
+            string SqlStmt = "Select FEDERATEDID from BIMRL_FEDERATEDMODEL where MODELNAME = '" + modelName + "' and PROJECTNAME = '" + projName + "' and PROJECTNUMBER = '" + projNumber + "'";
             OracleCommand command = new OracleCommand(SqlStmt, DBConn);
             object fID = null;
 
@@ -326,7 +359,7 @@ namespace BIMRL.OctreeLib
                 if (fID == null)
                 {
                     // Create a new record
-                    command.CommandText = "Insert into BIMRL_FEDERATEDMODEL (PROJECTNAME, PROJECTNUMBER) values ('" + projName + "', '" + projNumber + "')";
+                    command.CommandText = "Insert into BIMRL_FEDERATEDMODEL (MODELNAME, PROJECTNAME, PROJECTNUMBER) values ('" + modelName + "', '" + projName + "', '" + projNumber + "')";
                     DBOperation.beginTransaction();
                     //OracleTransaction txn = m_DBconnShort.BeginTransaction();
                     command.ExecuteNonQuery();

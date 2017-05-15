@@ -179,6 +179,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BIMRLAddressData.cs" />
     <Compile Include="BIMRLClassification.cs" />
     <Compile Include="BIMRLDiffModels.cs" />
     <Compile Include="BIMRLDiffOptions.cs" />
