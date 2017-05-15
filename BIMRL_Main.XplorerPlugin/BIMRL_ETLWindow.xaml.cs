@@ -32,7 +32,7 @@ using Xbim.Presentation.XplorerPluginSystem;
 using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Common;
-using BIMRL.OctreeLib;
+using BIMRL.Common;
 using BIMRL.BIMRLGraph;
 using BIMRL;
 

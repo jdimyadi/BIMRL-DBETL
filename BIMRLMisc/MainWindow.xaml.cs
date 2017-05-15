@@ -34,7 +34,7 @@ using System.Windows.Shapes;
 using System.IO;
 using System.Data;
 using BIMRL;
-using BIMRL.OctreeLib;
+using BIMRL.Common;
 using Oracle.DataAccess.Client;
 
 namespace BIMRLMisc

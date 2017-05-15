@@ -1,16 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B69F1F4C-7E5A-4A74-B6EF-82AE2CC2CA93}</ProjectGuid>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{571C1A04-3D2F-43C4-9BBC-E42A19FF2397}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BIMRLCommon</RootNamespace>
+    <RootNamespace>BIMRL.Common</RootNamespace>
     <AssemblyName>BIMRLCommon</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -19,7 +21,9 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>1</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -28,8 +32,53 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;DEBUG_NOPARALLEL_XX</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithPDB|AnyCPU'">
+    <OutputPath>bin\ReleaseWithPDB\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWithPDB|x64'">
+    <OutputPath>bin\x64\ReleaseWithPDB\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Oracle.DataAccess, Version=4.121.1.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\app\oracle\product\12.1.0\dbhome_1\ODP.NET\bin\4\Oracle.DataAccess.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -40,30 +89,41 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BIMRLCommon.cs" />
+    <Compile Include="BIMRL_Enum.cs" />
+    <Compile Include="BoundingBox3D.cs" />
+    <Compile Include="CellID64.cs" />
+    <Compile Include="Cuboid.cs" />
     <Compile Include="DBOperation.cs" />
+    <Compile Include="ElementID.cs" />
+    <Compile Include="Face3D.cs" />
+    <Compile Include="Ihas3DLocation.cs" />
+    <Compile Include="Line3D.cs" />
+    <Compile Include="LineSegment3D.cs" />
+    <Compile Include="MathUtils.cs" />
+    <Compile Include="Matrix3D.cs" />
+    <Compile Include="Matrix3x3.cs" />
+    <Compile Include="Octree.cs" />
+    <Compile Include="OctreeLibEnum.cs" />
+    <Compile Include="OracleSDO\ElementArrayFactory.cs" />
+    <Compile Include="OracleSDO\OracleArrayTypeFactory.cs" />
+    <Compile Include="OracleSDO\OracleCustomTypeBase.cs" />
+    <Compile Include="OracleSDO\OracleObjectColumns.cs" />
+    <Compile Include="OracleSDO\OrdinatesArrayFactory.cs" />
+    <Compile Include="OracleSDO\SdoGeometry.cs" />
+    <Compile Include="OracleSDO\SdoGeometryTypes.cs" />
+    <Compile Include="OracleSDO\SdoPoint.cs" />
+    <Compile Include="Plane3D.cs" />
+    <Compile Include="Point3D.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Polyhedron.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rect3D.cs" />
+    <Compile Include="OctreeNode.cs" />
+    <Compile Include="Vector3D.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Xbim.Common\Xbim.Common.csproj">
-      <Project>{6745f5ac-af3c-4372-81aa-a75e7b1fa03b}</Project>
-      <Name>Xbim.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Xbim.ModelGeometry.Converter\Xbim.ModelGeometry.Converter.csproj">
-      <Project>{97dff14e-add7-4ed3-b8c3-0d3d3e6cdee8}</Project>
-      <Name>Xbim.ModelGeometry.Converter</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Xbim.ModelGeometry.OCC\Xbim.ModelGeometry.OCC32.vcxproj">
-      <Project>{a0544330-3b8b-45f6-be6b-e9a5ad661384}</Project>
-      <Name>Xbim.ModelGeometry.OCC32</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Xbim.ModelGeometry.OCC\Xbim.ModelGeometry.OCC64.vcxproj">
-      <Project>{bb0e1c7a-c255-41cb-814d-894193ab6424}</Project>
-      <Name>Xbim.ModelGeometry.OCC64</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Xbim.ModelGeometry.Scene\Xbim.ModelGeometry.Scene.csproj">
-      <Project>{3d9d37de-a254-4433-b172-7590cbd84c69}</Project>
-      <Name>Xbim.ModelGeometry.Scene</Name>
-    </ProjectReference>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

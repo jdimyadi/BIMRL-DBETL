@@ -1,16 +1,33 @@
-﻿using System;
+﻿//
+// BIMRL (BIM Rule Language) Simplified Schema ETL (Extract, Transform, Load) library: this library transforms IFC data into BIMRL Simplified Schema for RDBMS. 
+// This work is part of the original author's Ph.D. thesis work on the automated rule checking in Georgia Institute of Technology
+// Copyright (C) 2013 Wawan Solihin (borobudurws@hotmail.com)
+// 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 3 of the License, or any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; If not, see <http://www.gnu.org/licenses/>.
+//
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Xbim.ModelGeometry;
-using Xbim.Common.Geometry;
 
 namespace BIMRL.Common
 {
     public class BIMRLCommon
     {
-        private Dictionary<int, string> LineNoToGuidMapping = new Dictionary<int, string>();
-        private Dictionary<string, int> GuidToLineNoMapping = new Dictionary<string, int>();
+        private Dictionary<Tuple<int,int>, string> LineNoToGuidMapping = new Dictionary<Tuple<int,int>,string>();
+        private Dictionary<string, Tuple<int, int>> GuidToLineNoMapping = new Dictionary<string, Tuple<int, int>>();
         private Dictionary<string, Dictionary<string, string>> PortToElem = new Dictionary<string, Dictionary<string,string>>();
         private HashSet<Tuple<int,int>> OwnerHistory = new HashSet<Tuple<int,int>>();
         private HashSet<Tuple<string, string>> ClassificationSet = new HashSet<Tuple<string, string>>();
@@ -23,20 +40,55 @@ namespace BIMRL.Common
             resetAll();
         }
 
-        public Stack<string> BIMRlErrorStack
-        {
-            get { return _bimrlErrorStack; }
-        }
+        //public Stack<string> BIMRlErrorStack
+        //{
+        //    get { return _bimrlErrorStack; }
+        //}
 
+      public int BIMRLErrorStackCount
+      {
+         get { return _bimrlErrorStack.Count; }
+      }
+
+      public void StackPushIgnorableError(string ignorableErrorMsg)
+      {
+#if DEBUG
+         StackPushError("(IGNORED) " + ignorableErrorMsg);
+#endif
+      }
+
+      public void StackPushError(string errorMsg)
+      {
+         _bimrlErrorStack.Push(errorMsg);
+      }
+
+      public string StackPopError()
+      {
+         return _bimrlErrorStack.Pop();
+      }
+
+      public void ErrorStackClear()
+      {
+         _bimrlErrorStack.Clear();
+      }
+
+        public string ErrorMessages
+        {
+            get
+            {
+                string errMsg = "";
+                foreach (string msg in _bimrlErrorStack)
+                {
+                    errMsg += msg + "\n";
+                }
+                return errMsg;
+            }
+        }
 
         public void resetAll()
         {
-            LineNoToGuidMapping.Clear();
-            GuidToLineNoMapping.Clear();
-            PortToElem.Clear();
-            OwnerHistory.Clear();
+            ClearDicts();
             ClassificationSet.Clear();
-            EntityLabelList.Clear();
 
             _LLB.X = float.MaxValue;
             _LLB.Y = float.MaxValue;
@@ -49,28 +101,46 @@ namespace BIMRL.Common
 
         }
 
-        public void guidLineNoMappingAdd (int lineNo, string guid)
+      public void ClearDicts()
+      {
+         LineNoToGuidMapping.Clear();
+         GuidToLineNoMapping.Clear();
+         PortToElem.Clear();
+         OwnerHistory.Clear();
+         EntityLabelList.Clear();
+      }
+
+        public void guidLineNoMappingAdd (int modelId, int lineNo, string guid)
         {
-            if (LineNoToGuidMapping.ContainsKey(lineNo))
+            Tuple<int,int> lineNoKey = new Tuple<int,int>(modelId,lineNo);
+            if (LineNoToGuidMapping.ContainsKey(lineNoKey))
                 return;
-            LineNoToGuidMapping.Add(lineNo, guid);
-            GuidToLineNoMapping.Add(guid, lineNo);
+            LineNoToGuidMapping.Add(lineNoKey, guid);
+            GuidToLineNoMapping.Add(guid, lineNoKey);
         }
 
-        public string guidLineNoMapping_Getguid(int lineNo)
+        public string guidLineNoMapping_Getguid(int modelId, int lineNo)
         {
+            Tuple<int, int> lineNoKey = new Tuple<int, int>(modelId, lineNo);
             string tmpGuid;
-            if (!(LineNoToGuidMapping.TryGetValue(lineNo, out tmpGuid)))
+            if (!(LineNoToGuidMapping.TryGetValue(lineNoKey, out tmpGuid)))
                 return null;
             else
                 return tmpGuid;
         }
 
+        /// <summary>
+        /// GUID is unique anyway and therefore the Tuple will also be unique even though the ModelId may not be unique, the line no is good enough for the return value
+        /// </summary>
+        /// <param name="guid"></param>
+        /// <returns></returns>
         public int? getLineNoFromMapping(string guid)
         {
-            int lineNo;
-            if (!(GuidToLineNoMapping.TryGetValue(guid, out lineNo)))
+            Tuple<int, int> lineNoKey;
+            if (!(GuidToLineNoMapping.TryGetValue(guid, out lineNoKey)))
                 return null;
+            int modelId = lineNoKey.Item1;
+            int lineNo = lineNoKey.Item2;
             return lineNo;
         }
 
@@ -89,44 +159,44 @@ namespace BIMRL.Common
             return portElemVal;
         }
 
-        private XbimPoint3D _LLB = new XbimPoint3D(float.MaxValue, float.MaxValue, float.MaxValue);
-        private XbimPoint3D _URT = new XbimPoint3D(float.MinValue, float.MinValue, float.MinValue);
-        public XbimPoint3D LLB
+        private Point3D _LLB = new Point3D(float.MaxValue, float.MaxValue, float.MaxValue);
+        private Point3D _URT = new Point3D(float.MinValue, float.MinValue, float.MinValue);
+        public Point3D LLB
         {
             get { return _LLB; }
             set { _LLB = value; }
         }
-        public float LLB_X
+        public double LLB_X
         {
             get { return _LLB.X; }
             set { _LLB.X = value; }
         }
-        public float LLB_Y
+        public double LLB_Y
         {
             get { return _LLB.Y; }
             set { _LLB.Y = value; }
         }
-        public float LLB_Z
+        public double LLB_Z
         {
             get { return _LLB.Z; }
             set { _LLB.Z = value; }
         }
-        public XbimPoint3D URT
+        public Point3D URT
         {
             get { return _URT; }
             set { _URT = value; }
         }
-        public float URT_X
+        public double URT_X
         {
             get { return _URT.X; }
             set { _URT.X = value; }
         }
-        public float URT_Y
+        public double URT_Y
         {
             get { return _URT.Y; }
             set { _URT.Y = value; }
         }
-        public float URT_Z
+        public double URT_Z
         {
             get { return _URT.Z; }
             set { _URT.Z = value; }
@@ -162,6 +232,32 @@ namespace BIMRL.Common
         public void insEntityLabelListAdd(int label)
         {
             EntityLabelList.Add(label);
+        }
+
+        public static void appendToString(string stringToAppend, string joiningKeyword, ref string originalString)
+        {
+            if (string.IsNullOrEmpty(stringToAppend))
+                return;
+
+            if (!string.IsNullOrEmpty(originalString))
+            {
+                if (originalString.Length > 0)
+                    originalString += joiningKeyword;
+            }
+            originalString += stringToAppend;
+        }
+
+        public static void appendToStringInFront(string stringToAppend, string joiningKeyword, ref string originalString)
+        {
+            if (string.IsNullOrEmpty(stringToAppend))
+                return;
+
+            if (!string.IsNullOrEmpty(originalString))
+            {
+                if (originalString.Length > 0)
+                    originalString = joiningKeyword + originalString;
+            }
+            originalString = stringToAppend + originalString;
         }
     }
 }

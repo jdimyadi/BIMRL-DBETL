@@ -217,13 +217,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BIMRL\BIMRL_QDB.csproj">
-      <Project>{6bafbb4a-44a8-4b24-91ee-a429eeb03246}</Project>
-      <Name>BIMRL_QDB</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OctTreeLib\OctreeLib.csproj">
+    <ProjectReference Include="..\BIMRLCommon\BIMRLCommon.csproj">
       <Project>{571c1a04-3d2f-43c4-9bbc-e42a19ff2397}</Project>
-      <Name>OctreeLib</Name>
+      <Name>BIMRLCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BIMRL_ETLDB\BIMRL_ETLDB.csproj">
+      <Project>{6bafbb4a-44a8-4b24-91ee-a429eeb03246}</Project>
+      <Name>BIMRL_ETLDB</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

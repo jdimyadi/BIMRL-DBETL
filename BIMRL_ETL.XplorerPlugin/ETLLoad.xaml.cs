@@ -30,7 +30,7 @@ using Xbim.Ifc;
 using Xbim.Ifc4.Interfaces;
 using Xbim.Common;
 using BIMRL;
-using BIMRL.OctreeLib;
+using BIMRL.Common;
 
 
 namespace push2BIMRL.XplorerPlugin

@@ -1,4 +1,23 @@
-﻿using System;
+﻿//
+// BIMRL (BIM Rule Language) Simplified Schema ETL (Extract, Transform, Load) library: this library transforms IFC data into BIMRL Simplified Schema for RDBMS. 
+// This work is part of the original author's Ph.D. thesis work on the automated rule checking in Georgia Institute of Technology
+// Copyright (C) 2013 Wawan Solihin (borobudurws@hotmail.com)
+// 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 3 of the License, or any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; If not, see <http://www.gnu.org/licenses/>.
+//
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,31 +25,45 @@ using System.Threading.Tasks;
 using System.Data;
 using System.Collections;
 using System.IO;
+using System.Reflection;
 using Oracle.DataAccess.Client;
 using Oracle.DataAccess.Types;
 using NetSdoGeometry;
-using BIMRL.OctreeLib;
-
 
 namespace BIMRL.Common
 {
-    public static class DBOperation
-    {
-        private static string m_connStr;
-        private static OracleTransaction m_longTrans;
-        private static bool transactionActive = false;
-        private static int currInsertCount = 0;
-        public static int commitInterval { get; set; }
-        public static string operatorToUse { get; set; }
-        public static string DBUserID { get; set; }
-        public static string DBPassword { get; set; }
-        public static string DBConnecstring { get; set; }
-        public static BIMRLCommon refBIMRLCommon { get; set; }
-        public static projectUnit currModelProjectUnitLength = projectUnit.SIUnit_Length_Meter;
-        public static Dictionary<string, bool> objectForSpaceBoundary = new Dictionary<string, bool>();
-        public static Dictionary<string, bool> objectForConnection = new Dictionary<string, bool>();
-        public static int currSelFedID { get; set; }
-        private static Dictionary<int, Tuple<Point3D, Point3D, int>> worldBBInfo = new Dictionary<int, Tuple<Point3D, Point3D, int>>();
+   public static class DBOperation
+   {
+      private static string m_connStr;
+      private static OracleTransaction m_longTrans;
+      private static bool transactionActive = false;
+      private static int currInsertCount = 0;
+      public static int commitInterval { get; set; }
+      public static string operatorToUse { get; set; }
+      public static string DBUserID { get; set; }
+      public static string DBPassword { get; set; }
+      public static string DBConnecstring { get; set; }
+      public static BIMRLCommon refBIMRLCommon { get; set; }
+      public static projectUnit currModelProjectUnitLength = projectUnit.SIUnit_Length_Meter;
+      public static Dictionary<string, bool> objectForSpaceBoundary = new Dictionary<string, bool>();
+      public static Dictionary<string, bool> objectForConnection = new Dictionary<string, bool>();
+      public static int currSelFedID { get; set; }
+      private static Dictionary<int, Tuple<Point3D, Point3D, int>> worldBBInfo = new Dictionary<int, Tuple<Point3D, Point3D, int>>();
+      public static bool UIMode {get; set;} = true;
+
+      public static void ConnectToDB(string username, string password, string connectstring)
+      {
+         try
+         {
+            m_DBconn = Connect(username, password, connectstring);
+         }
+         catch (OracleException e)
+         {
+            string excStr = "%%Error - " + e.Message + "\n\t";
+            refBIMRLCommon.StackPushError(excStr);
+            throw;
+         }
+      }
 
         public static OracleConnection Connect(string username, string password, string DBconnectstring)
         {
@@ -60,7 +93,7 @@ namespace BIMRL.Common
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
             return m_DBconn;
@@ -99,7 +132,7 @@ namespace BIMRL.Common
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
             return m_DBconn;
@@ -108,14 +141,20 @@ namespace BIMRL.Common
         private static OracleConnection m_DBconn;
         public static OracleConnection DBConn
         {
-            get { return m_DBconn; }
+            get 
+            {
+                if (m_DBconn == null)
+                    Connect();
+
+                return m_DBconn; 
+            }
         }
 
         // This is to initiate a second DB connection, useful to perform a short transaction separate from the main one (e.g. if
         // there is a need to execute a DDL statement in the middle of transaction, or commit certian change
         // Should be kept very short
         //private static OracleConnection m_DBconnShort;
-        private static OracleTransaction m_ShortTransaction;
+        //private static OracleTransaction m_ShortTransaction;
         //public static OracleConnection DBconnShort
         //{
         //    get {
@@ -136,14 +175,14 @@ namespace BIMRL.Common
             set { m_OctreeSubdivLevel = value; }
         }
 
-        private static bool m_createSpatialIndexes = false;
-        public static bool CreateSpatialIndexes
+        private static bool m_OnepushETL = false;
+        public static bool OnepushETL
         {
-            get { return m_createSpatialIndexes; }
-            set { m_createSpatialIndexes = value; }
+            get { return m_OnepushETL; }
+            set { m_OnepushETL = value; }
         }
 
-        public static int executeSingleStmt(string sqlStmt)
+        public static int executeSingleStmt(string sqlStmt, bool commit=true)
         {
             int commandStatus = -1;
             OracleCommand command = new OracleCommand(sqlStmt, DBConn);
@@ -152,7 +191,8 @@ namespace BIMRL.Common
             try
             {
                 commandStatus = command.ExecuteNonQuery();
-                DBOperation.commitTransaction();
+                if (commit)
+                    DBOperation.commitTransaction();
                 //m_ShortTransaction.Commit();
                 //m_ShortTransaction = m_DBconnShort.BeginTransaction();
             }
@@ -161,7 +201,7 @@ namespace BIMRL.Common
                 // Ignore error
                 // txn.Rollback();
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 command.Dispose();
                 // throw;
             }
@@ -224,7 +264,7 @@ namespace BIMRL.Common
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 command.Dispose();
                 throw;
             }
@@ -268,7 +308,7 @@ namespace BIMRL.Common
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 command.Dispose();
                 throw;
             }
@@ -302,14 +342,14 @@ namespace BIMRL.Common
             }
         }
 
-        public static FedIDStatus getFederatedID (string projName, string projNumber, out int fedID)
+        public static FedIDStatus getFederatedID (string modelName, string projName, string projNumber, out int fedID)
         {
             FedIDStatus stat = FedIDStatus.FedIDExisting;
             string currStep = "Getting federated ID";
 
             // Create separate connection with a short duration
 
-            string SqlStmt = "Select FEDERATEDID from BIMRL_FEDERATEDMODEL where PROJECTNAME = '" + projName + "' and PROJECTNUMBER = '" + projNumber + "'";
+            string SqlStmt = "Select FEDERATEDID from BIMRL_FEDERATEDMODEL where MODELNAME = '" + modelName + "' and PROJECTNAME = '" + projName + "' and PROJECTNUMBER = '" + projNumber + "'";
             OracleCommand command = new OracleCommand(SqlStmt, DBConn);
             object fID = null;
 
@@ -319,7 +359,7 @@ namespace BIMRL.Common
                 if (fID == null)
                 {
                     // Create a new record
-                    command.CommandText = "Insert into BIMRL_FEDERATEDMODEL (PROJECTNAME, PROJECTNUMBER) values ('" + projName + "', '" + projNumber + "')";
+                    command.CommandText = "Insert into BIMRL_FEDERATEDMODEL (MODELNAME, PROJECTNAME, PROJECTNUMBER) values ('" + modelName + "', '" + projName + "', '" + projNumber + "')";
                     DBOperation.beginTransaction();
                     //OracleTransaction txn = m_DBconnShort.BeginTransaction();
                     command.ExecuteNonQuery();
@@ -334,7 +374,7 @@ namespace BIMRL.Common
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 command.Dispose();
                 throw;
             }
@@ -357,7 +397,10 @@ namespace BIMRL.Common
 
         public static int createModelTables (int ID)
         {
-            return executeScript("script\\BIMRL_crtab.sql", ID);
+            var location = new Uri(Assembly.GetEntryAssembly().GetName().CodeBase);
+            string exePath = new FileInfo(location.AbsolutePath).Directory.FullName;
+            string crtabScript = Path.Combine(exePath, "script", "BIMRL_crtab.sql");
+            return executeScript(crtabScript, ID);
         }
 
         public static int executeScript (string filename, int ID)
@@ -399,8 +442,8 @@ namespace BIMRL.Common
                     }
                     catch (OracleException e)
                     {
-                        string excStr = "%%(IGNORED)Error - " + e.Message + "\n\t" + currStep;
-                        refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                        string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
+                        refBIMRLCommon.StackPushIgnorableError(excStr);
                         stmt = string.Empty;    // reset stmt
                         continue;
                     }
@@ -413,7 +456,10 @@ namespace BIMRL.Common
 
         public static int dropModelTables(int ID)
         {
-            return executeScript("script\\BIMRL_drtab.sql", ID);
+         var location = new Uri(Assembly.GetEntryAssembly().GetName().CodeBase);
+         string exePath = new FileInfo(location.AbsolutePath).Directory.FullName;
+         string drtabScript = Path.Combine(exePath, "script", "BIMRL_drtab.sql");
+         return executeScript(drtabScript, ID);
         }
 
         public static projectUnit getProjectUnitLength(int fedID)
@@ -434,16 +480,16 @@ namespace BIMRL.Common
                     if (string.Compare(unitString, "MILLI METRE",true) == 0)
                         projectUnit = projectUnit.SIUnit_Length_MilliMeter;
                     else if (string.Compare(unitString, "INCH", true) == 0)
-                        projectUnit = BIMRL.projectUnit.Imperial_Length_Inch;
+                        projectUnit = projectUnit.Imperial_Length_Inch;
                     else if (string.Compare(unitString, "FOOT", true) == 0)
-                        projectUnit = BIMRL.projectUnit.Imperial_Length_Foot;
+                        projectUnit = projectUnit.Imperial_Length_Foot;
                 }
 
             }
             catch (OracleException e)
             {
                 string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 command.Dispose();
             }
             command.Dispose();
@@ -503,15 +549,65 @@ namespace BIMRL.Common
             catch (OracleException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
             }
             catch (SystemException e)
             {
                 string excStr = "%%Read Error - " + e.Message + "\n\t" + sqlStmt;
-                refBIMRLCommon.BIMRlErrorStack.Push(excStr);
+                refBIMRLCommon.StackPushError(excStr);
                 throw;
             }
             return false;
+        }
+
+        public static int computeRecomOctreeLevel(int fedID)
+        {
+            Point3D llb;
+            Point3D urt;
+
+            if (getWorldBB(fedID, out llb, out urt))
+            {
+                double dX = urt.X - llb.X;
+                double dY = urt.Y - llb.Y;
+                double dZ = urt.Z - llb.Z;
+                double largestEdge = dX;        // set this as initial value
+
+                if (dY > dX && dY > dZ)
+                    largestEdge = dY;
+                else if (dZ > dY && dZ > dX)
+                    largestEdge = dZ;
+
+                double defaultTh = 200;     // value in mm
+                double threshold = defaultTh;
+                projectUnit pjUnit = getProjectUnitLength(fedID);
+                if (pjUnit == projectUnit.SIUnit_Length_MilliMeter)
+                {
+                    threshold = defaultTh;
+                }
+                else if (pjUnit == projectUnit.SIUnit_Length_Meter)
+                {
+                    threshold =  defaultTh / 1000;
+                }
+                else if (pjUnit == projectUnit.Imperial_Length_Foot)
+                {
+                    threshold = defaultTh / 304.8;
+                }
+                else if (pjUnit == projectUnit.Imperial_Length_Inch)
+                {
+                    threshold = defaultTh / 25.4;
+                }
+                
+                double calcV = largestEdge;
+                int level = 0;
+                while (calcV > threshold)
+                {
+                    calcV = calcV / 2;
+                    level++;
+                }
+                return level;
+            }
+            else
+                return -1;
         }
     }
 }

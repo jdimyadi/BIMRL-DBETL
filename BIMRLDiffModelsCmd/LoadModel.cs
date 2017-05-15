@@ -35,7 +35,7 @@ using Xbim.ModelGeometry.Scene;
 using Xbim.Presentation.FederatedModel;
 using Newtonsoft.Json;
 using BIMRL;
-using BIMRL.OctreeLib;
+using BIMRL.Common;
 
 
 namespace BIMRLDiffModelsCmd

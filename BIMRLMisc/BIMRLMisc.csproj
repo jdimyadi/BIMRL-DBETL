@@ -138,16 +138,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BIMRL\BIMRL_QDB.csproj">
-      <Project>{6bafbb4a-44a8-4b24-91ee-a429eeb03246}</Project>
-      <Name>BIMRL_QDB</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OctTreeLib\OctreeLib.csproj">
-      <Project>{571c1a04-3d2f-43c4-9bbc-e42a19ff2397}</Project>
-      <Name>OctreeLib</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="Oracle.DataAccess, Version=4.121.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\app\oracle\product\12.1.0\dbhome_1\ODP.NET\bin\4\Oracle.DataAccess.dll</HintPath>
@@ -163,6 +153,16 @@
     <Reference Include="UIAutomationProvider" />
     <Reference Include="WindowsBase" />
     <Reference Include="WindowsFormsIntegration" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BIMRLCommon\BIMRLCommon.csproj">
+      <Project>{571c1a04-3d2f-43c4-9bbc-e42a19ff2397}</Project>
+      <Name>BIMRLCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BIMRL_ETLDB\BIMRL_ETLDB.csproj">
+      <Project>{6bafbb4a-44a8-4b24-91ee-a429eeb03246}</Project>
+      <Name>BIMRL_ETLDB</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

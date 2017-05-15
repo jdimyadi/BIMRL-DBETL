@@ -33,7 +33,7 @@ using System.Data;
 using Oracle.DataAccess;
 using Oracle.DataAccess.Types;
 using Oracle.DataAccess.Client;
-using BIMRL.OctreeLib;
+using BIMRL.Common;
 using BIMRLGraph;
 using NetSdoGeometry;
 

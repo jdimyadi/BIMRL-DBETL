@@ -27,7 +27,7 @@ using Oracle.DataAccess.Types;
 using Oracle.DataAccess.Client;
 using NetSdoGeometry;
 using BIMRL;
-using BIMRL.OctreeLib;
+using BIMRL.Common;
 
 namespace BIMRLGraph
 {

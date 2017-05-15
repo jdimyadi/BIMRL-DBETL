@@ -25,7 +25,7 @@ using System.Data;
 using System.Text;
 using System.Threading.Tasks;
 using BIMRL;
-using BIMRL.OctreeLib;
+using BIMRL.Common;
 using Xbim.Ifc;
 using Newtonsoft.Json;
 
