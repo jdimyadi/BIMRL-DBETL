@@ -30,19 +30,6 @@ using BIMRL.Common;
 
 namespace BIMRL
 {
-    public struct BIMRLFedModel
-    {
-        public int FederatedID { get; set; }
-        public string ModelName { get; set; }
-        public string ProjectNumber { get; set; }
-        public string ProjectName { get; set; }
-        public string WorldBoundingBox { get; set; }
-        public int OctreeMaxDepth { get; set; }
-        public DateTime? LastUpdateDate { get; set; }
-        public string Owner { get; set; }
-        public string DBConnection { get; set; }
-    }
-
     public struct BIMRLModelInfo
     {
         public int ModelID { get; set; }
@@ -63,9 +50,9 @@ namespace BIMRL
             _refBIMRLCommon = refBIMRLCommon;
         }
 
-        public List<BIMRLFedModel> getFederatedModels()
+        public List<FederatedModelInfo> getFederatedModels()
         {
-            List<BIMRLFedModel> fedModels = new List<BIMRLFedModel>();
+            List<FederatedModelInfo> fedModels = new List<FederatedModelInfo>();
 
             DBOperation.beginTransaction();
             string currStep = string.Empty;
@@ -78,7 +65,7 @@ namespace BIMRL
                 OracleDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    BIMRLFedModel fedModel = new BIMRLFedModel();
+                    FederatedModelInfo fedModel = new FederatedModelInfo();
                     fedModel.FederatedID = reader.GetInt32(0);
                     fedModel.ModelName = reader.GetString(1);
                     fedModel.ProjectNumber = reader.GetString(2);
@@ -128,8 +115,8 @@ namespace BIMRL
             {
                 // Temporary: currently we don't support transformation information (Xbim does not provide that information) and I have not handle Oracle UDT yet
                 // string sqlStmt = "Select ModelID, ModelName, Source, Location, Transformation, Scale from BIMRL_MODELINFO_" + fedModelID.ToString("X4");
-                string sqlStmt = "Select b.ModelID, a.ModelName, a.Source, count(b.modelid) as \"No. Element\" from BIMRL_MODELINFO_" + fedModelID.ToString("X4")
-                                + " a, BIMRL_ELEMENT_" + fedModelID.ToString("X4") + " b WHERE b.modelid=a.modelid "
+                string sqlStmt = "Select b.ModelID, a.ModelName, a.Source, count(b.modelid) as \"No. Element\" from " + DBOperation.formatTabName("BIMRL_MODELINFO", fedModelID)
+                                + " a, " + DBOperation.formatTabName("BIMRL_ELEMENT", fedModelID) + " b WHERE b.modelid=a.modelid "
                                 + "group by b.modelid, modelname, source order by ModelID";
                 OracleCommand command = new OracleCommand(sqlStmt, DBOperation.DBConn);
                 OracleDataReader reader = command.ExecuteReader();

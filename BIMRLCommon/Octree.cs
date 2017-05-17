@@ -1046,7 +1046,7 @@ namespace BIMRL.Common
         public static void regenSpatialIndexDict(int fedID, ref Dictionary<UInt64, Octree.CellData> regenSpIndexTree)
         {
             BIMRLCommon refBIMRLCommon = new BIMRLCommon();
-            string sqlStmt = "SELECT ELEMENTID, CELLID FROM BIMRL_SPATIALINDEX_" + fedID.ToString("X4");
+            string sqlStmt = "SELECT ELEMENTID, CELLID FROM " + DBOperation.formatTabName("BIMRL_SPATIALINDEX", fedID);
             try
             {
                 OracleCommand cmd = new OracleCommand(sqlStmt, DBOperation.DBConn);
@@ -1158,7 +1158,7 @@ namespace BIMRL.Common
             Octree.OctreeCheck ret;
 
             string whereCond = Octree.childrenCellCondition(cellid);
-            string sqlStmt = "SELECT UNIQUE CELLID FROM BIMRL_SPATIALINDEX_" + fedID.ToString("X4") + " WHERE " + whereCond;
+            string sqlStmt = "SELECT UNIQUE CELLID FROM " + DBOperation.formatTabName("BIMRL_SPATIALINDEX", fedID) + " WHERE " + whereCond;
             DataTable dt = new DataTable();
             OracleCommand command = new OracleCommand(sqlStmt, DBOperation.DBConn);
             OracleDataAdapter dtAdapter = new OracleDataAdapter(command);

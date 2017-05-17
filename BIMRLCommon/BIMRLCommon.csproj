@@ -96,6 +96,7 @@
     <Compile Include="DBOperation.cs" />
     <Compile Include="ElementID.cs" />
     <Compile Include="Face3D.cs" />
+    <Compile Include="FederatedModelInfo.cs" />
     <Compile Include="Ihas3DLocation.cs" />
     <Compile Include="Line3D.cs" />
     <Compile Include="LineSegment3D.cs" />

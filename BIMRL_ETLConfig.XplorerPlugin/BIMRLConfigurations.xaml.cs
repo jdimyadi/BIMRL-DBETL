@@ -31,7 +31,7 @@ using Xbim.Common;
 using BIMRL.Common;
 using BIMRL;
 
-namespace BIMRL_ETLConfig.XplorerPlugin
+namespace BIMRL.BIMRL_ETLConfig
 {
     /// <summary>
     /// Interaction logic for BIMRLDBConnectSpec.xaml
@@ -92,34 +92,40 @@ namespace BIMRL_ETLConfig.XplorerPlugin
 
         private void TextBox_DBUserID_TextChanged(object sender, TextChangedEventArgs e)
         {
-            TextBlock_DB_ConnStr.Text = TextBox_DBUserID.Text + "/" + TextBox_DBPassword.Text + "@" + TextBox_DBConn.Text;
+            TextBlock_DB_ConnStr.Text = TextBox_DBUserID.Text.ToUpper() + "/" + TextBox_DBPassword.Text + "@" + TextBox_DBConn.Text;
         }
 
         private void TextBox_DBPassword_TextChanged(object sender, TextChangedEventArgs e)
         {
-            TextBlock_DB_ConnStr.Text = TextBox_DBUserID.Text + "/" + TextBox_DBPassword.Text + "@" + TextBox_DBConn.Text;
+            TextBlock_DB_ConnStr.Text = TextBox_DBUserID.Text.ToUpper() + "/" + TextBox_DBPassword.Text + "@" + TextBox_DBConn.Text;
         }
 
         private void TextBox_DBConn_TextChanged(object sender, TextChangedEventArgs e)
         {
-            TextBlock_DB_ConnStr.Text = TextBox_DBUserID.Text + "/" + TextBox_DBPassword.Text + "@" + TextBox_DBConn.Text;
+            TextBlock_DB_ConnStr.Text = TextBox_DBUserID.Text.ToUpper() + "/" + TextBox_DBPassword.Text + "@" + TextBox_DBConn.Text;
         }
 
         private void Button_OK_Click(object sender, RoutedEventArgs e)
         {
-            DBOperation.DBUserID = TextBox_DBUserID.Text;
-            DBOperation.DBPassword = TextBox_DBPassword.Text;
-            DBOperation.DBConnecstring = TextBox_DBConn.Text;
+            string DBUserID = TextBox_DBUserID.Text.ToUpper();
+            string DBPassword = TextBox_DBPassword.Text;
+            string DBConnecstring = TextBox_DBConn.Text;
 
             _bimrlCommon.resetAll();
 
             // Connect to Oracle DB
             DBOperation.refBIMRLCommon = _bimrlCommon;      // important to ensure DBoperation has reference to this object!!
-            if (DBOperation.Connect() == null)
+            try
             {
-                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(_bimrlCommon);
-                erroDlg.ShowDialog();
-                return;
+               DBOperation.ConnectToDB(DBUserID, DBPassword, DBConnecstring);
+            }
+            catch
+            {
+               if (!string.IsNullOrEmpty(DBOperation.refBIMRLCommon.ErrorMessages))
+               {
+                  Error_Dialog errorDlg = new Error_Dialog(DBOperation.refBIMRLCommon.ErrorMessages);
+                  errorDlg.ShowDialog();
+               }
             }
 
             // For object selections for Space Boundary
@@ -177,10 +183,10 @@ namespace BIMRL_ETLConfig.XplorerPlugin
 
         private void BIMRL_Configurations_Loaded(object sender, RoutedEventArgs e)
         {
-            TextBox_DBUserID.Text = DBOperation.DBUserID;
+            TextBox_DBUserID.Text = DBOperation.DBUserID.ToUpper();
             TextBox_DBPassword.Text = DBOperation.DBPassword;
             TextBox_DBConn.Text = DBOperation.DBConnecstring;
-            TextBlock_DB_ConnStr.Text = TextBox_DBUserID.Text + "/" + TextBox_DBPassword.Text + "@" + TextBox_DBConn.Text;
+            TextBlock_DB_ConnStr.Text = TextBox_DBUserID.Text.ToUpper() + "/" + TextBox_DBPassword.Text + "@" + TextBox_DBConn.Text;
             List<string> octreeLevelData = new List<string>();
             octreeLevelData.Add("2");
             octreeLevelData.Add("3");

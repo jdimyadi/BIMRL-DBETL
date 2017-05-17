@@ -77,7 +77,7 @@ namespace BIMRL
          OracleCommand command2 = new OracleCommand(" ", DBOperation.DBConn);
 
          // 2 columsn are not used: Category, ForProfile is only used in IFC4
-         string sqlStmt = "insert into BIMRL_TYPEMATERIAL_" + bimrlProcessModel.currFedID.ToString("X4") + " (ElementID, MaterialName, SetName, IsVentilated, MaterialSequence, MaterialThickness) "
+         string sqlStmt = "insert into " + DBOperation.formatTabName("BIMRL_TYPEMATERIAL") + " (ElementID, MaterialName, SetName, IsVentilated, MaterialSequence, MaterialThickness) "
                            + " values (:1, :2, :3, :4, :5, :6)";
          command.CommandText = sqlStmt;
          OracleParameter[] Param = new OracleParameter[6];
@@ -91,7 +91,7 @@ namespace BIMRL
          Param[5] = command.Parameters.Add("4", OracleDbType.Double);
          Param[5].Direction = ParameterDirection.Input;
                 
-         string sqlStmt2 = "insert into BIMRL_ELEMENTMATERIAL_" + bimrlProcessModel.currFedID.ToString("X4") + " (ElementID, MaterialName, SetName, IsVentilated, MaterialSequence, MaterialThickness) "
+         string sqlStmt2 = "insert into " + DBOperation.formatTabName("BIMRL_ELEMENTMATERIAL") + " (ElementID, MaterialName, SetName, IsVentilated, MaterialSequence, MaterialThickness) "
                            + " values (:1, :2, :3, :4, :5, :6)";
          command2.CommandText = sqlStmt2;
          OracleParameter[] Param2 = new OracleParameter[6];

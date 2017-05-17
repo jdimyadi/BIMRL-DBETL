@@ -50,6 +50,7 @@ namespace BIMRL.Common
       public static int currSelFedID { get; set; }
       private static Dictionary<int, Tuple<Point3D, Point3D, int>> worldBBInfo = new Dictionary<int, Tuple<Point3D, Point3D, int>>();
       public static bool UIMode {get; set;} = true;
+      static FederatedModelInfo _FederatedModelInfo;
 
       public static void ConnectToDB(string username, string password, string connectstring)
       {
@@ -65,9 +66,12 @@ namespace BIMRL.Common
          }
       }
 
-        public static OracleConnection Connect(string username, string password, string DBconnectstring)
+        static OracleConnection Connect(string username, string password, string DBconnectstring)
         {
-            DBUserID = username;
+            if (!username.ToUpper().Equals(DBUserID) && m_DBconn != null)
+               Disconnect();     // Disconnected first if previously connected but with different user
+
+            DBUserID = username.ToUpper();
             DBPassword = password;
             DBConnecstring = DBconnectstring;
 
@@ -83,12 +87,6 @@ namespace BIMRL.Common
                 currStep = "Opening Oracle connection using: " + constr;
                 m_DBconn.Open();
                 m_connStr = constr;
-                //if (m_DBconnShort == null)
-                //{
-                //    m_DBconnShort = new OracleConnection(constr);
-                //    m_DBconnShort.Open();
-                //    m_ShortTransaction = m_DBconnShort.BeginTransaction();
-                //}
             }
             catch (OracleException e)
             {
@@ -99,43 +97,29 @@ namespace BIMRL.Common
             return m_DBconn;
         }
 
-        public static OracleConnection Connect()
+        public static void ExistingOrDefaultConnection()
         {
             if (m_DBconn != null)
-                return m_DBconn;             // already connected
+                return ;             // already connected
 
-            if (string.IsNullOrEmpty(DBUserID))
-            {
-                // set defaults
+         // default connection
+         string defaultUser = "BIMRL";
+         string defaultPassword = "bimrl";
+         string defaultConnecstring = "pdborcl";
 
-                DBOperation.DBUserID = "wawan";
-                DBOperation.DBPassword = "wawan";
-                DBOperation.DBConnecstring = "pdborcl";
-            }
-
-            string constr = "User Id=" + DBUserID + ";Password=" + DBPassword + ";Data Source=" + DBConnecstring;
-            string currStep = string.Empty;
-            try
-            {
-                currStep = "Connecting to Oracle using: " + constr;
-                m_DBconn = new OracleConnection(constr);
-                currStep = "Opening Oracle connection using: " + constr;
-                m_DBconn.Open();
-                m_connStr = constr;
-                //if (m_DBconnShort == null)
-                //{
-                //    m_DBconnShort = new OracleConnection(constr);
-                //    m_DBconnShort.Open();
-                //    m_ShortTransaction = m_DBconnShort.BeginTransaction();
-                //}
+         try
+         {
+               if (string.IsNullOrEmpty(DBUserID))
+               {
+                  m_DBconn = Connect(defaultUser, defaultPassword, defaultConnecstring);
+               }
             }
             catch (OracleException e)
             {
-                string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
-                refBIMRLCommon.StackPushError(excStr);
-                throw;
+               string excStr = "%%Error - " + e.Message + "\n\t" + defaultUser + "@" + defaultConnecstring;
+               refBIMRLCommon.StackPushError(excStr);
+               throw;
             }
-            return m_DBconn;
         }
 
         private static OracleConnection m_DBconn;
@@ -144,29 +128,11 @@ namespace BIMRL.Common
             get 
             {
                 if (m_DBconn == null)
-                    Connect();
+                    ExistingOrDefaultConnection();
 
                 return m_DBconn; 
             }
         }
-
-        // This is to initiate a second DB connection, useful to perform a short transaction separate from the main one (e.g. if
-        // there is a need to execute a DDL statement in the middle of transaction, or commit certian change
-        // Should be kept very short
-        //private static OracleConnection m_DBconnShort;
-        //private static OracleTransaction m_ShortTransaction;
-        //public static OracleConnection DBconnShort
-        //{
-        //    get {
-        //        if (m_DBconnShort == null)
-        //        {
-        //            m_DBconnShort = new OracleConnection(m_connStr);
-        //            m_DBconnShort.Open();
-        //            m_ShortTransaction = m_DBconnShort.BeginTransaction();
-        //        }
-        //        return m_DBconnShort;
-        //    }
-        //}
 
         private static int m_OctreeSubdivLevel = 6;    // default value
         public static int OctreeSubdivLevel
@@ -187,23 +153,17 @@ namespace BIMRL.Common
             int commandStatus = -1;
             OracleCommand command = new OracleCommand(sqlStmt, DBConn);
             DBOperation.beginTransaction();
-            //command.Transaction = m_ShortTransaction;
             try
             {
                 commandStatus = command.ExecuteNonQuery();
                 if (commit)
                     DBOperation.commitTransaction();
-                //m_ShortTransaction.Commit();
-                //m_ShortTransaction = m_DBconnShort.BeginTransaction();
             }
             catch (OracleException e)
             {
-                // Ignore error
-                // txn.Rollback();
                 string excStr = "%%Error - " + e.Message + "\n\t" + sqlStmt;
                 refBIMRLCommon.StackPushError(excStr);
                 command.Dispose();
-                // throw;
             }
             command.Dispose();
             return commandStatus;
@@ -214,7 +174,7 @@ namespace BIMRL.Common
         {
             if (!transactionActive)
             {
-                m_longTrans = m_DBconn.BeginTransaction();
+                m_longTrans = DBConn.BeginTransaction();
                 transactionActive = true;
             }
             currInsertCount = 0;    // reset the insert count
@@ -225,7 +185,7 @@ namespace BIMRL.Common
             if (transactionActive)
             {
                 m_longTrans.Commit();
-                m_longTrans = m_DBconn.BeginTransaction();
+                m_longTrans = DBConn.BeginTransaction();
             }
         }
 
@@ -234,7 +194,7 @@ namespace BIMRL.Common
             if (transactionActive)
             {
                 m_longTrans.Rollback();
-                m_longTrans = m_DBconn.BeginTransaction();
+                m_longTrans = DBConn.BeginTransaction();
             }
         }
 
@@ -246,7 +206,7 @@ namespace BIMRL.Common
                 // no transaction opened
             }
             int commandStatus = -1;
-            OracleCommand command = new OracleCommand(sqlStmt, m_DBconn);
+            OracleCommand command = new OracleCommand(sqlStmt, DBConn);
             string currStep = sqlStmt;
 
             try
@@ -256,9 +216,8 @@ namespace BIMRL.Common
 
                 if (currInsertCount % commitInterval == 0)
                 {
-                    //Do commit at interval but keep the long transaction (reopen)
-                    m_longTrans.Commit();
-                    m_longTrans = m_DBconn.BeginTransaction();
+                  //Do commit at interval but keep the long transaction (reopen)
+                  commitTransaction();
                 }
             }
             catch (OracleException e)
@@ -280,7 +239,7 @@ namespace BIMRL.Common
                 // no transaction opened
             }
             Int32 commandStatus = -1;
-            OracleCommand command = new OracleCommand(sqlStmt, m_DBconn);
+            OracleCommand command = new OracleCommand(sqlStmt, DBConn);
             string currStep = sqlStmt;
 
             try
@@ -300,9 +259,8 @@ namespace BIMRL.Common
 
                 if (currInsertCount % commitInterval == 0)
                 {
-                    //Do commit at interval but keep the long transaction (reopen)
-                    m_longTrans.Commit();
-                    m_longTrans = m_DBconn.BeginTransaction();
+                  //Do commit at interval but keep the long transaction (reopen)
+                  commitTransaction();
                 }
             }
             catch (OracleException e)
@@ -333,43 +291,108 @@ namespace BIMRL.Common
         {
             if (m_DBconn != null)
             {
-                m_DBconn.Close();
-                //m_DBconnShort.Close();
-                m_DBconn.Dispose();
-                //m_DBconnShort.Dispose();
-                m_DBconn = null;
-                //m_DBconnShort = null;
+               m_DBconn.Close();
+               //m_DBconn.Dispose();
+               m_DBconn = null;
             }
         }
 
-        public static FedIDStatus getFederatedID (string modelName, string projName, string projNumber, out int fedID)
+      public static FederatedModelInfo getFederatedModelByID (int FedID)
+      {
+         FederatedModelInfo fedModel = new FederatedModelInfo();
+         string currStep = "Getting federated ID";
+
+         // Create separate connection with a short duration
+
+         string SqlStmt = "Select FEDERATEDID federatedID, ModelName, ProjectNumber, ProjectName, WORLDBBOX, MAXOCTREELEVEL, LastUpdateDate, Owner, DBConnection from BIMRL_FEDERATEDMODEL where FederatedID=" + FedID.ToString();
+         OracleCommand command = new OracleCommand(SqlStmt, DBConn);
+         OracleDataReader reader = command.ExecuteReader();
+         try
+         {
+            if (!reader.Read())
+            {
+               return null;
+            }
+
+            fedModel.FederatedID = reader.GetInt32(0);
+            fedModel.ModelName = reader.GetString(1);
+            fedModel.ProjectNumber = reader.GetString(2);
+            fedModel.ProjectName = reader.GetString(3);
+            if (!reader.IsDBNull(4))
+            {
+               SdoGeometry worldBB = reader.GetValue(4) as SdoGeometry;
+               Point3D LLB = new Point3D(worldBB.OrdinatesArrayOfDoubles[0], worldBB.OrdinatesArrayOfDoubles[1], worldBB.OrdinatesArrayOfDoubles[2]);
+               Point3D URT = new Point3D(worldBB.OrdinatesArrayOfDoubles[3], worldBB.OrdinatesArrayOfDoubles[4], worldBB.OrdinatesArrayOfDoubles[5]);
+               fedModel.WorldBoundingBox = LLB.ToString() + " " + URT.ToString();
+            }
+            if (!reader.IsDBNull(5))
+               fedModel.OctreeMaxDepth = reader.GetInt16(5);
+            if (!reader.IsDBNull(6))
+               fedModel.LastUpdateDate = reader.GetDateTime(6);
+            if (!reader.IsDBNull(7))
+               fedModel.Owner = reader.GetString(7);
+            if (!reader.IsDBNull(8))
+               fedModel.DBConnection = reader.GetString(8);
+         }
+         catch (OracleException e)
+         {
+            string excStr = "%%Error - " + e.Message + "\n\t" + currStep;
+            refBIMRLCommon.StackPushError(excStr);
+            command.Dispose();
+            throw;
+         }
+
+         command.Dispose();
+         return fedModel;
+      }
+
+      public static FedIDStatus getFederatedModel (string modelName, string projName, string projNumber, out FederatedModelInfo fedModel)
         {
+            fedModel = new FederatedModelInfo();
             FedIDStatus stat = FedIDStatus.FedIDExisting;
             string currStep = "Getting federated ID";
 
             // Create separate connection with a short duration
 
-            string SqlStmt = "Select FEDERATEDID from BIMRL_FEDERATEDMODEL where MODELNAME = '" + modelName + "' and PROJECTNAME = '" + projName + "' and PROJECTNUMBER = '" + projNumber + "'";
+            string SqlStmt = "Select FEDERATEDID federatedID, ModelName, ProjectNumber, ProjectName, WORLDBBOX, MAXOCTREELEVEL, LastUpdateDate, Owner, DBConnection from BIMRL_FEDERATEDMODEL where MODELNAME = '" + modelName + "' and PROJECTNAME = '" + projName + "' and PROJECTNUMBER = '" + projNumber + "'";
             OracleCommand command = new OracleCommand(SqlStmt, DBConn);
-            object fID = null;
-
+            OracleDataReader reader = command.ExecuteReader();
             try
             {
-                fID = command.ExecuteScalar();
-                if (fID == null)
-                {
-                    // Create a new record
-                    command.CommandText = "Insert into BIMRL_FEDERATEDMODEL (MODELNAME, PROJECTNAME, PROJECTNUMBER) values ('" + modelName + "', '" + projName + "', '" + projNumber + "')";
-                    DBOperation.beginTransaction();
-                    //OracleTransaction txn = m_DBconnShort.BeginTransaction();
-                    command.ExecuteNonQuery();
-                    DBOperation.commitTransaction();
-                    //txn.Commit();
-                    //txn.Dispose();
-                    command.CommandText = SqlStmt;
-                    fID = command.ExecuteScalar();
-                    stat = FedIDStatus.FedIDNew;
-                }
+               if (!reader.Read())
+               {
+                  reader.Close();
+                  // Create a new record
+                  command.CommandText = "Insert into BIMRL_FEDERATEDMODEL (MODELNAME, PROJECTNAME, PROJECTNUMBER) values ('" + modelName + "', '" + projName + "', '" + projNumber + "')";
+                  DBOperation.beginTransaction();
+                  command.ExecuteNonQuery();
+                  DBOperation.commitTransaction();
+                  stat = FedIDStatus.FedIDNew;
+               }
+
+               command.CommandText = SqlStmt;
+               reader = command.ExecuteReader();
+               reader.Read();
+
+               fedModel.FederatedID = reader.GetInt32(0);
+               fedModel.ModelName = reader.GetString(1);
+               fedModel.ProjectNumber = reader.GetString(2);
+               fedModel.ProjectName = reader.GetString(3);
+               if (!reader.IsDBNull(4))
+               {
+                  SdoGeometry worldBB = reader.GetValue(4) as SdoGeometry;
+                  Point3D LLB = new Point3D(worldBB.OrdinatesArrayOfDoubles[0], worldBB.OrdinatesArrayOfDoubles[1], worldBB.OrdinatesArrayOfDoubles[2]);
+                  Point3D URT = new Point3D(worldBB.OrdinatesArrayOfDoubles[3], worldBB.OrdinatesArrayOfDoubles[4], worldBB.OrdinatesArrayOfDoubles[5]);
+                  fedModel.WorldBoundingBox = LLB.ToString() + " " + URT.ToString();
+               }
+               if (!reader.IsDBNull(5))
+                  fedModel.OctreeMaxDepth = reader.GetInt16(5);
+               if (!reader.IsDBNull(6))
+                  fedModel.LastUpdateDate = reader.GetDateTime(6);
+               if (!reader.IsDBNull(7))
+                  fedModel.Owner = reader.GetString(7);
+               if (!reader.IsDBNull(8))
+                  fedModel.DBConnection = reader.GetString(8);
             }
             catch (OracleException e)
             {
@@ -379,7 +402,6 @@ namespace BIMRL.Common
                 throw;
             }
 
-            fedID = Convert.ToInt32(fID.ToString());
             command.Dispose();
 
             return stat;
@@ -387,8 +409,8 @@ namespace BIMRL.Common
 
         public static int getModelID (int fedID)
         {
-            string sqlStmt = "Select SEQ_BIMRL_MODELINFO_" + fedID.ToString("X4") + ".nextval from dual";
-            OracleCommand cmd = new OracleCommand(sqlStmt, m_DBconn);
+            string sqlStmt = "Select " + DBOperation.formatTabName("SEQ_BIMRL_MODELINFO", fedID) + ".nextval from dual";
+            OracleCommand cmd = new OracleCommand(sqlStmt, DBConn);
             int newModelID = Convert.ToInt32(cmd.ExecuteScalar().ToString());
 
             cmd.Dispose();
@@ -409,7 +431,7 @@ namespace BIMRL.Common
             string line;
             string stmt = string.Empty;
             string idStr = ID.ToString("X4");
-            OracleCommand cmd = new OracleCommand(" ", m_DBconn);
+            OracleCommand cmd = new OracleCommand(" ", DBConn);
             string currStep = string.Empty;
 
             bool commentStart = false;
@@ -466,7 +488,7 @@ namespace BIMRL.Common
         {
             projectUnit projectUnit = projectUnit.SIUnit_Length_Meter;
 
-            string SqlStmt = "Select PROPERTYVALUE from BIMRL_PROPERTIES_" + fedID.ToString("X4") + " P, BIMRL_ELEMENT_" + fedID.ToString("X4") + " E"
+            string SqlStmt = "Select PROPERTYVALUE from " + DBOperation.formatTabName("BIMRL_PROPERTIES", fedID) + " P, " + DBOperation.formatTabName("BIMRL_ELEMENT", fedID) + " E"
                             + " where P.ELEMENTID=E.ELEMENTID and E.ELEMENTTYPE='IFCPROJECT' AND PROPERTYGROUPNAME='IFCATTRIBUTES' AND PROPERTYNAME='LENGTHUNIT'";
             string currStep = SqlStmt;
             OracleCommand command = new OracleCommand(SqlStmt, DBConn);
@@ -577,26 +599,29 @@ namespace BIMRL.Common
                 else if (dZ > dY && dZ > dX)
                     largestEdge = dZ;
 
-                double defaultTh = 200;     // value in mm
-                double threshold = defaultTh;
-                projectUnit pjUnit = getProjectUnitLength(fedID);
-                if (pjUnit == projectUnit.SIUnit_Length_MilliMeter)
-                {
-                    threshold = defaultTh;
-                }
-                else if (pjUnit == projectUnit.SIUnit_Length_Meter)
-                {
-                    threshold =  defaultTh / 1000;
-                }
-                else if (pjUnit == projectUnit.Imperial_Length_Foot)
-                {
-                    threshold = defaultTh / 304.8;
-                }
-                else if (pjUnit == projectUnit.Imperial_Length_Inch)
-                {
-                    threshold = defaultTh / 25.4;
-                }
-                
+               //double defaultTh = 200;     // value in mm
+               //double threshold = defaultTh;
+               //projectUnit pjUnit = getProjectUnitLength(fedID);
+               //if (pjUnit == projectUnit.SIUnit_Length_MilliMeter)
+               //{
+               //    threshold = defaultTh;
+               //}
+               //else if (pjUnit == projectUnit.SIUnit_Length_Meter)
+               //{
+               //    threshold =  defaultTh / 1000;
+               //}
+               //else if (pjUnit == projectUnit.Imperial_Length_Foot)
+               //{
+               //    threshold = defaultTh / 304.8;
+               //}
+               //else if (pjUnit == projectUnit.Imperial_Length_Inch)
+               //{
+               //    threshold = defaultTh / 25.4;
+               //}
+
+               // Model now is always stored in Meter. Here the treshold should be set to use M unit
+               double threshold = 0.2;     // Default base of 200mm
+
                 double calcV = largestEdge;
                 int level = 0;
                 while (calcV > threshold)
@@ -609,5 +634,24 @@ namespace BIMRL.Common
             else
                 return -1;
         }
-    }
+
+      public static FederatedModelInfo currFedModel
+      {
+         get { return _FederatedModelInfo; }
+         set { _FederatedModelInfo = value; }
+      }
+
+      public static string formatTabName(string rawTabName)
+      {
+         return (currFedModel.Owner + "." + rawTabName + "_" + currFedModel.FederatedID.ToString("X4")).ToUpper();
+      }
+
+      public static string formatTabName(string rawTabName, int FedID)
+      {
+         FederatedModelInfo fedInfo = getFederatedModelByID(FedID);
+         if (fedInfo == null)
+            return null;
+         return (fedInfo.Owner + "." + rawTabName + "_" + fedInfo.FederatedID.ToString("X4")).ToUpper();
+      }
+   }
 }

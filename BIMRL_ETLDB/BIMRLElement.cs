@@ -153,7 +153,7 @@ namespace BIMRL
                   RelTransform.TryAdd(locPlacement.EntityLabel, newRelTrf);
             }
 
-            string prodGuid = _refBIMRLCommon.guidLineNoMapping_Getguid(bimrlProcessModel.currModelID, productLabel);
+            string prodGuid = _refBIMRLCommon.guidLineNoMapping_Getguid(BIMRLProcessModel.currModelID, productLabel);
             // foreach (var geomData in _model.GetGeometryData(XbimGeometryType.TriangulatedMesh))
 
             //if (geomDataList.Count() == 0)
@@ -277,7 +277,7 @@ namespace BIMRL
             if (!string.IsNullOrEmpty(prodGuid))
             {
                // Found match, update the table with geometry data
-               string sqlStmt = "update BIMRL_ELEMENT_" + bimrlProcessModel.currFedID.ToString("X4") + " set GEOMETRYBODY=:1, TRANSFORM_COL1=:2, TRANSFORM_COL2=:3, TRANSFORM_COL3=:4, TRANSFORM_COL4=:5, TOTAL_SURFACE_AREA=:6"
+               string sqlStmt = "update " + DBOperation.formatTabName("BIMRL_ELEMENT") + " set GEOMETRYBODY=:1, TRANSFORM_COL1=:2, TRANSFORM_COL2=:3, TRANSFORM_COL3=:4, TRANSFORM_COL4=:5, TOTAL_SURFACE_AREA=:6"
                               + " Where elementid = '" + prodGuid + "'";
                // int status = DBOperation.updateGeometry(sqlStmt, sdoGeomData);
                currStep = sqlStmt;
@@ -413,14 +413,14 @@ namespace BIMRL
          {
             // Process IfcProject
             IIfcProject project = _model.Instances.OfType<IIfcProject>().FirstOrDefault();
-            SqlStmt = "SELECT COUNT(*) FROM BIMRL_ELEMENT_" + bimrlProcessModel.currFedID.ToString("X4") + " WHERE ELEMENTID='" + project.GlobalId.ToString() + "'";
+            SqlStmt = "SELECT COUNT(*) FROM " + DBOperation.formatTabName("BIMRL_ELEMENT") + " WHERE ELEMENTID='" + project.GlobalId.ToString() + "'";
             OracleCommand chkCmd = new OracleCommand(SqlStmt, DBOperation.DBConn);
             object ret = chkCmd.ExecuteScalar();
             int iRet = Convert.ToInt32(ret.ToString());
             if (iRet == 0)
             {
-               SqlStmt = "INSERT INTO BIMRL_ELEMENT_" + bimrlProcessModel.currFedID.ToString("X4") + " (ELEMENTID, ELEMENTTYPE, MODELID) VALUES ("
-                           + "'" + project.GlobalId.ToString() + "', 'IFCPROJECT', " + bimrlProcessModel.currModelID.ToString() + ")";
+               SqlStmt = "INSERT INTO " + DBOperation.formatTabName("BIMRL_ELEMENT") + " (ELEMENTID, ELEMENTTYPE, MODELID) VALUES ("
+                           + "'" + project.GlobalId.ToString() + "', 'IFCPROJECT', " + BIMRLProcessModel.currModelID.ToString() + ")";
                OracleCommand cmd = new OracleCommand(SqlStmt, DBOperation.DBConn);
                cmd.ExecuteNonQuery();
                cmd.Dispose();
@@ -459,10 +459,10 @@ namespace BIMRL
 
                // from el, we can get all IFC related attributes (property set?), including relationships. But first we need to populate BIMRL_ELEMENT table first before building the relationships
                // Keep a mapping between IFC guid used as a key in BIMRL and the IFC line no of the entity
-               _refBIMRLCommon.guidLineNoMappingAdd(bimrlProcessModel.currModelID, IfcLineNo, guid);
+               _refBIMRLCommon.guidLineNoMappingAdd(BIMRLProcessModel.currModelID, IfcLineNo, guid);
 
                string columnSpec = "Elementid, LineNo, ElementType, ModelID";
-               string valueList = "'" + guid + "'," + IfcLineNo.ToString() + ",'" + typeName + "'," + bimrlProcessModel.currModelID.ToString();
+               string valueList = "'" + guid + "'," + IfcLineNo.ToString() + ",'" + typeName + "'," + BIMRLProcessModel.currModelID.ToString();
 
                if (!string.IsNullOrEmpty(typGuid))
                {
@@ -495,14 +495,14 @@ namespace BIMRL
                   valueList += ", '" + container + "'";
                }
 
-               Tuple<int, int> ownHEntry = new Tuple<int, int>(Math.Abs(el.OwnerHistory.EntityLabel), bimrlProcessModel.currModelID);
+               Tuple<int, int> ownHEntry = new Tuple<int, int>(Math.Abs(el.OwnerHistory.EntityLabel), BIMRLProcessModel.currModelID);
                if (_refBIMRLCommon.OwnerHistoryExist(ownHEntry))
                {
                   columnSpec += ", OwnerHistoryID";
                   valueList += ", " + Math.Abs(el.OwnerHistory.EntityLabel);
                }
 
-               SqlStmt = "Insert into BIMRL_Element_" + bimrlProcessModel.currFedID.ToString("X4") + "(" + columnSpec + ") Values (" + valueList + ")";
+               SqlStmt = "Insert into " + DBOperation.formatTabName("BIMRL_Element") + "(" + columnSpec + ") Values (" + valueList + ")";
                command.CommandText = SqlStmt;
                currStep = SqlStmt;
                commandStatus = command.ExecuteNonQuery();
@@ -531,10 +531,10 @@ namespace BIMRL
                string elDesc = BIMRLUtils.checkSingleQuote(el.Description);
                int IfcLineNo = el.EntityLabel;
 
-               _refBIMRLCommon.guidLineNoMappingAdd(bimrlProcessModel.currModelID, IfcLineNo, guid);
+               _refBIMRLCommon.guidLineNoMappingAdd(BIMRLProcessModel.currModelID, IfcLineNo, guid);
 
                string columnSpec = "Elementid, LineNo, ElementType, ModelID";
-               string valueList = "'" + guid + "'," + IfcLineNo.ToString() + ",'" + typeName + "'," + bimrlProcessModel.currModelID.ToString();
+               string valueList = "'" + guid + "'," + IfcLineNo.ToString() + ",'" + typeName + "'," + BIMRLProcessModel.currModelID.ToString();
 
                if (!string.IsNullOrEmpty(elName))
                {
@@ -552,14 +552,14 @@ namespace BIMRL
                   valueList += ", '" + elObjectType + "'";
                }
 
-               Tuple<int, int> ownHEntry = new Tuple<int, int>(Math.Abs(el.OwnerHistory.EntityLabel), bimrlProcessModel.currModelID);
+               Tuple<int, int> ownHEntry = new Tuple<int, int>(Math.Abs(el.OwnerHistory.EntityLabel), BIMRLProcessModel.currModelID);
                if (_refBIMRLCommon.OwnerHistoryExist(ownHEntry))
                {
                   columnSpec += ", OwnerHistoryID";
                   valueList += ", " + Math.Abs(el.OwnerHistory.EntityLabel);
                }
 
-               SqlStmt = "Insert into BIMRL_Element_" + bimrlProcessModel.currFedID.ToString("X4") + "(" + columnSpec + ") Values (" + valueList + ")";
+               SqlStmt = "Insert into " + DBOperation.formatTabName("BIMRL_ELEMENT") + "(" + columnSpec + ") Values (" + valueList + ")";
 
                command.CommandText = SqlStmt;
                currStep = SqlStmt;
@@ -602,7 +602,7 @@ namespace BIMRL
          BIMRLProperties bimrlProp = new BIMRLProperties(_refBIMRLCommon);
          OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
 
-         string SqlStmt = "Insert into BIMRL_ElementProperties_" + bimrlProcessModel.currFedID.ToString("X4") + "(ElementId, PropertyGroupName, PropertyName, PropertyValue, PropertyDataType"
+         string SqlStmt = "Insert into " + DBOperation.formatTabName("BIMRL_ElementProperties") + "(ElementId, PropertyGroupName, PropertyName, PropertyValue, PropertyDataType"
             + ", PropertyUnit) Values (:1, :2, :3, :4, :5, :6)";
          command.CommandText = SqlStmt;
          string currStep = SqlStmt;
@@ -627,7 +627,7 @@ namespace BIMRL
          IEnumerable<IIfcProject> projects = _model.Instances.OfType<IIfcProject>();
          // Insert only ONE project from the first one. Therefore needs to check its existence first
          IIfcProject project = projects.First();
-         SqlStmt = "SELECT COUNT(*) FROM BIMRL_PROPERTIES_" + bimrlProcessModel.currFedID.ToString("X4") + " WHERE ELEMENTID='" + project.GlobalId.ToString() + "'";
+         SqlStmt = "SELECT COUNT(*) FROM " + DBOperation.formatTabName("BIMRL_PROPERTIES") + " WHERE ELEMENTID='" + project.GlobalId.ToString() + "'";
          OracleCommand chkCmd = new OracleCommand(SqlStmt, DBOperation.DBConn);
          object ret = chkCmd.ExecuteScalar();
          int iRet = Convert.ToInt32(ret.ToString());

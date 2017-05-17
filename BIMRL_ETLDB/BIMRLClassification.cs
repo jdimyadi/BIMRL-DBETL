@@ -75,7 +75,7 @@ namespace BIMRL
          OracleCommand command2 = new OracleCommand(" ", DBOperation.DBConn);
          OracleCommand command3 = new OracleCommand(" ", DBOperation.DBConn);
 
-         string sqlStmt = "Insert into BIMRL_CLASSIFICATION_" + bimrlProcessModel.currFedID.ToString("X4") + " (ClassificationName, ClassificationSource, "
+         string sqlStmt = "Insert into " + DBOperation.formatTabName("BIMRL_CLASSIFICATION") + " (ClassificationName, ClassificationSource, "
                            + "ClassificationEdition, ClassificationEditionDate, ClassificationItemCode, ClassificationItemName, ClassificationItemLocation) Values "
                            + "(:1, :2, :3, to_date(:4, 'DD-MM-YYYY'), :5, :6, :7)";
          command.CommandText = sqlStmt;
@@ -87,7 +87,7 @@ namespace BIMRL
                Param[i].Direction = ParameterDirection.Input;
          }
 
-         string sqlStmt2 = "Insert into BIMRL_ELEMCLASSIFICATION_" + bimrlProcessModel.currFedID.ToString("X4") + " (ElementID, ClassificationName, ClassificationItemCode) "
+         string sqlStmt2 = "Insert into " + DBOperation.formatTabName("BIMRL_ELEMCLASSIFICATION") + " (ElementID, ClassificationName, ClassificationItemCode) "
                            + " Values (:1, :2, :3)";
          command2.CommandText = sqlStmt2;
 
@@ -98,7 +98,7 @@ namespace BIMRL
                Param2[i].Direction = ParameterDirection.Input;
          }
 
-         string sqlStmt3 = "Insert into BIMRL_TYPCLASSIFICATION_" + bimrlProcessModel.currFedID.ToString("X4") + " (ElementID, ClassificationName, ClassificationItemCode) "
+         string sqlStmt3 = "Insert into " + DBOperation.formatTabName("BIMRL_TYPCLASSIFICATION") + " (ElementID, ClassificationName, ClassificationItemCode) "
                            + " Values (:1, :2, :3)";
          command3.CommandText = sqlStmt3;
 

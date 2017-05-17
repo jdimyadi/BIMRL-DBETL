@@ -39,23 +39,24 @@ using BIMRL.Common;
 
 namespace BIMRL
 {
-   public class bimrlProcessModel
+   public class BIMRLProcessModel
    {
-      static int _FederatedID = 0;
+      //static int DBOperation.currFedModel.FederatedID = 0;
+
       static int _ModelID = 0;
       BIMRLCommon _bimrlCommon = new BIMRLCommon();
 
-      public static int currFedID
-      { 
-         get { return _FederatedID; } 
-      }
+      //public static int currFedID
+      //{ 
+      //   get { return DBOperation.currFedModel.FederatedID; } 
+      //}
 
       public static int currModelID
       {
          get { return _ModelID; }
       }
 
-      public bimrlProcessModel(IModel model, bool update)
+      public BIMRLProcessModel(IModel model, bool update)
       {
          //IfcProject proj = model.IfcProject;
          IfcStore modelStore = model as IfcStore;
@@ -64,7 +65,12 @@ namespace BIMRL
 
          // Connect to Oracle DB
          DBOperation.refBIMRLCommon = _bimrlCommon;      // important to ensure DBoperation has reference to this object!!
-         if (DBOperation.Connect() == null)
+
+         try
+         {
+            DBOperation.ExistingOrDefaultConnection();
+         }
+         catch
          {
             if (DBOperation.UIMode)
             {
@@ -82,7 +88,7 @@ namespace BIMRL
          BIMRLSpatialIndex spIdx = new BIMRLSpatialIndex(_bimrlCommon);
 
          try
-         {
+         { 
             DBOperation.beginTransaction();
             IIfcProject firstProject;
             if (modelStore.IsFederation)
@@ -109,23 +115,31 @@ namespace BIMRL
                modelNameFromFile = firstProject.Name + " - " + firstProject.LongName;
 
             currStep = "Getting Federated ID from BIMRL_FEDERATEDMODEL - Model name, Project name and longname: " + modelNameFromFile + "; " + firstProject.Name + "; " + firstProject.LongName;
-            FedIDStatus stat = DBOperation.getFederatedID(modelNameFromFile, projLName, firstProject.Name, out _FederatedID);
+            FederatedModelInfo fedModel;
+            FedIDStatus stat = DBOperation.getFederatedModel(modelNameFromFile, projLName, firstProject.Name, out fedModel);
             if (stat == FedIDStatus.FedIDNew)
             {
+               DBOperation.currFedModel = fedModel;
                // Create new set of tables using the fedID as suffix
-               int retStat = DBOperation.createModelTables(_FederatedID);
+               int retStat = DBOperation.createModelTables(DBOperation.currFedModel.FederatedID);
             }
             else
             {
-               // Prompt user to drop and recreate tables
+               DBOperation.currFedModel = fedModel;
+               if (!fedModel.Owner.Equals(DBOperation.DBUserID))
+               {
+                  _bimrlCommon.StackPushError("%Error: Only the Owner (" + fedModel.Owner + ") can delete or override existing model (!" + fedModel.ModelName + ")");
+                  throw new Exception("%Error: Unable to overwrite exisitng model");
+               }
+
                // Drop and recreate tables
-               currStep = "Dropping existing model tables (ID: " + _FederatedID.ToString("X4") + ")";
-               int retStat = DBOperation.dropModelTables(_FederatedID);
-               currStep = "Creating model tables (ID: " + _FederatedID.ToString("X4") + ")";
-               retStat = DBOperation.createModelTables(_FederatedID);
+               currStep = "Dropping existing model tables (ID: " + DBOperation.currFedModel.FederatedID.ToString("X4") + ")";
+               int retStat = DBOperation.dropModelTables(DBOperation.currFedModel.FederatedID);
+               currStep = "Creating model tables (ID: " + DBOperation.currFedModel.FederatedID.ToString("X4") + ")";
+               retStat = DBOperation.createModelTables(DBOperation.currFedModel.FederatedID);
             }
 
-            DBOperation.currSelFedID = _FederatedID;        // set the static variable keeping the selected Fed Id
+            DBOperation.currSelFedID = DBOperation.currFedModel.FederatedID;        // set the static variable keeping the selected Fed Id
 
             if (modelStore.IsFederation)
             {
@@ -134,10 +148,10 @@ namespace BIMRL
                foreach (IReferencedModel refModel in modelStore.ReferencedModels)
                {
                   IfcStore m = refModel.Model as IfcStore;
-                  currStep = "Getting Model ID for Federated model ID:" + _FederatedID.ToString("X4");
+                  currStep = "Getting Model ID for Federated model ID:" + DBOperation.currFedModel.FederatedID.ToString("X4");
                   _bimrlCommon.ClearDicts();
 
-                  _ModelID = DBOperation.getModelID(_FederatedID);
+                  _ModelID = DBOperation.getModelID(DBOperation.currFedModel.FederatedID);
                   doModel(m);
                   BIMRLUtils.ResetIfcUnitDicts();
                }
@@ -145,8 +159,8 @@ namespace BIMRL
             }
             else
             {
-               currStep = "Getting Model ID for Federated model ID:" + _FederatedID.ToString("X4");
-               _ModelID = DBOperation.getModelID(_FederatedID);
+               currStep = "Getting Model ID for Federated model ID:" + DBOperation.currFedModel.FederatedID.ToString("X4");
+               _ModelID = DBOperation.getModelID(DBOperation.currFedModel.FederatedID);
                doModel(modelStore);
                BIMRLUtils.ResetIfcUnitDicts();
             }
@@ -177,7 +191,7 @@ namespace BIMRL
             double upperZ = _bimrlCommon.URT_Z + marginZ;
 
             string sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_ELEMENT_" + currFedID.ToString("X4") + "','GEOMETRYBODY',"
+                           + "('BIMRL_ELEMENT_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','GEOMETRYBODY',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', " + lowerX.ToString() + ", " + upperX.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', " + lowerY.ToString() + ", " + upperY.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', " + lowerZ.ToString() + ", " + upperZ.ToString() + ", 0.000001)),"
@@ -187,7 +201,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_ELEMENT_" + currFedID.ToString("X4") + "','GEOMETRYBODY_BBOX',"
+                           + "('BIMRL_ELEMENT_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','GEOMETRYBODY_BBOX',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', " + lowerX.ToString() + ", " + upperX.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', " + lowerY.ToString() + ", " + upperY.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', " + lowerZ.ToString() + ", " + upperZ.ToString() + ", 0.000001)),"
@@ -197,7 +211,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_ELEMENT_" + currFedID.ToString("X4") + "','GEOMETRYBODY_BBOX_CENTROID',"
+                           + "('BIMRL_ELEMENT_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','GEOMETRYBODY_BBOX_CENTROID',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', " + lowerX.ToString() + ", " + upperX.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', " + lowerY.ToString() + ", " + upperY.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', " + lowerZ.ToString() + ", " + upperZ.ToString() + ", 0.000001)),"
@@ -207,7 +221,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_ELEMENT_" + currFedID.ToString("X4") + "','GEOMETRYFOOTPRINT',"
+                           + "('BIMRL_ELEMENT_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','GEOMETRYFOOTPRINT',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', " + lowerX.ToString() + ", " + upperX.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', " + lowerY.ToString() + ", " + upperY.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', " + lowerZ.ToString() + ", " + upperZ.ToString() + ", 0.000001)),"
@@ -217,7 +231,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_ELEMENT_" + currFedID.ToString("X4") + "','GEOMETRYAXIS',"
+                           + "('BIMRL_ELEMENT_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','GEOMETRYAXIS',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', " + lowerX.ToString() + ", " + upperX.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', " + lowerY.ToString() + ", " + upperY.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', " + lowerZ.ToString() + ", " + upperZ.ToString() + ", 0.000001)),"
@@ -227,7 +241,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_ELEMENT_" + currFedID.ToString("X4") + "','BODY_MAJOR_AXIS1',"
+                           + "('BIMRL_ELEMENT_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','BODY_MAJOR_AXIS1',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', -1.01, 1.01, 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', -1.01, 1.01, 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', -1.01, 1.01, 0.000001)),"
@@ -237,7 +251,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_ELEMENT_" + currFedID.ToString("X4") + "','BODY_MAJOR_AXIS2',"
+                           + "('BIMRL_ELEMENT_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','BODY_MAJOR_AXIS2',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', -1.01, 1.01, 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', -1.01, 1.01, 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', -1.01, 1.01, 0.000001)),"
@@ -247,7 +261,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_ELEMENT_" + currFedID.ToString("X4") + "','BODY_MAJOR_AXIS3',"
+                           + "('BIMRL_ELEMENT_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','BODY_MAJOR_AXIS3',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', -1.01, 1.01, 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', -1.01, 1.01, 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', -1.01, 1.01, 0.000001)),"
@@ -257,7 +271,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_ELEMENT_" + currFedID.ToString("X4") + "','BODY_MAJOR_AXIS_CENTROID',"
+                           + "('BIMRL_ELEMENT_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','BODY_MAJOR_AXIS_CENTROID',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', " + lowerX.ToString() + ", " + upperX.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', " + lowerY.ToString() + ", " + upperY.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', " + lowerZ.ToString() + ", " + upperZ.ToString() + ", 0.000001)),"
@@ -267,7 +281,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_TOPO_FACE_" + currFedID.ToString("X4") + "','POLYGON',"
+                           + "('BIMRL_TOPO_FACE_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','POLYGON',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', " + lowerX.ToString() + ", " + upperX.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', " + lowerY.ToString() + ", " + upperY.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', " + lowerZ.ToString() + ", " + upperZ.ToString() + ", 0.000001)),"
@@ -277,7 +291,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_TOPO_FACE_" + currFedID.ToString("X4") + "','NORMAL',"
+                           + "('BIMRL_TOPO_FACE_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','NORMAL',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', -1.01, 1.01, 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', -1.01, 1.01, 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', -1.01, 1.01, 0.000001)),"
@@ -287,7 +301,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
             sqlStmt = "insert into USER_SDO_GEOM_METADATA (TABLE_NAME, COLUMN_NAME, DIMINFO, SRID) VALUES "
-                           + "('BIMRL_TOPO_FACE_" + currFedID.ToString("X4") + "','CENTROID',"
+                           + "('BIMRL_TOPO_FACE_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "','CENTROID',"
                            + "SDO_DIM_ARRAY(SDO_DIM_ELEMENT('X', " + lowerX.ToString() + ", " + upperX.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Y', " + lowerY.ToString() + ", " + upperY.ToString() + ", 0.000001),"
                            + "SDO_DIM_ELEMENT('Z', " + lowerZ.ToString() + ", " + upperZ.ToString() + ", 0.000001)),"
@@ -297,7 +311,7 @@ namespace BIMRL
             cmd.ExecuteNonQuery();
 
 
-            sqlStmt = "Update BIMRL_FEDERATEDMODEL SET LastUpdateDate=sysdate WHERE FederatedID=" + currFedID.ToString();
+            sqlStmt = "Update BIMRL_FEDERATEDMODEL SET LastUpdateDate=sysdate WHERE FederatedID=" + DBOperation.currFedModel.FederatedID.ToString();
             currStep = sqlStmt;
             cmd.CommandText = sqlStmt;
             cmd.ExecuteNonQuery();
@@ -322,7 +336,7 @@ namespace BIMRL
             Bbox.OrdinatesArrayOfDoubles = coordArr;
 
             // Create spatial index from the new model (list of triangles are accummulated during processing of geometries)
-            sqlStmt = "update BIMRL_FEDERATEDMODEL SET WORLDBBOX=:1 , MAXOCTREELEVEL=:2 WHERE FEDERATEDID=" + bimrlProcessModel.currFedID.ToString();
+            sqlStmt = "update BIMRL_FEDERATEDMODEL SET WORLDBBOX=:1 , MAXOCTREELEVEL=:2 WHERE FEDERATEDID=" + DBOperation.currFedModel.FederatedID.ToString();
             currStep = sqlStmt;
             OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
             command.CommandText = sqlStmt;
@@ -343,13 +357,13 @@ namespace BIMRL
             if (DBOperation.OnepushETL)
             {
                DBOperation.commitInterval = 10000;
-               int octreeLevel = DBOperation.computeRecomOctreeLevel(currFedID);
+               int octreeLevel = DBOperation.computeRecomOctreeLevel(DBOperation.currFedModel.FederatedID);
 
                // 1. Create Octree spatial indexes and the Brep Topology Faces
-               spIdx.createSpatialIndexFromBIMRLElement(currFedID, null, true);
+               spIdx.createSpatialIndexFromBIMRLElement(DBOperation.currFedModel.FederatedID, null, true, true);
 
                // 2. Update major Axes and OBB
-               BIMRLUtils.updateMajorAxesAndOBB(currFedID, null);
+               BIMRLUtils.updateMajorAxesAndOBB(DBOperation.currFedModel.FederatedID, null);
 
                // 3. Enhance Space Boundary
                EnhanceBRep eBrep = new EnhanceBRep();
@@ -368,22 +382,27 @@ namespace BIMRL
 
                // 5. Create Graph Data
                BIMRLGraph.GraphData graphData = new BIMRLGraph.GraphData();
-               graphData.createCirculationGraph(currFedID);
-               graphData.createSpaceAdjacencyGraph(currFedID);
+               graphData.createCirculationGraph(DBOperation.currFedModel.FederatedID);
+               graphData.createSpaceAdjacencyGraph(DBOperation.currFedModel.FederatedID);
 
                sqlStmt = "UPDATE BIMRL_FEDERATEDMODEL SET LASTUPDATEDATE=sysdate";
                BIMRLCommon.appendToString("MAXOCTREELEVEL=" + octreeLevel.ToString(), ", ", ref sqlStmt);
-               BIMRLCommon.appendToString("WHERE FEDERATEDID=" + currFedID.ToString(), " ", ref sqlStmt);
+               BIMRLCommon.appendToString("WHERE FEDERATEDID=" + DBOperation.currFedModel.FederatedID.ToString(), " ", ref sqlStmt);
                DBOperation.executeSingleStmt(sqlStmt);
+            }
+            else
+            {
+               // Minimum (without One-push ETL, create the bounding boxes (AABB)
+               spIdx.createSpatialIndexFromBIMRLElement(DBOperation.currFedModel.FederatedID, null, false, false);
             }
 
             var location = new Uri(Assembly.GetEntryAssembly().GetName().CodeBase);
             string exePath = new FileInfo(location.AbsolutePath).Directory.FullName;
 
             // (Re)-Create the spatial indexes
-            DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_SpatialIndexes.sql"), currFedID);
-            DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_TopoFace.sql"), currFedID);
-            DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_MajorAxes.sql"), currFedID);
+            DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_SpatialIndexes.sql"), DBOperation.currFedModel.FederatedID);
+            DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_TopoFace.sql"), DBOperation.currFedModel.FederatedID);
+            DBOperation.executeScript(Path.Combine(exePath, "script", "BIMRL_Idx_MajorAxes.sql"), DBOperation.currFedModel.FederatedID);
 
             //sqlStmt = "Create Index IDX_BIMRLELEM_GEOM_" + currFedID.ToString("X4") + " on BIMRL_ELEMENT_" + currFedID.ToString("X4")
             //            + " (GEOMETRYBODY) INDEXTYPE is MDSYS.SPATIAL_INDEX PARAMETERS ('sdo_indx_dims=3')";
@@ -496,7 +515,7 @@ namespace BIMRL
          try
          {
             // Insert model info
-            SqlStmt = "Insert into BIMRL_ModelInfo_" + _FederatedID.ToString("X4") + " (ModelID, ModelName, Source) Values ("
+            SqlStmt = "Insert into " + DBOperation.formatTabName("BIMRL_ModelInfo") + " (ModelID, ModelName, Source) Values ("
                         + _ModelID + ",'" + projName + "','" + m.FileName + "')";
             currStep = SqlStmt;
             int status = DBOperation.insertRow(SqlStmt);
@@ -544,6 +563,11 @@ namespace BIMRL
             throw;
          }
          m.StopCaching();
+      }
+
+      public string ErrorsInStack()
+      {
+          return _bimrlCommon.ErrorMessages;
       }
    }
 }

@@ -67,8 +67,8 @@ namespace BIMRL
          if ((!compNewModel.HasValue || !compRefModel.HasValue) && (!newModel.HasValue || !refModel.HasValue))
             throw new Exception("Model IDs must be supplied!");
         
-         string elemTableNew = "BIMRL_ELEMENT_" + compNewModel.Value.ToString("X4");
-         string elemTableRef = "BIMRL_ELEMENT_" + compRefModel.Value.ToString("X4");
+         string elemTableNew = DBOperation.formatTabName("BIMRL_ELEMENT", compNewModel.Value);
+         string elemTableRef = DBOperation.formatTabName("BIMRL_ELEMENT", compRefModel.Value);
 
          // Create tables to keep track of the new or deleted objects
          runNonQuery("drop table newelements", true);
@@ -136,8 +136,8 @@ namespace BIMRL
       IList<DataTable> DiffObjects()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string elemTableNew = "BIMRL_ELEMENT_" + compNewModel.Value.ToString("X4");
-         string elemTableRef = "BIMRL_ELEMENT_" + compRefModel.Value.ToString("X4");
+         string elemTableNew = DBOperation.formatTabName("BIMRL_ELEMENT", compNewModel.Value);
+         string elemTableRef = DBOperation.formatTabName("BIMRL_ELEMENT", compRefModel.Value);
 
          string newElementReport = "select elementid, elementtype, name, longname, description, modelid, container, typeid from " + elemTableNew
                                     + " where elementid in (select elementid from newelements)";
@@ -157,8 +157,8 @@ namespace BIMRL
       IList<DataTable> DiffGeometry(string graphicsOutputZip, double tol = 0.0001)
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string elemTableNew = "BIMRL_ELEMENT_" + compNewModel.Value.ToString("X4");
-         string elemTableRef = "BIMRL_ELEMENT_" + compRefModel.Value.ToString("X4");
+         string elemTableNew = DBOperation.formatTabName("BIMRL_ELEMENT", compNewModel.Value);
+         string elemTableRef = DBOperation.formatTabName("BIMRL_ELEMENT", compRefModel.Value);
          double tolNeg = -tol;
 
          string diffGeomReport = "select a.elementid \"Elementid\", a.elementtype \"Element Type\", a.total_surface_area \"Surface Area (New)\", b.total_surface_area \"Surface Area (Ref)\", "
@@ -213,7 +213,7 @@ namespace BIMRL
 
             // Add background element from IFCSLAB to give a sense of spatial relative location
             x3dExp.transparencyOverride = 0.9;
-            string whereCondElemGeom = "ELEMENTID IN (SELECT ELEMENTID FROM BIMRL_ELEMENT_" + modelIDNew.ToString("X4") + " WHERE elementtype like 'IFCSLAB%')";
+            string whereCondElemGeom = "ELEMENTID IN (SELECT ELEMENTID FROM " + DBOperation.formatTabName("BIMRL_ELEMENT", compNewModel.Value) + " WHERE elementtype like 'IFCSLAB%')";
             x3dExp.exportElemGeomToX3D(modelIDNew, whereCondElemGeom);
             x3dExp.endExportToX3D();
             row["GraphicFile"] = x3dFile;
@@ -239,10 +239,10 @@ namespace BIMRL
       IList<DataTable> DiffType()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string elemTableNew = "BIMRL_ELEMENT_" + compNewModel.Value.ToString("X4");
-         string elemTableRef = "BIMRL_ELEMENT_" + compRefModel.Value.ToString("X4");
-         string typeTableNew = "BIMRL_TYPE_" + compNewModel.Value.ToString("X4");
-         string typeTableRef = "BIMRL_TYPE_" + compRefModel.Value.ToString("X4");
+         string elemTableNew = DBOperation.formatTabName("BIMRL_ELEMENT", compNewModel.Value);
+         string elemTableRef = DBOperation.formatTabName("BIMRL_ELEMENT", compRefModel.Value);
+         string typeTableNew = DBOperation.formatTabName("BIMRL_TYPE", compNewModel.Value);
+         string typeTableRef = DBOperation.formatTabName("BIMRL_TYPE", compRefModel.Value);
 
          //string newTypeReport = "select elementid, ifctype, name from " + typeTableNew + " minus "
          //                        + "select elementid, ifctype, name from " + typeTableRef;
@@ -275,8 +275,8 @@ namespace BIMRL
       IList<DataTable> DiffContainment()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string elemTableNew = "BIMRL_ELEMENT_" + compNewModel.Value.ToString("X4");
-         string elemTableRef = "BIMRL_ELEMENT_" + compRefModel.Value.ToString("X4");
+         string elemTableNew = DBOperation.formatTabName("BIMRL_ELEMENT", compNewModel.Value);
+         string elemTableRef = DBOperation.formatTabName("BIMRL_ELEMENT", compRefModel.Value);
 
          string containerReport = "select tab1.*, tab2.* from "
                                  + "(select a.elementid id_new, a.elementtype \"Element Type (New)\", a.name \"Element Name (New)\", b.elementid as containerid_new, b.name as containername_new, b.longname as containerlongname_new from " + elemTableNew + " a, " + elemTableNew + " b where b.elementid = a.container) tab1 "
@@ -294,8 +294,8 @@ namespace BIMRL
       IList<DataTable> DiffOwnerHistory()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string oHTableNew = "BIMRL_OWNERHISTORY_" + compNewModel.Value.ToString("X4");
-         string oHTableRef = "BIMRL_OWNERHISTORY_" + compRefModel.Value.ToString("X4");
+         string oHTableNew = DBOperation.formatTabName("BIMRL_OWNERHISTORY", compNewModel.Value);
+         string oHTableRef = DBOperation.formatTabName("BIMRL_OWNERHISTORY", compRefModel.Value);
 
          string oHReport = "select a.*, b.* from " + oHTableNew + " a "
                                  + "full outer join " + oHTableRef + " b "
@@ -309,8 +309,8 @@ namespace BIMRL
       IList<DataTable> DiffProperty()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string propTableNew = "BIMRL_PROPERTIES_" + compNewModel.Value.ToString("X4");
-         string propTableRef = "BIMRL_PROPERTIES_" + compRefModel.Value.ToString("X4");
+         string propTableNew = DBOperation.formatTabName("BIMRL_PROPERTIES", compNewModel.Value);
+         string propTableRef = DBOperation.formatTabName("BIMRL_PROPERTIES", compRefModel.Value);
 
          string elemNewProps = "select elementid, fromtype, propertygroupname, propertyname from " + propTableNew
                                 + " minus "
@@ -344,8 +344,8 @@ namespace BIMRL
       IList<DataTable> DiffMaterial()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string matTableNew = "BIMRL_ELEMENTMATERIAL_" + compNewModel.Value.ToString("X4");
-         string matTableRef = "BIMRL_ELEMENTMATERIAL_" + compRefModel.Value.ToString("X4");
+         string matTableNew = DBOperation.formatTabName("BIMRL_ELEMENTMATERIAL", compNewModel.Value);
+         string matTableRef = DBOperation.formatTabName("BIMRL_ELEMENTMATERIAL", compRefModel.Value);
 
          string newMatReport = "select elementid, materialname, materialthickness from " + matTableNew + " where setname is null "
                                  + "minus "
@@ -383,8 +383,8 @@ namespace BIMRL
       IList<DataTable> DiffClassification()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string classifTableNew = "BIMRL_CLASSIFASSIGNMENT_" + compNewModel.Value.ToString("X4");
-         string classifTableRef = "BIMRL_CLASSIFASSIGNMENT_" + compRefModel.Value.ToString("X4");
+         string classifTableNew = DBOperation.formatTabName("BIMRL_CLASSIFASSIGNMENT", compNewModel.Value);
+         string classifTableRef = DBOperation.formatTabName("BIMRL_CLASSIFASSIGNMENT", compRefModel.Value);
 
          string classifReport = "select a.elementid \"ElementID (New)\", a.classificationname \"Classification Name (New)\", a.classificationitemcode \"Code (New)\", a.fromtype \"FromType?\", "
                                  + "b.elementid \"ElementID (Ref)\", b.classificationname \"Classification Name (Ref)\", b.classificationitemcode \"Code (Ref)\", b.fromtype \"FromType?\""
@@ -400,8 +400,8 @@ namespace BIMRL
       IList<DataTable> DiffGroupMembership()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string groupRelTableNew = "BIMRL_RELGROUP_" + compNewModel.Value.ToString("X4");
-         string groupRelTableRef = "BIMRL_RELGROUP_" + compRefModel.Value.ToString("X4");
+         string groupRelTableNew = DBOperation.formatTabName("BIMRL_RELGROUP", compNewModel.Value);
+         string groupRelTableRef = DBOperation.formatTabName("BIMRL_RELGROUP", compRefModel.Value);
 
          string groupRelReport = "Select a.groupelementid \"Group ID (New)\", a.groupelementtype \"Group Type (New)\", a.memberelementid \"Member ID (New)\", a.memberelementtype \"Member Type (New)\", "
                                  + "b.groupelementid \"Group ID (Ref)\", b.groupelementtype \"Group Type (Ref)\", b.memberelementid \"Member ID (Ref)\", b.memberelementtype \"Member Type (Ref)\" "
@@ -418,8 +418,8 @@ namespace BIMRL
       IList<DataTable> DiffAggregation()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string aggrTableNew = "BIMRL_RELAGGREGATION_" + compNewModel.Value.ToString("X4");
-         string aggrTableRef = "BIMRL_RELAGGREGATION_" + compRefModel.Value.ToString("X4");
+         string aggrTableNew = DBOperation.formatTabName("BIMRL_RELAGGREGATION", compNewModel.Value);
+         string aggrTableRef = DBOperation.formatTabName("BIMRL_RELAGGREGATION", compRefModel.Value);
 
          string aggrReport = "Select a.masterelementid \"Master ID (New)\", a.masterelementtype \"Master Type (New)\", a.aggregateelementid \"Aggre ID (New)\", a.aggregateelementtype \"Aggr Type (New)\", "
                               + "b.masterelementid \"Master ID (Ref)\", b.masterelementtype \"Master Type (Ref)\", b.aggregateelementid \"Aggre ID (Ref)\", b.aggregateelementtype \"Aggr Type (Ref)\" "
@@ -435,8 +435,8 @@ namespace BIMRL
       IList<DataTable> DiffConnection()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string connTableNew = "BIMRL_RELCONNECTION_" + compNewModel.Value.ToString("X4");
-         string connTableRef = "BIMRL_RELCONNECTION_" + compRefModel.Value.ToString("X4");
+         string connTableNew = DBOperation.formatTabName("BIMRL_RELCONNECTION", compNewModel.Value);
+         string connTableRef = DBOperation.formatTabName("BIMRL_RELCONNECTION", compRefModel.Value);
 
          string connReport = "Select a.CONNECTINGELEMENTID \"Connecting Elem ID (New)\", a.CONNECTINGELEMENTTYPE \"Connecting Type (New)\", a.CONNECTEDELEMENTID \"Connected Elem ID(New)\", a.CONNECTEDELEMENTTYPE \"Connected Type (New)\", "
                               + "b.CONNECTINGELEMENTID \"Connecting Elem ID (Ref)\", b.CONNECTINGELEMENTTYPE \"Connecting Type (Ref)\", b.CONNECTEDELEMENTID \"Connected Elem ID(Ref)\", b.CONNECTEDELEMENTTYPE \"Connected Type (Ref)\" "
@@ -465,8 +465,8 @@ namespace BIMRL
       IList<DataTable> DiffElementDependency()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string dependTableNew = "BIMRL_ELEMENTDEPENDENCY_" + compNewModel.Value.ToString("X4");
-         string dependTableRef = "BIMRL_ELEMENTDEPENDENCY_" + compRefModel.Value.ToString("X4");
+         string dependTableNew = DBOperation.formatTabName("BIMRL_ELEMENTDEPENDENCY", compNewModel.Value);
+         string dependTableRef = DBOperation.formatTabName("BIMRL_ELEMENTDEPENDENCY", compRefModel.Value);
 
          string dependReport = "Select a.elementid \"Element ID (New)\", a.elementtype \"Element Type (New)\", a.DEPENDENTELEMENTID \"Dependent Element ID (New)\", a.DEPENDENTELEMENTTYPE \"Dependent Element Type (New)\", a.dependencytype \"Dependency Type (New)\", "
                                  + "b.elementid \"Element ID (Ref)\", b.elementtype \"Element Type (Ref)\", b.DEPENDENTELEMENTID \"Dependent Element ID (Ref)\", b.DEPENDENTELEMENTTYPE \"Dependent Element Type (Ref)\", b.dependencytype \"Dependency Type (Ref)\" "
@@ -482,8 +482,8 @@ namespace BIMRL
       IList<DataTable> DiffSpaceBoundary()
       {
          IList<DataTable> qResults = new List<DataTable>();
-         string spacebTableNew = "BIMRL_RELSPACEBOUNDARY_" + compNewModel.Value.ToString("X4");
-         string spacebTableRef = "BIMRL_RELSPACEBOUNDARY_" + compRefModel.Value.ToString("X4");
+         string spacebTableNew = DBOperation.formatTabName("BIMRL_RELSPACEBOUNDARY", compNewModel.Value);
+         string spacebTableRef = DBOperation.formatTabName("BIMRL_RELSPACEBOUNDARY", compRefModel.Value);
 
          string spacebReport = "select a.spaceelementid \"Space ID (New)\", a.boundaryelementid \"Boundary ID (New)\", a.boundaryelementtype \"Boundary Elem Type (New)\", a.boundarytype \"Boundary Type (New)\", a.internalorexternal \"Internal or External (New)\", "
                                  + "b.spaceelementid \"Space ID (Ref)\", b.boundaryelementid \"Boundary ID (Ref)\", b.boundaryelementtype \"Boundary Elem Type (Ref)\", b.boundarytype \"Boundary Type (Ref)\", b.internalorexternal \"Internal or External (Ref)\" "

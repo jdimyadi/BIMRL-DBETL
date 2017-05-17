@@ -58,7 +58,7 @@ namespace BIMRL
       {
          BIMRLCommon bimrlCommon = new BIMRLCommon();
 
-         string sqlStmt = "SELECT ELEMENTID, GEOMETRYBODY FROM BIMRL_ELEMENT_" + fedID.ToString("X4") + " WHERE GEOMETRYBODY IS NOT NULL";
+         string sqlStmt = "SELECT ELEMENTID, GEOMETRYBODY FROM " + DBOperation.formatTabName("BIMRL_ELEMENT", fedID) + " WHERE GEOMETRYBODY IS NOT NULL";
          if (!string.IsNullOrEmpty(whereCond))
                sqlStmt += " AND " + whereCond;
 
@@ -120,7 +120,7 @@ namespace BIMRL
             return;
 
          int fedID = int.Parse(oFedID.ToString());
-         command.CommandText = "SELECT ELEMENTID, LINENO FROM bimrl_element_" + fedID.ToString("X4") + " WHERE GEOMETRYBODY IS NOT NULL";
+         command.CommandText = "SELECT ELEMENTID, LINENO FROM " + DBOperation.formatTabName("bimrl_element", fedID) + " WHERE GEOMETRYBODY IS NOT NULL";
          OracleDataReader reader = command.ExecuteReader();
          SortedDictionary<int, string> elemList = new SortedDictionary<int, string>();
 
@@ -150,7 +150,7 @@ namespace BIMRL
             //m3D = sdoGeomData.Transform;
             //m3D = XbimMatrix3D.FromArray(sdoGeomData.DataArray2);       // Xbim 3.0 removes Tranform property
             m3D = shapeInstances.FirstOrDefault().Transformation;
-            string sqlStmt = "update BIMRL_ELEMENT_" + fedID.ToString("X4") + " set TRANSFORM_COL1=:1, TRANSFORM_COL2=:2, TRANSFORM_COL3=:3, TRANSFORM_COL4=:4"
+            string sqlStmt = "update " + DBOperation.formatTabName("BIMRL_ELEMENT", fedID) + " set TRANSFORM_COL1=:1, TRANSFORM_COL2=:2, TRANSFORM_COL3=:3, TRANSFORM_COL4=:4"
                            + " Where elementid = '" + elemListItem.Value + "'";
             // int status = DBOperation.updateGeometry(sqlStmt, sdoGeomData);
             currStep = sqlStmt;

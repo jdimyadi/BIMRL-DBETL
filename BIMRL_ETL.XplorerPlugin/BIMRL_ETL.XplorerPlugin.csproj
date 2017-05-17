@@ -172,6 +172,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Error_Dialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="ETLLoad.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -179,6 +183,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Error_Dialog.xaml.cs">
+      <DependentUpon>Error_Dialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="ETLLoad.xaml.cs">
       <DependentUpon>ETLLoad.xaml</DependentUpon>

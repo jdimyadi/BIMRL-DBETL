@@ -1,7 +1,7 @@
-﻿<Application x:Class="push2BIMRL.XplorerPlugin.App"
+﻿<Application x:Class="BIMRL.BIMRL_ETL.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:push2BIMRL.XplorerPlugin"
+             xmlns:local="clr-namespace:BIMRL.BIMRL_ETL"
              StartupUri="ETLLoad.xaml">
     <Application.Resources>
          

@@ -53,7 +53,20 @@ namespace BIMRLGraph
         public GraphData()
         {
             refBimrlCommon = new BIMRLCommon();
-            DBOperation.Connect();
+            try { 
+               DBOperation.ExistingOrDefaultConnection();
+            }
+            catch
+            {
+               if (DBOperation.UIMode)
+               {
+                  BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(refBimrlCommon);
+                  erroDlg.ShowDialog();
+               }
+               else
+                  Console.Write(refBimrlCommon.ErrorMessages);
+               return;
+            }
 
             nodeIdList = new List<int>();
             nodeNameList = new List<string>();
@@ -124,7 +137,7 @@ namespace BIMRLGraph
                 commandPlSql.Dispose();
 
                 // 
-                sqlStmt = "SELECT ELEMENTID,CONTAINER FROM BIMRL_ELEMENT_" + FedID.ToString("X4") + " WHERE ELEMENTTYPE IN ('IFCSPACE','IFCDOOR','IFCDOORSTANDARDCASE','IFCOPENINGELEMENT','IFCOPENINGELEMENTSTANDARDCASE','IFCSTAIR','IFCSTAIRFLIGHT','IFCRAMP','IFCRAMPFLIGHT','IFCTRANSPORTELEMENT')"
+                sqlStmt = "SELECT ELEMENTID,CONTAINER FROM " + DBOperation.formatTabName("BIMRL_ELEMENT", FedID) + " WHERE ELEMENTTYPE IN ('IFCSPACE','IFCDOOR','IFCDOORSTANDARDCASE','IFCOPENINGELEMENT','IFCOPENINGELEMENTSTANDARDCASE','IFCSTAIR','IFCSTAIRFLIGHT','IFCRAMP','IFCRAMPFLIGHT','IFCTRANSPORTELEMENT')"
                           + " OR (ELEMENTTYPE='IFCBUILDINGELEMENTPROXY' AND (UPPER(NAME) LIKE '%LIFT%' OR UPPER(NAME) LIKE '%ELEVATOR%'))";
                 command.CommandText = sqlStmt;
                 OracleDataReader reader = command.ExecuteReader();
@@ -192,7 +205,7 @@ namespace BIMRLGraph
                 }
                 reader.Dispose();
 
-                sqlStmt = "SELECT SPACEELEMENTID, BOUNDARYELEMENTID, BOUNDARYELEMENTTYPE FROM BIMRL_SPACEBOUNDARYV_" + FedID.ToString("X4")
+                sqlStmt = "SELECT SPACEELEMENTID, BOUNDARYELEMENTID, BOUNDARYELEMENTTYPE FROM " + DBOperation.formatTabName("BIMRL_SPACEBOUNDARYV", FedID)
                             + " WHERE BOUNDARYELEMENTTYPE IN ('IFCSPACE','IFCDOOR','IFCOPENINGELEMENT','IFCDOORSTANDARDCASE','IFCOPENINGELEMENTSTANDARDCASE') order by spaceelementid";
                 command.CommandText = sqlStmt;
                 reader2 = command.ExecuteReader();
@@ -228,7 +241,7 @@ namespace BIMRLGraph
                         if (!dependencyDict.ContainsKey(boundID))
                         {
                             // If opening element, need to check whether there is any infill, if yes, use the Door as the node
-                            command2.CommandText = "SELECT DEPENDENTELEMENTID,DEPENDENTELEMENTTYPE FROM BIMRL_ELEMENTDEPENDENCY_" + FedID.ToString("X4") + " WHERE ELEMENTID='" + boundID
+                            command2.CommandText = "SELECT DEPENDENTELEMENTID,DEPENDENTELEMENTTYPE FROM " + DBOperation.formatTabName("BIMRL_ELEMENTDEPENDENCY", FedID) + " WHERE ELEMENTID='" + boundID
                                                     + "' AND DEPENDENTELEMENTTYPE IN ('IFCDOOR','IFCDOORSTANDARDCASE')";
                             OracleDataReader depReader = command2.ExecuteReader();
                             if (depReader.HasRows)
@@ -376,7 +389,7 @@ namespace BIMRLGraph
                 // Connect between stories: collect means to connect via Stairs or Ramp
                 linkParentID = new List<int>();
                 linkParentStatus = new List<OracleParameterStatus>();
-                sqlStmt = "SELECT ELEMENTID, ELEMENTTYPE, CONTAINER, NAME FROM BIMRL_ELEMENT_" + FedID.ToString("X4") + " WHERE ELEMENTTYPE IN ('IFCSTAIR','IFCSTAIRFLIGHT','IFCRAMP','IFCRAMPFLIGHT') order by elementid";
+                sqlStmt = "SELECT ELEMENTID, ELEMENTTYPE, CONTAINER, NAME FROM " + DBOperation.formatTabName("BIMRL_ELEMENT", FedID) + " WHERE ELEMENTTYPE IN ('IFCSTAIR','IFCSTAIRFLIGHT','IFCRAMP','IFCRAMPFLIGHT') order by elementid";
                 command.CommandText = sqlStmt;
                 reader = command.ExecuteReader();
                 while (reader.Read())
@@ -406,7 +419,7 @@ namespace BIMRLGraph
 
                     string storeyID = storeyContainer(FedID, containerId);
 
-                    sqlStmt = "select aggregateelementid,aggregateelementtype from bimrl_relaggregation_" + FedID.ToString("X4") + " where masterelementid='" + elemID + "'";
+                    sqlStmt = "select aggregateelementid,aggregateelementtype from " + DBOperation.formatTabName("bimrl_relaggregation", FedID) + " where masterelementid='" + elemID + "'";
                     command2.CommandText = sqlStmt;
                     reader2 = command2.ExecuteReader();
                     string elemIDList = "'" + elemID + "'";
@@ -421,9 +434,9 @@ namespace BIMRLGraph
                     reader2.Close();
 
                     // Getting objects (space or the same object) that intersect cells that are at the top of the object
-                    sqlStmt = "select a.elementid, a.elementtype, a.name, a.container, count(b.cellid) cellCount from bimrl_element_" + FedID.ToString("X4") + " a, bimrl_spatialindex_" + FedID.ToString("X4")
-                               + " b where a.elementid=b.elementid and b.cellid  in (select cellid from bimrl_spatialindex_" + FedID.ToString("X4")
-                               + " where elementid in(" + elemIDList + ") and zmaxbound = (select max(zmaxbound) from bimrl_spatialindex_" + FedID.ToString("X4")
+                    sqlStmt = "select a.elementid, a.elementtype, a.name, a.container, count(b.cellid) cellCount from " + DBOperation.formatTabName("bimrl_element", FedID) + " a, " + DBOperation.formatTabName("bimrl_spatialindex", FedID)
+                               + " b where a.elementid=b.elementid and b.cellid  in (select cellid from " + DBOperation.formatTabName("bimrl_spatialindex)", FedID)
+                               + " where elementid in(" + elemIDList + ") and zmaxbound = (select max(zmaxbound) from " + DBOperation.formatTabName("bimrl_spatialindex", FedID)
                                + " where elementid in (" + elemIDList + "))) and elementtype='IFCSPACE' GROUP BY a.elementid, a.elementtype, a.name, a.container order by cellCount desc";
                     command2.CommandText = sqlStmt;
                     reader2 = command2.ExecuteReader();
@@ -565,19 +578,20 @@ namespace BIMRLGraph
 
                 projectUnit projUnit = DBOperation.getProjectUnitLength(FedID);
                 double maxHeight = 2.5; // default in Meter
-                if (projUnit == projectUnit.SIUnit_Length_MilliMeter)
-                    maxHeight = maxHeight * 1000;
-                else if (projUnit == projectUnit.Imperial_Length_Foot)
-                    maxHeight = maxHeight * 3.28084;
-                else if (projUnit == projectUnit.Imperial_Length_Inch)
-                    maxHeight = maxHeight * 39.37008;
+            // Model now is always in Meter
+                //if (projUnit == projectUnit.SIUnit_Length_MilliMeter)
+                //    maxHeight = maxHeight * 1000;
+                //else if (projUnit == projectUnit.Imperial_Length_Foot)
+                //    maxHeight = maxHeight * 3.28084;
+                //else if (projUnit == projectUnit.Imperial_Length_Inch)
+                //    maxHeight = maxHeight * 39.37008;
 
                 // To set MaxOctreeLevel correctly, do this first
                 Point3D llb, urt;
                 DBOperation.getWorldBB(FedID, out llb, out urt);
 
                 // Now look for connection through elevator or elevator space
-                sqlStmt = "SELECT ELEMENTID, ELEMENTTYPE, CONTAINER, BODY_MAJOR_AXIS_CENTROID FROM BIMRL_ELEMENT_" + FedID.ToString("X4") 
+                sqlStmt = "SELECT ELEMENTID, ELEMENTTYPE, CONTAINER, BODY_MAJOR_AXIS_CENTROID FROM " + DBOperation.formatTabName("BIMRL_ELEMENT", FedID) 
                             + " WHERE (UPPER(NAME) LIKE '%ELEVATOR$' OR UPPER(NAME) LIKE '%LIFT%') AND ELEMENTTYPE IN ('IFCBUILDINGELEMENTPROXY','IFCSPACE')";
                 command.CommandText = sqlStmt;
                 reader = command.ExecuteReader();
@@ -591,7 +605,7 @@ namespace BIMRLGraph
 
                     string storeyID = storeyContainer(FedID, containerId);
 
-                    sqlStmt = "SELECT MIN(XMINBOUND), MAX(XMAXBOUND), MIN(YMINBOUND), MAX(YMAXBOUND), MIN(ZMINBOUND), MAX(ZMAXBOUND) FROM BIMRL_SPATIALINDEX_" + FedID.ToString("X4")
+                    sqlStmt = "SELECT MIN(XMINBOUND), MAX(XMAXBOUND), MIN(YMINBOUND), MAX(YMAXBOUND), MIN(ZMINBOUND), MAX(ZMAXBOUND) FROM " + DBOperation.formatTabName("BIMRL_SPATIALINDEX", FedID)
                                 + " WHERE ELEMENTID='" + elemID + "'";
                     command2.CommandText = sqlStmt;
                     reader2 = command2.ExecuteReader();
@@ -613,8 +627,8 @@ namespace BIMRLGraph
 
                     // Need to limit the max height to avoid getting other relevant object on the higher storeys
                     // Getting objects (space or the same object) that have cells that are above of the object
-                    sqlStmt = "select a.elementid, a.elementtype, a.name, a.container, b.zminbound, count(b.cellid) cellCount from bimrl_element_" + FedID.ToString("X4") + " a, bimrl_spatialindex_" + FedID.ToString("X4")
-                                + " b where a.elementid=b.elementid and b.cellid  in (select cellid from bimrl_spatialindex_" + FedID.ToString("X4")
+                    sqlStmt = "select a.elementid, a.elementtype, a.name, a.container, b.zminbound, count(b.cellid) cellCount from " + DBOperation.formatTabName("bimrl_element", FedID) + " a, " + DBOperation.formatTabName("bimrl_spatialindex", FedID)
+                                + " b where a.elementid=b.elementid and b.cellid  in (select cellid from " + DBOperation.formatTabName("bimrl_spatialindex", FedID)
                                 + " where (zminbound >= " + zmax.ToString() + " and zminbound < " + zmax2.ToString() + ") "
                                 + " and xminbound between " + xmin.ToString() + " and " + xmax.ToString() 
                                 + " and yminbound between " + ymin.ToString() + " and " + ymax.ToString() + ") and (a.elementtype in ('IFCSPACE','IFCTRANSPORTELEMENT') or (a.elementtype='IFCBUILDINGELEMENTPROXY' and (upper(a.name) like '%LIFT%' OR upper(a.name) like '%ELEVATOR%')))"
@@ -832,9 +846,9 @@ namespace BIMRLGraph
         string containerFromDetail(int FedID, string elemID)
         {
             string container = null;
-            string sqlStmt = "select container from bimrl_element_" + FedID.ToString("X4")
-                        + " where elementid in (select aggregateelementid  from bimrl_relaggregation_" + FedID.ToString("X4")
-                        + " where masterelementid='" + elemID + "' union all select dependentelementid from  bimrl_elementdependency_" + FedID.ToString("X4")
+            string sqlStmt = "select container from " + DBOperation.formatTabName("bimrl_element", FedID)
+                        + " where elementid in (select aggregateelementid  from " + DBOperation.formatTabName("bimrl_relaggregation", FedID)
+                        + " where masterelementid='" + elemID + "' union all select dependentelementid from " + DBOperation.formatTabName("bimrl_elementdependency", FedID)
                         + " where elementid='" + elemID + "')";
             OracleCommand command = new OracleCommand(sqlStmt, DBOperation.DBConn);
             try
@@ -868,9 +882,9 @@ namespace BIMRLGraph
         string containerFromHost(int FedID, string elemID)
         {
             string container = null;
-            string sqlStmt = "select container from bimrl_element_" + FedID.ToString("X4")
-                        + " where elementid in (select masterelementid  from bimrl_relaggregation_" + FedID.ToString("X4")
-                        + " where aggregateelementid='" + elemID + "' union all select elementid from  bimrl_elementdependency_" + FedID.ToString("X4")
+            string sqlStmt = "select container from " + DBOperation.formatTabName("bimrl_element", FedID)
+                        + " where elementid in (select masterelementid  from " + DBOperation.formatTabName("bimrl_relaggregation", FedID)
+                        + " where aggregateelementid='" + elemID + "' union all select elementid from " + DBOperation.formatTabName("bimrl_elementdependency", FedID)
                         + " where dependentelementid='" + elemID + "')";
             OracleCommand command = new OracleCommand(sqlStmt, DBOperation.DBConn);
             try
@@ -907,8 +921,8 @@ namespace BIMRLGraph
         {
             string storeyID = null;
             OracleCommand command = new OracleCommand("", DBOperation.DBConn);
-            string sqlStmt = "select parentid from bimrl_spatialstructure_" + FedID.ToString("X4") + " where spatialelementid='" + containerID + "' "
-                            + " and parenttype='IFCBUILDINGSTOREY' union select spatialelementid from bimrl_spatialstructure_" + FedID.ToString("X4")
+            string sqlStmt = "select parentid from " + DBOperation.formatTabName("bimrl_spatialstructure", FedID) + " where spatialelementid='" + containerID + "' "
+                            + " and parenttype='IFCBUILDINGSTOREY' union select spatialelementid from " + DBOperation.formatTabName("bimrl_spatialstructure", FedID)
                             + " where spatialelementid='" + containerID + "' and spatialelementtype='IFCBUILDINGSTOREY'";
             command.CommandText = sqlStmt;
             try
@@ -947,8 +961,8 @@ namespace BIMRLGraph
                 BIMRLCommon.appendToString("'" + elem + "'", ",", ref elemIDLis);
 
             string container = null;
-            string sqlStmt = "select a.elementid, count(b.cellid) cellCount from bimrl_element_" + FedID.ToString("X4") + " a, bimrl_spatialindex_" + FedID.ToString("X4") + " b, "
-                        + "bimrl_element_" + FedID.ToString("X4") + " c, bimrl_spatialindex_" + FedID.ToString("X4") + " d "
+            string sqlStmt = "select a.elementid, count(b.cellid) cellCount from " + DBOperation.formatTabName("bimrl_element", FedID) + " a, " + DBOperation.formatTabName("bimrl_spatialindex", FedID) + " b, "
+                        + DBOperation.formatTabName("bimrl_element", FedID) + " c, " + DBOperation.formatTabName("bimrl_spatialindex", FedID) + " d "
                         + "where a.elementid=b.elementid and c.elementid=d.elementid and b.cellid=d.cellid and c.elementid in (" + elemIDLis + ") and a.elementtype='IFCSPACE' "
                         + "group by a.elementid order by cellCount desc";
             OracleCommand command = new OracleCommand(sqlStmt, DBOperation.DBConn);

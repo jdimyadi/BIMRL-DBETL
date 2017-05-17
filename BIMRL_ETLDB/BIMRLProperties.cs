@@ -124,7 +124,7 @@ namespace BIMRL
       {
          OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
 
-         string SqlStmt = "Insert into " + tableName + "_" + bimrlProcessModel.currFedID.ToString("X4") + "(ElementId, PropertyGroupName, PropertyName, PropertyValue, PropertyDataType"
+         string SqlStmt = "Insert into " + DBOperation.formatTabName(tableName) + "(ElementId, PropertyGroupName, PropertyName, PropertyValue, PropertyDataType"
             + ", PropertyUnit) Values (:1, :2, :3, :4, :5, :6)";
          command.CommandText = SqlStmt;
          string currStep = SqlStmt;
@@ -665,7 +665,7 @@ namespace BIMRL
       {
          OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
 
-         string SqlStmt = "Insert into " + tableName + "_" + bimrlProcessModel.currFedID.ToString("X4") + "(ElementId, PropertyGroupName, PropertyName, PropertyValue, PropertyDataType"
+         string SqlStmt = "Insert into " + DBOperation.formatTabName(tableName) + "(ElementId, PropertyGroupName, PropertyName, PropertyValue, PropertyDataType"
             + ", PropertyUnit) Values (:1, :2, :3, :4, :5, :6)";
          command.CommandText = SqlStmt;
          string currStep = SqlStmt;

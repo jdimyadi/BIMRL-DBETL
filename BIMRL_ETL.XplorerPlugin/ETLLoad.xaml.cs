@@ -33,7 +33,7 @@ using BIMRL;
 using BIMRL.Common;
 
 
-namespace push2BIMRL.XplorerPlugin
+namespace BIMRL.BIMRL_ETL
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -136,9 +136,13 @@ namespace push2BIMRL.XplorerPlugin
             else
                 DBOperation.OnepushETL = false;
 
-            bimrlProcessModel bimrlPM = new bimrlProcessModel(_model, false);
-
             Close();
+            BIMRLProcessModel bimrlPM = new BIMRLProcessModel(_model, false);
+            if (!string.IsNullOrEmpty(bimrlPM.ErrorsInStack()))
+            {
+               Error_Dialog errorDlg = new Error_Dialog(bimrlPM.ErrorsInStack());
+               errorDlg.ShowDialog();
+            }
         }
     }
 }

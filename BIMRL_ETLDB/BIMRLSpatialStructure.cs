@@ -100,10 +100,10 @@ namespace BIMRL
                   container = relContainer.RelatingObject.GlobalId.ToString();
 
                // Keep a mapping between IFC guid used as a key in BIMRL and the IFC line no of the entity
-               _refBIMRLCommon.guidLineNoMappingAdd(bimrlProcessModel.currModelID, IfcLineNo, guid);
+               _refBIMRLCommon.guidLineNoMappingAdd(BIMRLProcessModel.currModelID, IfcLineNo, guid);
 
-               SqlStmt = "Insert into BIMRL_Element_" + bimrlProcessModel.currFedID.ToString("X4") + "(Elementid, LineNo, ElementType, ModelID, Name, LongName, Description, ObjectType, Container, TypeID) Values ('"
-                           + guid + "'," + IfcLineNo + ", '" + elementtype + "', " + bimrlProcessModel.currModelID.ToString() + ", '" + sseName + "', '" + sseLongName + "','" + sseDescription + "', '" + sseObjectType 
+               SqlStmt = "Insert into " + DBOperation.formatTabName("BIMRL_Element") + "(Elementid, LineNo, ElementType, ModelID, Name, LongName, Description, ObjectType, Container, TypeID) Values ('"
+                           + guid + "'," + IfcLineNo + ", '" + elementtype + "', " + BIMRLProcessModel.currModelID.ToString() + ", '" + sseName + "', '" + sseLongName + "','" + sseDescription + "', '" + sseObjectType 
                            + "', '" + container + "', '" + typeID + "')";
                // status = DBOperation.insertRow(SqlStmt);
                command.CommandText = SqlStmt;
@@ -154,7 +154,7 @@ namespace BIMRL
             {
                // Insert itself at levelremoved=0
                int levelRemoved = 0;
-               SqlStmt = "insert into BIMRL_SPATIALSTRUCTURE_" + bimrlProcessModel.currFedID.ToString("X4") + "(SPATIALELEMENTID, SPATIALELEMENTTYPE, PARENTID, PARENTTYPE, LEVELREMOVED)"
+               SqlStmt = "insert into " + DBOperation.formatTabName("BIMRL_SPATIALSTRUCTURE") + "(SPATIALELEMENTID, SPATIALELEMENTTYPE, PARENTID, PARENTTYPE, LEVELREMOVED)"
                   + " values ('" + sse.GlobalId.ToString() + "','" + sse.GetType().Name.ToUpper() + "','"
                   + sse.GlobalId.ToString() + "','" + sse.GetType().Name.ToUpper() + "'," + levelRemoved + ")";
                command.CommandText = SqlStmt;
@@ -180,7 +180,7 @@ namespace BIMRL
                      parentGuid = parent.GlobalId.ToString();
                      parentType = parent.GetType().Name.ToUpper();
                   }
-                  SqlStmt = "insert into BIMRL_SPATIALSTRUCTURE_" + bimrlProcessModel.currFedID.ToString("X4") + "(SPATIALELEMENTID, SPATIALELEMENTTYPE, PARENTID, PARENTTYPE, LEVELREMOVED)"
+                  SqlStmt = "insert into " + DBOperation.formatTabName("BIMRL_SPATIALSTRUCTURE") + "(SPATIALELEMENTID, SPATIALELEMENTTYPE, PARENTID, PARENTTYPE, LEVELREMOVED)"
                               + " values ('" + sse.GlobalId.ToString() + "','" + sse.GetType().Name.ToUpper() + "','"
                               + parentGuid + "','" + parentType + "'," + levelRemoved + ")";
                   command.CommandText = SqlStmt;
@@ -200,7 +200,7 @@ namespace BIMRL
                      if (grandparent == null)
                         break;  // no ancestor to insert anymore
 
-                     SqlStmt = "insert into BIMRL_SPATIALSTRUCTURE_" + bimrlProcessModel.currFedID.ToString("X4") + "(SPATIALELEMENTID, SPATIALELEMENTTYPE, PARENTID, PARENTTYPE, LEVELREMOVED)"
+                     SqlStmt = "insert into " + DBOperation.formatTabName("BIMRL_SPATIALSTRUCTURE") + "(SPATIALELEMENTID, SPATIALELEMENTTYPE, PARENTID, PARENTTYPE, LEVELREMOVED)"
                                  + " values ('" + sse.GlobalId.ToString() + "','" + sse.GetType().Name.ToUpper() + "','"
                                  + grandparent.GlobalId.ToString() + "','" + grandparent.GetType().Name.ToUpper() + "'," + levelRemoved + ")";
                      command.CommandText = SqlStmt;

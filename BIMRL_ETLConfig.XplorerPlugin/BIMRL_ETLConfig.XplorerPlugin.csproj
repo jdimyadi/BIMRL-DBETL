@@ -187,8 +187,15 @@
     <Compile Include="BIMRLConfigurations.xaml.cs">
       <DependentUpon>BIMRLConfigurations.xaml</DependentUpon>
     </Compile>
+    <Page Include="Error_Dialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Error_Dialog.xaml.cs">
+      <DependentUpon>Error_Dialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

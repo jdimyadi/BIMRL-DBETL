@@ -48,7 +48,7 @@ namespace BIMRL
             elemIDList.Clear();
         }
 
-        public void createSpatialIndexFromBIMRLElement(int federatedId, string whereCond, bool createFaces)
+        public void createSpatialIndexFromBIMRLElement(int federatedId, string whereCond, bool createFaces=true, bool createSpIdx=true)
         {
             DBOperation.beginTransaction();
             string currStep = string.Empty;
@@ -64,11 +64,11 @@ namespace BIMRL
 
             try
             {
-                command.CommandText = "SELECT COUNT(*) FROM BIMRL_ELEMENT_" + federatedId.ToString("X4") + " where geometrybody is not null ";
+                command.CommandText = "SELECT COUNT(*) FROM " + DBOperation.formatTabName("BIMRL_ELEMENT", federatedId) + " where geometrybody is not null ";
                 object rC = command.ExecuteScalar();
                 int totalRowCount = Convert.ToInt32(rC.ToString()) * (int) Math.Pow(8,2);
 
-                string sqlStmt = "select elementid, elementtype, geometrybody from BIMRL_ELEMENT_" + federatedId.ToString("X4") + " where geometrybody is not null ";
+                string sqlStmt = "select elementid, elementtype, geometrybody from " + DBOperation.formatTabName("BIMRL_ELEMENT", federatedId) + " where geometrybody is not null ";
                 if (!string.IsNullOrEmpty(whereCond))
                 {
                     sqlStmt += " and " + whereCond;
@@ -79,38 +79,8 @@ namespace BIMRL
                 command.CommandText = sqlStmt;
                 command.FetchSize = 20;
 
-                ////string sqlStmt2 = "INSERT INTO BIMRL_SPATIALINDEX_" + federatedId.ToString("X4") + " (ELEMENTID, CELLID, BORDERCELL) VALUES (:1, :2, :3)"; 
-                //string sqlStmt2 = "INSERT INTO BIMRL_SPATIALINDEX_" + federatedId.ToString("X4") + " (ELEMENTID, CELLID, XMinBound, YMinBound, ZMinBound, XMaxBound, YMaxBound, ZMaxBound, Depth) "
-                //                    + "VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9)";
-                //OracleCommand commandIns = new OracleCommand(" ", DBOperation.DBConn);
-                //commandIns.CommandText = sqlStmt2;
-                //commandIns.Parameters.Clear();
-
-                ////OracleParameter[] spatialIdx = new OracleParameter[3];
-                //OracleParameter[] spatialIdx = new OracleParameter[9]; 
-                //spatialIdx[0] = commandIns.Parameters.Add("1", OracleDbType.Varchar2);
-                //spatialIdx[0].Direction = ParameterDirection.Input;
-                //spatialIdx[1] = commandIns.Parameters.Add("2", OracleDbType.Varchar2);
-                //spatialIdx[1].Direction = ParameterDirection.Input;
-                ////spatialIdx[2] = commandIns.Parameters.Add("3", OracleDbType.Int32);
-                ////spatialIdx[2].Direction = ParameterDirection.Input;
-                //spatialIdx[2] = commandIns.Parameters.Add("3", OracleDbType.Int32);
-                //spatialIdx[2].Direction = ParameterDirection.Input;
-                //spatialIdx[3] = commandIns.Parameters.Add("4", OracleDbType.Int32);
-                //spatialIdx[3].Direction = ParameterDirection.Input;
-                //spatialIdx[4] = commandIns.Parameters.Add("5", OracleDbType.Int32);
-                //spatialIdx[4].Direction = ParameterDirection.Input;
-                //spatialIdx[5] = commandIns.Parameters.Add("6", OracleDbType.Int32);
-                //spatialIdx[5].Direction = ParameterDirection.Input;
-                //spatialIdx[6] = commandIns.Parameters.Add("7", OracleDbType.Int32);
-                //spatialIdx[6].Direction = ParameterDirection.Input;
-                //spatialIdx[7] = commandIns.Parameters.Add("8", OracleDbType.Int32);
-                //spatialIdx[7].Direction = ParameterDirection.Input;
-                //spatialIdx[8] = commandIns.Parameters.Add("9", OracleDbType.Int32);
-                //spatialIdx[8].Direction = ParameterDirection.Input;
-
                 // The following is needed to update the element table with Bbox information
-                string sqlStmt3 = "UPDATE BIMRL_ELEMENT_" + federatedId.ToString("X4") + " SET GeometryBody_BBOX = :bbox, "
+                string sqlStmt3 = "UPDATE " + DBOperation.formatTabName("BIMRL_ELEMENT", federatedId) + " SET GeometryBody_BBOX = :bbox, "
                                     + "GeometryBody_BBOX_CENTROID = :cent WHERE ELEMENTID = :eid";
                 OracleCommand commandUpdBbox = new OracleCommand(" ", DBOperation.DBConn);
                 commandUpdBbox.CommandText = sqlStmt3;
@@ -216,120 +186,31 @@ namespace BIMRL
                         processFaces.insertIntoDB(false);
                     }
 
-                    // These 3 actions below now are called separately with the "Major Axes & OBB" option
-                    // Update major axes
-                    //BIMRLGeometryPostProcess majorAxes = new BIMRLGeometryPostProcess(elemID, geom, _refBIMRLCommon, federatedId, null);
-                    //majorAxes.deriveMajorAxes();
-                    //majorAxes.trueOBBFaces();
-                    //majorAxes.projectedFaces();
-
-                    //// create OBB topo face information
-                    //if (majorAxes.OBB != null)
-                    //{
-                    //    Polyhedron obbGeom;
-                    //    if (SDOGeomUtils.generate_Polyhedron(majorAxes.OBB, out obbGeom))
-                    //    {
-                    //        BIMRLGeometryPostProcess processFaces = new BIMRLGeometryPostProcess(elemID, obbGeom, _refBIMRLCommon, federatedId, "OBB");
-                    //        processFaces.simplifyAndMergeFaces();
-                    //        processFaces.insertIntoDB(false);
-                    //        processFaces.projectedFace();           // Generate
-                    //    }
-                    //}
-
-                    octreeInstance.ComputeOctree(elemID, geom);
-//                    List<string> cellIDs = octreeInstance.collectCellIDs();
+                    if (createSpIdx)
+                       octreeInstance.ComputeOctree(elemID, geom);
                 }
 
                 reader.Dispose();
 
-                //List<string> elemIDs;
-                //List<string> cellIDs;
-                //List<int> XMinBound;
-                //List<int> YMinBound;
-                //List<int> ZMinBound;
-                //List<int> XMaxBound;
-                //List<int> YMaxBound;
-                //List<int> ZMaxBound;
-                //List<int> depthList;
 
-                // Truncate the table first before reinserting the records
-                DBOperation.executeSingleStmt("TRUNCATE TABLE BIMRL_SPATIALINDEX_" + federatedId.ToString("X4"));
+                  if (createSpIdx)
+                  {
+                     // Truncate the table first before reinserting the records
+                     FederatedModelInfo fedModel = DBOperation.getFederatedModelByID(federatedId);
+                     if (DBOperation.DBUserID.Equals(fedModel.FederatedID))
+                        DBOperation.executeSingleStmt("TRUNCATE TABLE " + DBOperation.formatTabName("BIMRL_SPATIALINDEX", federatedId));
+                     else
+                        DBOperation.executeSingleStmt("DELETE FROM " + DBOperation.formatTabName("BIMRL_SPATIALINDEX"));
 
-                //octreeInstance.collectSpatialIndex(out elemIDs, out cellIDs, out XMinBound, out YMinBound, out ZMinBound, out XMaxBound, out YMaxBound, out ZMaxBound, out depthList);
-                collectSpatialIndexAndInsert(octreeInstance, federatedId);
+                     collectSpatialIndexAndInsert(octreeInstance, federatedId);
+                  }
 
-                ////if (cellIDs.Count > 0)
-                ////{
-                ////    //List<string> elemIDs = new List<string>();
-                ////    //for (int ii = 0; ii < cellIDs.Count; ii++)
-                ////    //    elemIDs.Add(elemID);
-
-                ////    //int recCount = DBOperation.commitInterval;
-                ////    int recCount = cellIDs.Count/100;
-                ////    if (recCount < 10000)
-                ////        recCount = 10000;
-
-                ////    while (elemIDs.Count > 0)
-                ////    {
-                ////        if (elemIDs.Count < recCount)
-                ////            recCount = elemIDs.Count;
-
-                ////        spatialIdx[0].Value = elemIDs.GetRange(0, recCount).ToArray();
-                ////        elemIDs.RemoveRange(0, recCount);
-                ////        spatialIdx[0].Size = recCount;
-                ////        spatialIdx[1].Value = cellIDs.GetRange(0, recCount).ToArray();
-                ////        cellIDs.RemoveRange(0, recCount);
-                ////        spatialIdx[1].Size = recCount;
-                ////        //spatialIdx[2].Value = borderFlagList.GetRange(0, recCount).ToArray();
-                ////        //borderFlagList.RemoveRange(0, recCount);
-                ////        //spatialIdx[2].Size = recCount;
-                ////        spatialIdx[2].Value = XMinBound.GetRange(0, recCount).ToArray();
-                ////        XMinBound.RemoveRange(0, recCount);
-                ////        spatialIdx[2].Size = recCount;
-
-                ////        spatialIdx[3].Value = YMinBound.GetRange(0, recCount).ToArray();
-                ////        YMinBound.RemoveRange(0, recCount);
-                ////        spatialIdx[3].Size = recCount;
-
-                ////        spatialIdx[4].Value = ZMinBound.GetRange(0, recCount).ToArray();
-                ////        ZMinBound.RemoveRange(0, recCount);
-                ////        spatialIdx[4].Size = recCount;
-
-                ////        spatialIdx[5].Value = XMaxBound.GetRange(0, recCount).ToArray();
-                ////        XMaxBound.RemoveRange(0, recCount);
-                ////        spatialIdx[5].Size = recCount;
-
-                ////        spatialIdx[6].Value = YMaxBound.GetRange(0, recCount).ToArray();
-                ////        YMaxBound.RemoveRange(0, recCount);
-                ////        spatialIdx[6].Size = recCount;
-
-                ////        spatialIdx[7].Value = ZMaxBound.GetRange(0, recCount).ToArray();
-                ////        ZMaxBound.RemoveRange(0, recCount);
-                ////        spatialIdx[7].Size = recCount;
-
-                ////        spatialIdx[8].Value = depthList.GetRange(0, recCount).ToArray();
-                ////        depthList.RemoveRange(0, recCount);
-                ////        spatialIdx[8].Size = recCount;
-
-                ////        commandIns.ArrayBindCount = recCount;
-
-                ////        int commandStatus = commandIns.ExecuteNonQuery();
-                ////        DBOperation.commitTransaction();
-                ////    }
-                ////}
-                //else
-                //{
-                //    // Something is not right that it does not return any Octree?
-                //    string msg = "%Warning: Octree master does not return anything";
-                //    _refBIMRLCommon.StackPushError(msg);
-                //}
-
-                if (sublistCnt > 0)
-                {
-                    bboxListList.Add(bboxList);
-                    centListList.Add(centList);
-                    eidUpdListList.Add(eidUpdList);
-                }
+                  if (sublistCnt > 0)
+                  {
+                     bboxListList.Add(bboxList);
+                     centListList.Add(centList);
+                     eidUpdListList.Add(eidUpdList);
+                  }
 
                 for (int i = 0; i < eidUpdListList.Count; i++)
                 {
@@ -345,7 +226,7 @@ namespace BIMRL
                     DBOperation.commitTransaction();
                 }
 
-                if (!string.IsNullOrEmpty(whereCond))
+                if (!string.IsNullOrEmpty(whereCond) && createSpIdx)
                 {
                     command.CommandText = "UPDATE BIMRL_FEDERATEDMODEL SET MAXOCTREELEVEL=" + Octree.MaxDepth.ToString() + " WHERE FEDERATEDID=" + federatedId.ToString();
                     command.ExecuteNonQuery();
@@ -378,7 +259,7 @@ namespace BIMRL
             {
                 SdoGeometry sdoGeomData = new SdoGeometry();
 
-                string sqlStmt = "select elementid, geometrybody from BIMRL_ELEMENT_" + federatedId.ToString("X4") + " where geometrybody is not null ";
+                string sqlStmt = "select elementid, geometrybody from " + DBOperation.formatTabName("BIMRL_ELEMENT", federatedId) + " where geometrybody is not null ";
                 if (!string.IsNullOrEmpty(whereCond))
                     sqlStmt += " and " + whereCond;
                 currStep = sqlStmt;
@@ -431,7 +312,7 @@ namespace BIMRL
             {
                 SdoGeometry sdoGeomData = new SdoGeometry();
 
-                string sqlStmt = "select elementid, geometrybody from BIMRL_ELEMENT_" + federatedId.ToString("X4") + " where geometrybody is not null ";
+                string sqlStmt = "select elementid, geometrybody from " + DBOperation.formatTabName("BIMRL_ELEMENT", federatedId) + " where geometrybody is not null ";
                 if (!string.IsNullOrEmpty(whereCond))
                     sqlStmt += " and " + whereCond;
                 currStep = sqlStmt;
@@ -474,7 +355,7 @@ namespace BIMRL
 
         public void collectSpatialIndexAndInsert(Octree octreeInstance, int federatedId)
         {
-            string sqlStmt = "INSERT INTO BIMRL_SPATIALINDEX_" + federatedId.ToString("X4") + " (ELEMENTID, CELLID, XMinBound, YMinBound, ZMinBound, XMaxBound, YMaxBound, ZMaxBound, Depth) "
+            string sqlStmt = "INSERT INTO " + DBOperation.formatTabName("BIMRL_SPATIALINDEX", federatedId) + " (ELEMENTID, CELLID, XMinBound, YMinBound, ZMinBound, XMaxBound, YMaxBound, ZMaxBound, Depth) "
                                 + "VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9)";
             OracleCommand commandIns = new OracleCommand(" ", DBOperation.DBConn);
             commandIns.CommandText = sqlStmt;

@@ -176,10 +176,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="BIMRLConfigurations.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="Error_Dialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -191,9 +187,6 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="BIMRLConfigurations.xaml.cs">
-      <DependentUpon>BIMRLConfigurations.xaml</DependentUpon>
     </Compile>
     <Compile Include="Error_Dialog.xaml.cs">
       <DependentUpon>Error_Dialog.xaml</DependentUpon>

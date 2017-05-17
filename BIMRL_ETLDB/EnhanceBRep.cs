@@ -59,16 +59,23 @@ namespace BIMRL
             // If the dictionary is empty, initialize with default settings
             if (DBOperation.objectForSpaceBoundary.Count == 0)
             {
-                DBOperation.objectForSpaceBoundary.Add("IFCCOVERING", true);
-                DBOperation.objectForSpaceBoundary.Add("IFCCURTAINWALL", true);
-                DBOperation.objectForSpaceBoundary.Add("IFCDOOR", true);
-                DBOperation.objectForSpaceBoundary.Add("IFCROOF", true);
-                DBOperation.objectForSpaceBoundary.Add("IFCSLAB", true);
-                DBOperation.objectForSpaceBoundary.Add("IFCSPACE", true);
-                DBOperation.objectForSpaceBoundary.Add("IFCWALL", true);
-                DBOperation.objectForSpaceBoundary.Add("IFCWALLSTANDARDCASE", true);
-                DBOperation.objectForSpaceBoundary.Add("IFCWINDOW", true);
-                DBOperation.objectForSpaceBoundary.Add("IFCOPENINGELEMENT", true);
+               DBOperation.objectForSpaceBoundary.Add("IFCBEAM", false);
+               DBOperation.objectForSpaceBoundary.Add("IFCCOLUMN", false);
+               DBOperation.objectForSpaceBoundary.Add("IFCCOVERING", true);
+               DBOperation.objectForSpaceBoundary.Add("IFCCURTAINWALL", true);
+               DBOperation.objectForSpaceBoundary.Add("IFCDOOR", true);
+               DBOperation.objectForSpaceBoundary.Add("IFCMEMBER", false);
+               DBOperation.objectForSpaceBoundary.Add("IFCOPENINGELEMENT", true);
+               DBOperation.objectForSpaceBoundary.Add("IFCPLATE", false);
+               DBOperation.objectForSpaceBoundary.Add("IFCRAILING", false);
+               DBOperation.objectForSpaceBoundary.Add("IFCRAMP", false);
+               DBOperation.objectForSpaceBoundary.Add("IFCROOF", true);
+               DBOperation.objectForSpaceBoundary.Add("IFCSLAB", true);
+               DBOperation.objectForSpaceBoundary.Add("IFCSPACE", true);
+               DBOperation.objectForSpaceBoundary.Add("IFCSTAIR", false);
+               DBOperation.objectForSpaceBoundary.Add("IFCWALL", true);
+               DBOperation.objectForSpaceBoundary.Add("IFCWALLSTANDARDCASE", true);
+               DBOperation.objectForSpaceBoundary.Add("IFCWINDOW", true);
             }
         }
 
@@ -113,7 +120,7 @@ namespace BIMRL
                 // expand elementtype that has aggregation
                 if (!string.IsNullOrEmpty(elemList))
                 {
-                    string sqlStmt = "SELECT UNIQUE AGGREGATEELEMENTTYPE FROM BIMRL_RELAGGREGATION_" + DBOperation.currSelFedID.ToString("X4") + " WHERE MASTERELEMENTTYPE IN (" + elemList + ")";
+                    string sqlStmt = "SELECT UNIQUE AGGREGATEELEMENTTYPE FROM " + DBOperation.formatTabName("BIMRL_RELAGGREGATION") + " WHERE MASTERELEMENTTYPE IN (" + elemList + ")";
                     currStep = sqlStmt;
                     OracleCommand cmdAT = new OracleCommand(sqlStmt, DBOperation.DBConn);
                     cmdAT.FetchSize = 200;
@@ -135,7 +142,7 @@ namespace BIMRL
                     elemListCond = "SELECT ELEMENTID FROM BIMRL_ELEMENT_" +  DBOperation.currSelFedID.ToString("X4") + " WHERE ELEMENTTYPE IN " + elemList;
                 
                 OracleCommand cmdETyp = new OracleCommand("", DBOperation.DBConn);
-                string sqlStmt1 = "SELECT ELEMENTID FROM BIMRL_ELEMENT_" + DBOperation.currSelFedID.ToString("X4") + " WHERE ELEMENTTYPE='IFCSPACE'";
+                string sqlStmt1 = "SELECT ELEMENTID FROM " + DBOperation.formatTabName("BIMRL_ELEMENT") + " WHERE ELEMENTTYPE='IFCSPACE'";
                 BIMRLCommon.appendToString(addCondition, " AND ", ref sqlStmt1);
                 cmdETyp.CommandText = sqlStmt1;
                 currStep = sqlStmt1;
@@ -150,8 +157,8 @@ namespace BIMRL
                     //string sqlStmt2 = "SELECT UNIQUE A.ELEMENTID, C.ELEMENTTYPE FROM " + "BIMRL_SPATIALINDEX_" + DBOperation.currSelFedID.ToString("X4")
                     //                + " A, BIMRL_SPATIALINDEX_" + DBOperation.currSelFedID.ToString("X4") + " B, BIMRL_ELEMENT_" + DBOperation.currSelFedID.ToString("X4")
                     //                + " C WHERE A.CELLID = B.CELLID AND C.ELEMENTID = A.ELEMENTID AND B.ELEMENTID='" + eid + "' " + elemListCond;
-                    string sqlStmt2 = "SELECT UNIQUE A.ELEMENTID FROM " + "BIMRL_SPATIALINDEX_" + DBOperation.currSelFedID.ToString("X4")
-                                        + " A, BIMRL_SPATIALINDEX_" + DBOperation.currSelFedID.ToString("X4") + " B "
+                    string sqlStmt2 = "SELECT UNIQUE A.ELEMENTID FROM " + DBOperation.formatTabName("BIMRL_SPATIALINDEX")
+                                        + " A, " + DBOperation.formatTabName("BIMRL_SPATIALINDEX") + " B "
                                         + " WHERE A.CELLID = B.CELLID AND B.ELEMENTID='" + eid + "' INTERSECT " + elemListCond;
 
                     OracleCommand cmd = new OracleCommand(sqlStmt2, DBOperation.DBConn);
@@ -210,7 +217,7 @@ namespace BIMRL
                         cmdETyp.ArrayBindCount = eids.Count;
                         addCmd.ExecuteNonQuery();
 
-                        sqlStmt3 = "SELECT ELEMENTID, ID, TYPE, POLYGON, NORMAL, ANGLEFROMNORTH, CENTROID FROM BIMRL_TOPO_FACE_" + DBOperation.currSelFedID.ToString("X4")
+                        sqlStmt3 = "SELECT ELEMENTID, ID, TYPE, POLYGON, NORMAL, ANGLEFROMNORTH, CENTROID FROM " + DBOperation.formatTabName("BIMRL_TOPO_FACE")
                                     + " WHERE ELEMENTID IN (SELECT ID1 FROM BIMRLQUERYTEMP) AND TYPE NOT IN ('OBB',' PROJOBB') ORDER BY ELEMENTID";
                     }
                     else
@@ -220,7 +227,7 @@ namespace BIMRL
                             eidList += ",'" + it.elementId + "'";
                         }
                         eidList = "(" + eidList + ")";
-                        sqlStmt3 = "SELECT ELEMENTID, ID, TYPE, POLYGON, NORMAL, ANGLEFROMNORTH, CENTROID FROM BIMRL_TOPO_FACE_" + DBOperation.currSelFedID.ToString("X4")
+                        sqlStmt3 = "SELECT ELEMENTID, ID, TYPE, POLYGON, NORMAL, ANGLEFROMNORTH, CENTROID FROM " + DBOperation.formatTabName("BIMRL_TOPO_FACE")
                                     + " WHERE ELEMENTID IN " + eidList + " AND TYPE NOT IN ('OBB','PROJOBB') ORDER BY ELEMENTID";
                     }
                     OracleCommand cmdF = new OracleCommand(sqlStmt3, DBOperation.DBConn);
@@ -361,7 +368,7 @@ namespace BIMRL
                 }
 
                 // Insert record into a new table
-                string insStmt = "INSERT INTO BIMRL_RELSPACEB_DETAIL_" + DBOperation.currSelFedID.ToString("X4") + "(SPACEELEMENTID,SFACEBOUNDID,COMMONPOINTATS,"
+                string insStmt = "INSERT INTO " + DBOperation.formatTabName("BIMRL_RELSPACEB_DETAIL") + "(SPACEELEMENTID,SFACEBOUNDID,COMMONPOINTATS,"
                                     + "BOUNDARYELEMENTID,BFACEBOUNDID,COMMONPOINTATB,SFACEPOLYGON,SFACENORMAL,SFACEANGLEFROMNORTH,SFACECENTROID,"
                                     + "BFACEPOLYGON,BFACENORMAL,BFACEANGLEFROMNORTH,BFACECENTROID) "
                                     + " VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13, :14)";
@@ -492,7 +499,7 @@ namespace BIMRL
             List<SdoGeometry> centroidList = new List<SdoGeometry>();
             List<string> elemTypeList = new List<string>();
 
-            string sqlStmt = "SELECT ELEMENTID, ID, NORMAL, POLYGON, CENTROID, ELEMENTTYPE FROM BIMRL_TOPOFACEV_" + DBOperation.currSelFedID.ToString("X4") ;
+            string sqlStmt = "SELECT ELEMENTID, ID, NORMAL, POLYGON, CENTROID, ELEMENTTYPE FROM " + DBOperation.formatTabName("BIMRL_TOPOFACEV") ;
             if (!string.IsNullOrEmpty(addCond))
                 sqlStmt += " WHERE " + addCond;
             sqlStmt += " ORDER BY ELEMENTID, ID";
@@ -621,7 +628,7 @@ namespace BIMRL
                             idlist += ", ";
                         idlist += "'" + faceidList[faceIdxColl[k]] + "'";
                     }
-                    cmd.CommandText = "UPDATE BIMRL_TOPO_FACE_" + DBOperation.currSelFedID.ToString("X4") + " SET ORIENTATION='" + orientation + "'"
+                    cmd.CommandText = "UPDATE " + DBOperation.formatTabName("BIMRL_TOPO_FACE") + " SET ORIENTATION='" + orientation + "'"
                                         + ", TOPORBOTTOM_Z=" + prevPos.Z.ToString("F4")
                                         + " WHERE ELEMENTID='" + elemid + "' AND ID IN (" + idlist + ")";
 
@@ -669,7 +676,7 @@ namespace BIMRL
                                 idlist += ", ";
                             idlist += "'" + faceidList[faceIdxColl[k]] + "'";
                         }
-                        cmd.CommandText = "UPDATE BIMRL_TOPO_FACE_" + DBOperation.currSelFedID.ToString("X4") + " SET ORIENTATION='" + orientation + "'"
+                        cmd.CommandText = "UPDATE " + DBOperation.formatTabName("BIMRL_TOPO_FACE") + " SET ORIENTATION='" + orientation + "'"
                                             + ", TOPORBOTTOM_Z=" + prevPos.Z.ToString("F4")
                                             + " WHERE ELEMENTID='" + elemid + "' AND ID IN (" + idlist + ")";
 
@@ -721,7 +728,7 @@ namespace BIMRL
                             idlist += ", ";
                         idlist += "'" + faceidList[faceIdxColl[k]] + "'";
                     }
-                    cmd.CommandText = "UPDATE BIMRL_TOPO_FACE_" + DBOperation.currSelFedID.ToString("X4") + " SET ORIENTATION='" + orientation + "'"
+                    cmd.CommandText = "UPDATE " + DBOperation.formatTabName("BIMRL_TOPO_FACE") + " SET ORIENTATION='" + orientation + "'"
                                         + ", TOPORBOTTOM_Z=" + prevPos.Z.ToString("F4")
                                         + " WHERE ELEMENTID='" + elemid + "' AND ID IN (" + idlist + ")";
 
@@ -765,7 +772,7 @@ namespace BIMRL
                                 idlist += ", ";
                             idlist += "'" + faceidList[faceIdxColl[k]] + "'";
                         }
-                        cmd.CommandText = "UPDATE BIMRL_TOPO_FACE_" + DBOperation.currSelFedID.ToString("X4") + " SET ORIENTATION='" + orientation + "'"
+                        cmd.CommandText = "UPDATE " + DBOperation.formatTabName("BIMRL_TOPO_FACE") + " SET ORIENTATION='" + orientation + "'"
                                             + ", TOPORBOTTOM_Z=" + prevPos.Z.ToString("F4")
                                             + " WHERE ELEMENTID='" + elemid + "' AND ID IN (" + idlist + ")";
 
@@ -824,7 +831,7 @@ namespace BIMRL
                         addCmd.ArrayBindCount = fIdList.Count;
                         addCmd.ExecuteNonQuery();
 
-                        cmd.CommandText = "UPDATE BIMRL_TOPO_FACE_" + DBOperation.currSelFedID.ToString("X4") + " SET ORIENTATION='" + orientation + "'"
+                        cmd.CommandText = "UPDATE " + DBOperation.formatTabName("BIMRL_TOPO_FACE") + " SET ORIENTATION='" + orientation + "'"
                                             + " WHERE ELEMENTID='" + elemid + "' AND ID IN ( SELECT ID1 FROM BIMRLQUERYTEMP )";
                     }
                     else
@@ -835,7 +842,7 @@ namespace BIMRL
                                 idlist += ", ";
                             idlist += "'" + faceidList[faceIdxColl[k]] + "'";
                         }
-                        cmd.CommandText = "UPDATE BIMRL_TOPO_FACE_" + DBOperation.currSelFedID.ToString("X4") + " SET ORIENTATION='" + orientation + "'"
+                        cmd.CommandText = "UPDATE " + DBOperation.formatTabName("BIMRL_TOPO_FACE") + " SET ORIENTATION='" + orientation + "'"
                                             + " WHERE ELEMENTID='" + elemid + "' AND ID IN (" + idlist + ")";
                     }
                     int stat = cmd.ExecuteNonQuery();
@@ -968,7 +975,7 @@ namespace BIMRL
 
         void processDoorLeafOrWindowPanelAttribute(string elemid)
         {
-            string currStmt = "SELECT COUNT(*) FROM BIMRL_PROPERTIES_" + DBOperation.currSelFedID.ToString("X4") + " WHERE ELEMENTID='" + elemid
+            string currStmt = "SELECT COUNT(*) FROM " + DBOperation.formatTabName("BIMRL_PROPERTIES") + " WHERE ELEMENTID='" + elemid
                                 + "' AND (PROPERTYGROUPNAME='IFCDOORPANELPROPERTIES' OR PROPERTYGROUPNAME='IFCWINDOWPANELPROPERTIES') AND PROPERTYNAME='PANELPOSITION'";
             OracleCommand cmd2 = new OracleCommand(currStmt, DBOperation.DBConn);
             object ret = cmd2.ExecuteScalar();
@@ -979,9 +986,10 @@ namespace BIMRL
 
             SortedList<double, Tuple<string, Vector3D>> faceArea = new SortedList<double,Tuple<string,Vector3D>>();
 
-            string sqlStmt = "SELECT A.ID, SDO_GEOM.SDO_AREA(A.POLYGON, B.DIMINFO) AREA, A.NORMAL FROM BIMRL_TOPOFACEV_" + DBOperation.currSelFedID.ToString("X4") 
-                            + " A, USER_SDO_GEOM_METADATA B WHERE A.ELEMENTID='" + elemid + "' AND A.ORIENTATION='" + faceOrientation.SIDE.ToString() + "' AND"
-                            + " B.TABLE_NAME='BIMRL_TOPO_FACE_" + DBOperation.currSelFedID.ToString("X4") + "' AND B.COLUMN_NAME='POLYGON' ORDER BY AREA DESC";
+            string sqlStmt = "SELECT A.ID, SDO_GEOM.SDO_AREA(A.POLYGON, B.DIMINFO) AREA, A.NORMAL FROM " + DBOperation.formatTabName("BIMRL_TOPOFACEV4")
+                            + " A, ALL_SDO_GEOM_METADATA B WHERE A.ELEMENTID='" + elemid + "' AND A.ORIENTATION='" + faceOrientation.SIDE.ToString() + "' AND"
+                            + " B.TABLE_NAME='BIMRL_TOPO_FACE_" + DBOperation.currFedModel.FederatedID.ToString("X4") + "' AND OWNER='" + DBOperation.currFedModel.Owner + "'"
+                            + " AND B.COLUMN_NAME='POLYGON' ORDER BY AREA DESC";
             currStmt = sqlStmt;
             try
             {
@@ -1050,7 +1058,7 @@ namespace BIMRL
                     }
                 }
 
-                string sqlUpd = "UPDATE BIMRL_TOPOFACEV_" + DBOperation.currSelFedID.ToString("X4") + " SET ATTRIBUTE=:1 WHERE ELEMENTID='" + elemid + "' AND ID=:2";
+                string sqlUpd = "UPDATE " + DBOperation.formatTabName("BIMRL_TOPOFACEV") + " SET ATTRIBUTE=:1 WHERE ELEMENTID='" + elemid + "' AND ID=:2";
                 currStmt = sqlUpd;
                 OracleCommand cmdUpd = new OracleCommand(sqlUpd, DBOperation.DBConn);
                 OracleParameter[] pars = new OracleParameter[2];

@@ -71,7 +71,7 @@ namespace BIMRL
 
          OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
 
-         SqlStmt = "insert into BIMRL_RELAGGREGATION_" + bimrlProcessModel.currFedID.ToString("X4")
+         SqlStmt = "insert into " + DBOperation.formatTabName("BIMRL_RELAGGREGATION")
                      + " (MASTERELEMENTID, MASTERELEMENTTYPE, AGGREGATEELEMENTID, AGGREGATEELEMENTTYPE) values (:mGuids, :mType, :aGuids, :aType )";
          command.CommandText = SqlStmt;
          currStep = SqlStmt;
@@ -191,7 +191,7 @@ namespace BIMRL
 
          OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
 
-         SqlStmt = "insert into BIMRL_RELCONNECTION_" + bimrlProcessModel.currFedID.ToString("X4")
+         SqlStmt = "insert into " + DBOperation.formatTabName("BIMRL_RELCONNECTION")
                      + " (CONNECTINGELEMENTID, CONNECTINGELEMENTTYPE, CONNECTINGELEMENTATTRNAME, CONNECTINGELEMENTATTRVALUE, "
                      + "CONNECTEDELEMENTID, CONNECTEDELEMENTTYPE, CONNECTEDELEMENTATTRNAME, CONNECTEDELEMENTATTRVALUE, "
                      + "CONNECTIONATTRNAME, CONNECTIONATTRVALUE, REALIZINGELEMENTID, REALIZINGELEMENTTYPE, RELATIONSHIPTYPE) "
@@ -928,7 +928,7 @@ namespace BIMRL
 
          OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
 
-         SqlStmt = "insert into BIMRL_RELSPACEBOUNDARY_" + bimrlProcessModel.currFedID.ToString("X4")
+         SqlStmt = "insert into " + DBOperation.formatTabName("BIMRL_RELSPACEBOUNDARY")
                      + " (SPACEELEMENTID, BOUNDARYELEMENTID, BOUNDARYELEMENTTYPE, BOUNDARYTYPE, INTERNALOREXTERNAL) values (:1, :2, :3, :4, :5)";
          command.CommandText = SqlStmt;
          currStep = SqlStmt;
@@ -1100,7 +1100,7 @@ namespace BIMRL
 
          OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
 
-         SqlStmt = "insert into BIMRL_RELGROUP_" + bimrlProcessModel.currFedID.ToString("X4")
+         SqlStmt = "insert into " + DBOperation.formatTabName("BIMRL_RELGROUP")
                      + " (GROUPELEMENTID, GROUPELEMENTTYPE, MEMBERELEMENTID, MEMBERELEMENTTYPE) values (:1, :2, :3, :4)";
          command.CommandText = SqlStmt;
          currStep = SqlStmt;
@@ -1300,7 +1300,7 @@ namespace BIMRL
       {
          OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
 
-         string SqlStmt = "insert into BIMRL_ELEMENTDEPENDENCY_" + bimrlProcessModel.currFedID.ToString("X4")
+         string SqlStmt = "insert into " + DBOperation.formatTabName("BIMRL_ELEMENTDEPENDENCY")
                      + " (ELEMENTID, ELEMENTTYPE, DEPENDENTELEMENTID, DEPENDENTELEMENTTYPE, DEPENDENCYTYPE) "
                      + "VALUES (:1, :2, :3, :4, :5)";
          command.CommandText = SqlStmt;
@@ -1316,7 +1316,7 @@ namespace BIMRL
             Param[i].Direction = ParameterDirection.Input;
          }
 
-         if (cEleId.Count >= DBOperation.commitInterval)
+         if (cEleId.Count > 0)
          {
             Param[0].Size = cEleId.Count();
             Param[0].Value = cEleId.ToArray();

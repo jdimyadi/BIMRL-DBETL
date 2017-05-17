@@ -1,7 +1,7 @@
-﻿<Application x:Class="BIMRL_ETLConfig.XplorerPlugin.App"
+﻿<Application x:Class="BIMRL.XplorerPlugin.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:BIMRL_ETLConfig.XplorerPlugin"
+             xmlns:local="clr-namespace:BIMRL.XplorerPlugin"
              StartupUri="BIMRLConfigurations.xaml">
     <Application.Resources>
          

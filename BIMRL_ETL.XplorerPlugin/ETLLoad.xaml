@@ -1,9 +1,9 @@
-﻿<Window x:Class="push2BIMRL.XplorerPlugin.ETLLoad"
+﻿<Window x:Class="BIMRL.BIMRL_ETL.ETLLoad"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:push2BIMRL.XplorerPlugin"
+        xmlns:local="clr-namespace:BIMRL.BIMRL_ETL"
         mc:Ignorable="d"
         Title="Load Model to BIMRL" Height="222.5" Width="444">
     <Grid>

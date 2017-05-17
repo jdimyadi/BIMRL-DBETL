@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace BIMRL_ETLConfig.XplorerPlugin.Properties
+namespace BIMRL.XplorerPlugin.Properties
 {
 
 

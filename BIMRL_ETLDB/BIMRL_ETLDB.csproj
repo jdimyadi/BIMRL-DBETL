@@ -195,7 +195,7 @@
     <Compile Include="BIMRLRelationship.cs" />
     <Compile Include="BIMRLSpatialIndex.cs" />
     <Compile Include="BIMRLSpatialStructure.cs" />
-    <Compile Include="bimrlProcessModel.cs" />
+    <Compile Include="BIMRLProcessModel.cs" />
     <Compile Include="BIMRLTypeObject.cs" />
     <Compile Include="BIMRLUtils.cs" />
     <Compile Include="BIMRLGeometryPostProcess.cs" />
@@ -204,16 +204,9 @@
     <Compile Include="PrincipalComponentAnalysis.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SDOGeomUtils.cs" />
-    <Compile Include="ShowBIMRLModels.xaml.cs">
-      <DependentUpon>ShowBIMRLModels.xaml</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Include="BIMRLErrorDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ShowBIMRLModels.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -303,7 +303,7 @@ namespace BIMRL
             try
             {
                 SdoGeometry sdoGeomData = new SdoGeometry();
-                sqlStmt = "select elementid, elementtype, geometrybody from BIMRL_ELEMENT_" + fedModelID.ToString("X4") + " where geometrybody is not null ";
+                sqlStmt = "select elementid, elementtype, geometrybody from " + DBOperation.formatTabName("BIMRL_ELEMENT", fedModelID) + " where geometrybody is not null ";
                 if (!string.IsNullOrEmpty(whereCond))
                     sqlStmt += " AND " + whereCond;
                 currStep = sqlStmt;
@@ -501,7 +501,7 @@ namespace BIMRL
             {
                 string sqlStmt;
                 if (!forUsergeom)
-                    sqlStmt = "select cellid from BIMRL_SPATIALINDEX_" + fedModelID.ToString("X4") + whereStr;
+                    sqlStmt = "select cellid from " + DBOperation.formatTabName("BIMRL_SPATIALINDEX", fedModelID) + whereStr;
                 else
                     sqlStmt = "select cellid, celltype from USERGEOM_SPATIALINDEX " + whereStr;
 
@@ -644,7 +644,7 @@ namespace BIMRL
 
                 string sqlStmt;
                 if (!forUsergeom)
-                    sqlStmt = "select A.ELEMENTID, A.ID, A.POLYGON, A.TYPE from BIMRL_TOPO_FACE_" + fedModelID.ToString("X4") + " A ";
+                    sqlStmt = "select A.ELEMENTID, A.ID, A.POLYGON, A.TYPE from " + DBOperation.formatTabName("BIMRL_TOPO_FACE", fedModelID) + " A ";
                 else
                     sqlStmt = "select A.ELEMENTID, A.ID, A.POLYGON, A.TYPE from USERGEOM_TOPO_FACE A";
 

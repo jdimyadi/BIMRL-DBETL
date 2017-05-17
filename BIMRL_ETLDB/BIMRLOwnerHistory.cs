@@ -52,7 +52,7 @@ namespace BIMRL
          {
             string columnSpec = "ID, ModelID";
             int ID = Math.Abs(ownH.EntityLabel);
-            string valueList = ID.ToString() + ", " + bimrlProcessModel.currModelID;
+            string valueList = ID.ToString() + ", " + BIMRLProcessModel.currModelID;
 
             IIfcPerson thePerson = ownH.OwningUser.ThePerson;
             string middleNames = string.Empty;
@@ -208,7 +208,7 @@ namespace BIMRL
             columnSpec += ", CreationDate";
             valueList += ", to_date('01-01-1970 00:00:00','DD-MM-YYYY HH24:MI:SS')+" + crDateTS.ToString() + " ";
 
-            string sqlStmt = "insert into BIMRL_OWNERHISTORY_" + bimrlProcessModel.currFedID.ToString("X4") + "(" + columnSpec + ") values (" + valueList + ")";
+            string sqlStmt = "insert into " + DBOperation.formatTabName("BIMRL_OWNERHISTORY") + "(" + columnSpec + ") values (" + valueList + ")";
             currStep = sqlStmt;
 
             command.CommandText = sqlStmt;
@@ -216,7 +216,7 @@ namespace BIMRL
             try
             {
                int commandStatus = command.ExecuteNonQuery();
-               Tuple<int, int> ownHEntry = new Tuple<int, int>(ID, bimrlProcessModel.currModelID);
+               Tuple<int, int> ownHEntry = new Tuple<int, int>(ID, BIMRLProcessModel.currModelID);
                _refBIMRLCommon.OwnerHistoryAdd(ownHEntry);
             }
             catch (OracleException e)

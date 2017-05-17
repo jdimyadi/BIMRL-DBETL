@@ -53,7 +53,7 @@ namespace BIMRL
             {
                 OracleCommand command = new OracleCommand(" ", DBOperation.DBConn);
 
-                string SqlStmt = "Insert into BIMRL_TYPE_" + bimrlProcessModel.currFedID.ToString("X4") + "(ElementId, IfcType, Name, Description, ApplicableOccurrence"
+                string SqlStmt = "Insert into " + DBOperation.formatTabName("BIMRL_TYPE") + "(ElementId, IfcType, Name, Description, ApplicableOccurrence"
                                     + ", Tag, ElementType, PredefinedType, AssemblyPlace, OperationType, ConstructionType, OwnerHistoryID, ModelID)"
                                     + " Values (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13)";
                 command.CommandText = SqlStmt;
@@ -270,7 +270,7 @@ namespace BIMRL
                     Param[10].ArrayBindStatus = arrBStatN.ToArray();
                 }
 
-                Tuple<int, int> ownHEntry = new Tuple<int, int>(Math.Abs(typ.OwnerHistory.EntityLabel), bimrlProcessModel.currModelID);
+                Tuple<int, int> ownHEntry = new Tuple<int, int>(Math.Abs(typ.OwnerHistory.EntityLabel), BIMRLProcessModel.currModelID);
                 if (_refBIMRLCommon.OwnerHistoryExist(ownHEntry))
                 {
                     arrOwnH.Add(Math.Abs(typ.OwnerHistory.EntityLabel));
@@ -284,7 +284,7 @@ namespace BIMRL
                 Param[11].Value = arrOwnH.ToArray();
                 Param[11].ArrayBindStatus = arrOwnHPS.ToArray();
 
-                arrModelID.Add(bimrlProcessModel.currModelID);
+                arrModelID.Add(BIMRLProcessModel.currModelID);
                 Param[12].Value = arrModelID.ToArray();
                            
                 command.ArrayBindCount = 1;

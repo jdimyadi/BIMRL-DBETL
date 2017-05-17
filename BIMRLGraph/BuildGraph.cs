@@ -124,7 +124,7 @@ namespace BIMRLGraph
         public void generateBiDirectionalGraph(int FedID, string networkName)
         {
             string sqlStmt = "SELECT a.node_id, b.elementid, b.elementtype, b.name, b.body_major_axis_centroid from " + networkName + "_node$ a, "
-                            + "bimrl_element_" + FedID.ToString("X4") + " b where a.node_name = b.elementid";
+                            + DBOperation.formatTabName("bimrl_element", FedID) + " b where a.node_name = b.elementid";
             OracleCommand command = new OracleCommand(sqlStmt, DBOperation.DBConn);
 
             try

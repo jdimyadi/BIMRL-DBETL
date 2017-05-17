@@ -53,8 +53,12 @@ namespace DiffModelsUI
       {
          InitializeComponent();
          DBOperation.refBIMRLCommon = BIMRLCommonRef;      // important to ensure DBoperation has reference to this object!!
-         if (DBOperation.Connect() == null)
+         try
          {
+            DBOperation.ExistingOrDefaultConnection();
+         }
+         catch
+         { 
             if (DBOperation.UIMode)
             {
                BIMRLErrorDialog erroDlg = new BIMRLErrorDialog(BIMRLCommonRef);
@@ -66,7 +70,7 @@ namespace DiffModelsUI
          }
 
          BIMRLQueryModel qModel = new BIMRLQueryModel(BIMRLCommonRef);
-         IList<BIMRLFedModel> fedModels = qModel.getFederatedModels();
+         IList<FederatedModelInfo> fedModels = qModel.getFederatedModels();
          dataGrid_ModelList.AutoGenerateColumns = true;
          dataGrid_ModelList.IsReadOnly = true;
          dataGrid_ModelList.ItemsSource = fedModels;
@@ -79,12 +83,12 @@ namespace DiffModelsUI
 
       private void button_1stModel_Click(object sender, RoutedEventArgs e)
       {
-         BIMRLFedModel? selFedModelsItem = dataGrid_ModelList.SelectedItem as BIMRLFedModel?;
+         FederatedModelInfo selFedModelsItem = dataGrid_ModelList.SelectedItem as FederatedModelInfo;
          if (selFedModelsItem == null)
             return;     // do nothing, no selection made
-         else if (selFedModelsItem.HasValue)
+         else
          {
-            BIMRLFedModel selModel = selFedModelsItem.Value;
+            FederatedModelInfo selModel = selFedModelsItem;
             if (modelIDRef >= 0 && modelIDRef == selModel.FederatedID)
                return;  // Can't select the same model to compare
             textBox_1stModel.Text = "(ID: " + selModel.FederatedID.ToString() + ") " + selModel.ModelName + "; " + selModel.ProjectNumber + "; " + selModel.ProjectName;
@@ -96,12 +100,12 @@ namespace DiffModelsUI
 
       private void button_2ndModel_Click(object sender, RoutedEventArgs e)
       {
-         BIMRLFedModel? selFedModelsItem = dataGrid_ModelList.SelectedItem as BIMRLFedModel?;
+         FederatedModelInfo selFedModelsItem = dataGrid_ModelList.SelectedItem as FederatedModelInfo;
          if (selFedModelsItem == null)
             return;     // do nothing, no selection made
-         else if (selFedModelsItem.HasValue)
+         else
          {
-            BIMRLFedModel selModel = selFedModelsItem.Value;
+            FederatedModelInfo selModel = selFedModelsItem;
             if (modelIDNew >= 0 && modelIDNew == selModel.FederatedID)
                return;  // Can't select the same model to compare
 
@@ -143,10 +147,10 @@ namespace DiffModelsUI
 
       private void dataGrid_ModelList_SelectionChanged(object sender, SelectionChangedEventArgs e)
       {
-         BIMRLFedModel? selFedModelsItem = dataGrid_ModelList.SelectedItem as BIMRLFedModel?;
+         FederatedModelInfo selFedModelsItem = dataGrid_ModelList.SelectedItem as FederatedModelInfo;
          if (selFedModelsItem == null)
             return;     // do nothing, no selection made
-         else if (selFedModelsItem.HasValue)
+         else
          {
             button_1stModel.IsEnabled = true;
             button_2ndModel.IsEnabled = true;

@@ -44,9 +44,9 @@ namespace BIMRLDiffModelsCmd
    {
       static public int LoadModelToBIMRL(IfcStore model)
       {
-         bimrlProcessModel bimrlPM = new bimrlProcessModel(model, false);
+         BIMRLProcessModel bimrlPM = new BIMRLProcessModel(model, false);
          if (bimrlPM != null)
-            return bimrlProcessModel.currFedID;
+            return DBOperation.currFedModel.FederatedID;
          return -1;
       }
 

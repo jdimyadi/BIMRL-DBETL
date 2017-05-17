@@ -45,7 +45,7 @@ namespace BIMRL
         BIMRLQueryModel _qModel;
         BIMRLCommon BIMRLCommonRef = new BIMRLCommon();
         List<BIMRLModelInfo> modelInfos = new List<BIMRLModelInfo>();
-        List<BIMRLFedModel> fedModels = new List<BIMRLFedModel>();
+        List<FederatedModelInfo> fedModels = new List<FederatedModelInfo>();
         bool drawOctree = false;
         bool drawFacesOnly = false;
         bool drawWorldBB = false;
@@ -89,13 +89,13 @@ namespace BIMRL
             string whereCond = string.Empty;
 
             int fedModelID = 0;
-            BIMRLFedModel selFedModel;
-            BIMRLFedModel? selFedModelsItem = DataGrid_FedModels.SelectedItem as BIMRLFedModel?;
+            FederatedModelInfo selFedModel;
+            FederatedModelInfo selFedModelsItem = DataGrid_FedModels.SelectedItem as FederatedModelInfo;
             if (selFedModelsItem == null)
                 return;     // do nothing, no selection made
-            else if (selFedModelsItem.HasValue)
+            else
             {
-                selFedModel = selFedModelsItem.Value;
+                selFedModel = selFedModelsItem;
                 fedModelID = selFedModel.FederatedID;
             }
 
@@ -159,22 +159,21 @@ namespace BIMRL
 
         private void DataGrid_FedModels_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            BIMRLFedModel selFedModel;
-            BIMRLFedModel? selFedModelsItem = DataGrid_FedModels.SelectedItem as BIMRLFedModel?;
+            FederatedModelInfo selFedModelsItem = DataGrid_FedModels.SelectedItem as FederatedModelInfo;
             if (selFedModelsItem == null)
                 return;     // do nothing, no selection made
-            else if (selFedModelsItem.HasValue)
+            else
             {
                 modelInfos.Clear();     // clear the list first
-                selFedModel = selFedModelsItem.Value;
-                modelInfos = _qModel.getModelInfos(selFedModel.FederatedID);
+                DBOperation.currFedModel = selFedModelsItem;
+                modelInfos = _qModel.getModelInfos(DBOperation.currFedModel.FederatedID);
                 DataGrid_ModelInfos.AutoGenerateColumns = true;
                 DataGrid_ModelInfos.IsReadOnly = true;
                 DataGrid_ModelInfos.ItemsSource = modelInfos;
                 Button_RegenGeometry.IsEnabled = true;
                 Button_EnhanceSpB.IsEnabled = true;
                 Button_genGraph.IsEnabled = true;
-                projectUnit projectUnit = DBOperation.getProjectUnitLength(selFedModel.FederatedID);
+                projectUnit projectUnit = DBOperation.getProjectUnitLength(DBOperation.currFedModel.FederatedID);
                 DBOperation.currModelProjectUnitLength = projectUnit;
                 
                 if (projectUnit == projectUnit.SIUnit_Length_MilliMeter)
@@ -201,10 +200,10 @@ namespace BIMRL
                     MathUtils._doubleDecimalPrecision = 3;
                     MathUtils._floatDecimalPrecision = 3;
                 }
-                DBOperation.currSelFedID = selFedModel.FederatedID;     // set a static variable keeping the currently selected Fed Id
+                DBOperation.currSelFedID = DBOperation.currFedModel.FederatedID;     // set a static variable keeping the currently selected Fed Id
                 
-                DBOperation.OctreeSubdivLevel = selFedModel.OctreeMaxDepth; 
-                TextBox_OctreeLevel.Text = selFedModel.OctreeMaxDepth.ToString();
+                DBOperation.OctreeSubdivLevel = DBOperation.currFedModel.OctreeMaxDepth; 
+                TextBox_OctreeLevel.Text = DBOperation.currFedModel.OctreeMaxDepth.ToString();
             }
         }
 
@@ -255,12 +254,12 @@ namespace BIMRL
             }
 
             int FedID = -1;
-            BIMRLFedModel? selFedModelsItem = DataGrid_FedModels.SelectedItem as BIMRLFedModel?;
+            FederatedModelInfo selFedModelsItem = DataGrid_FedModels.SelectedItem as FederatedModelInfo;
             if (selFedModelsItem == null)
                 return;     // do nothing, no selection made
-            else if (selFedModelsItem.HasValue)
+            else
             {
-                BIMRLFedModel selFedModel = selFedModelsItem.Value;
+               FederatedModelInfo selFedModel = selFedModelsItem;
                 FedID = selFedModel.FederatedID;
             }
 
@@ -281,15 +280,27 @@ namespace BIMRL
                             // DBOperation.executeSingleStmt("DELETE FROM BIMRL_SPATIALINDEX_" + FedID.ToString("X4") + " WHERE " + whereCond);
                         }
                         if (regenBoundaryFaces)
-                            DBOperation.executeSingleStmt("DELETE FROM BIMRL_TOPO_FACE_" + FedID.ToString("X4") + " WHERE " + whereCond);
+                            DBOperation.executeSingleStmt("DELETE FROM " + DBOperation.formatTabName("BIMRL_TOPO_FACE", FedID) + " WHERE " + whereCond);
                     }
                     else
                     {
-                        if (regenSpatialIndex)
-                            DBOperation.executeSingleStmt("TRUNCATE TABLE BIMRL_SPATIALINDEX_" + FedID.ToString("X4"));
-                        if (regenBoundaryFaces)
-                            DBOperation.executeSingleStmt("TRUNCATE TABLE BIMRL_TOPO_FACE_" + FedID.ToString("X4"));
-                    }
+                        FederatedModelInfo fedModel = DBOperation.getFederatedModelByID(FedID);
+                  if (DBOperation.DBUserID.Equals(fedModel.Owner))
+                  {
+                     if (regenSpatialIndex)
+                        DBOperation.executeSingleStmt("TRUNCATE TABLE " + DBOperation.formatTabName("BIMRL_SPATIALINDEX", FedID));
+                     if (regenBoundaryFaces)
+                        DBOperation.executeSingleStmt("TRUNCATE TABLE " + DBOperation.formatTabName("BIMRL_TOPO_FACE", FedID));
+                  }
+                  else
+                  {
+                     if (regenSpatialIndex)
+                        DBOperation.executeSingleStmt("DELETE FROM " + DBOperation.formatTabName("BIMRL_SPATIALINDEX", FedID));
+                     if (regenBoundaryFaces)
+                        DBOperation.executeSingleStmt("DELETE FROM " + DBOperation.formatTabName("BIMRL_TOPO_FACE", FedID));
+
+                  }
+               }
 
                     // Update Spatial index (including major axes and OBB) and Boundary faces
                     if (regenSpatialIndex && regenBoundaryFaces && _majorAxes)
@@ -400,9 +411,17 @@ namespace BIMRL
         static bool _deleteModel = false;
         private void CheckBox_DeleteModel_Checked(object sender, RoutedEventArgs e)
         {
-            _deleteModel = true;
-            Button_DeleteModel.IsEnabled = true;
-        }
+            if (DBOperation.currFedModel.Owner.Equals(DBOperation.DBUserID))
+            {
+               _deleteModel = true;
+               Button_DeleteModel.IsEnabled = true;
+            }
+            else
+            {
+               _deleteModel = false;
+               Button_DeleteModel.IsEnabled = false;
+            }
+         }
 
         private void CheckBox_DeleteModel_Unchecked(object sender, RoutedEventArgs e)
         {
@@ -412,14 +431,14 @@ namespace BIMRL
 
         private void Button_DeleteModel_Click(object sender, RoutedEventArgs e)
         {
-            BIMRLFedModel selFedModel;
+            FederatedModelInfo selFedModel;
             int FedID = -1;
-            BIMRLFedModel? selFedModelsItem = DataGrid_FedModels.SelectedItem as BIMRLFedModel?;
+            FederatedModelInfo selFedModelsItem = DataGrid_FedModels.SelectedItem as FederatedModelInfo;
             if (selFedModelsItem == null)
                 return;     // do nothing, no selection made
-            else if (selFedModelsItem.HasValue)
+            else
             {
-                selFedModel = selFedModelsItem.Value;
+                selFedModel = selFedModelsItem;
                 FedID = selFedModel.FederatedID;
             }
             try
@@ -475,13 +494,13 @@ namespace BIMRL
             }
 
             int fedModelID = 0;
-            BIMRLFedModel selFedModel;
-            BIMRLFedModel? selFedModelsItem = DataGrid_FedModels.SelectedItem as BIMRLFedModel?;
+            FederatedModelInfo selFedModel;
+            FederatedModelInfo selFedModelsItem = DataGrid_FedModels.SelectedItem as FederatedModelInfo;
             if (selFedModelsItem == null)
                 return;     // do nothing, no selection made
-            else if (selFedModelsItem.HasValue)
+            else
             {
-                selFedModel = selFedModelsItem.Value;
+                selFedModel = selFedModelsItem;
                 fedModelID = selFedModel.FederatedID;
             }
 
@@ -491,12 +510,15 @@ namespace BIMRL
                 {
                     BIMRLCommon.appendToString(TextBox_Additional_Condition.Text, " AND ", ref whereCond);
                     string whereCondD = Regex.Replace(whereCond, "elementid", "spaceelementid", RegexOptions.IgnoreCase);
-                    DBOperation.executeSingleStmt("DELETE FROM BIMRL_RELSPACEB_DETAIL_" + fedModelID.ToString("X4") + " WHERE " + whereCondD);
+                    DBOperation.executeSingleStmt("DELETE FROM " + DBOperation.formatTabName("BIMRL_RELSPACEB_DETAIL", fedModelID) + " WHERE " + whereCondD);
                 }
                 else
                 {
-                    DBOperation.executeSingleStmt("TRUNCATE TABLE BIMRL_RELSPACEB_DETAIL_" + fedModelID.ToString("X4"));
-                }
+                   if (DBOperation.DBUserID.Equals(selFedModel.Owner))
+                     DBOperation.executeSingleStmt("TRUNCATE TABLE " + DBOperation.formatTabName("BIMRL_RELSPACEB_DETAIL", fedModelID));
+                   else
+                     DBOperation.executeSingleStmt("DELETE FROM " + DBOperation.formatTabName("BIMRL_RELSPACEB_DETAIL", fedModelID));
+            }
 
                 DBOperation.commitInterval = 5000;
                 EnhanceBRep eBrep = new EnhanceBRep();
@@ -556,16 +578,16 @@ namespace BIMRL
         private void Button_OctreeLevelCompute_Click(object sender, RoutedEventArgs e)
         {
             int fedModelID = 0;
-            BIMRLFedModel selFedModel;
-            BIMRLFedModel? selFedModelsItem = DataGrid_FedModels.SelectedItem as BIMRLFedModel?;
+            FederatedModelInfo selFedModel;
+            FederatedModelInfo selFedModelsItem = DataGrid_FedModels.SelectedItem as FederatedModelInfo;
 
             try
             {
                 if (selFedModelsItem == null)
                     return;     // do nothing, no selection made
-                else if (selFedModelsItem.HasValue)
+                else
                 {
-                    selFedModel = selFedModelsItem.Value;
+                    selFedModel = selFedModelsItem;
                     fedModelID = selFedModel.FederatedID;
 
                     int level = DBOperation.computeRecomOctreeLevel(fedModelID);
@@ -599,12 +621,12 @@ namespace BIMRL
         {
             // 1. Generate Circulation graph data in the database
             int FedID = -1;
-            BIMRLFedModel? selFedModelsItem = DataGrid_FedModels.SelectedItem as BIMRLFedModel?;
+            FederatedModelInfo selFedModelsItem = DataGrid_FedModels.SelectedItem as FederatedModelInfo;
             if (selFedModelsItem == null)
                 return;     // do nothing, no selection made
-            else if (selFedModelsItem.HasValue)
+            else
             {
-                BIMRLFedModel selFedModel = selFedModelsItem.Value;
+               FederatedModelInfo selFedModel = selFedModelsItem;
                 FedID = selFedModel.FederatedID;
             }
 

@@ -87,7 +87,7 @@ namespace BIMRL
                 Vector3D nullVector = new Vector3D();
                 if (_trueNorth == nullVector)
                 {
-                    sqlStmt = "Select PROPERTYVALUE FROM BIMRL_PROPERTIES_" + _currFedID.ToString("X4") + " WHERE PROPERTYGROUPNAME='IFCATTRIBUTES' AND PROPERTYNAME='TRUENORTH'";
+                    sqlStmt = "Select PROPERTYVALUE FROM " + DBOperation.formatTabName("BIMRL_PROPERTIES", _currFedID) + " WHERE PROPERTYGROUPNAME='IFCATTRIBUTES' AND PROPERTYNAME='TRUENORTH'";
                     OracleCommand cmd = new OracleCommand(sqlStmt, DBOperation.DBConn);
                     object ret = cmd.ExecuteScalar();
                     if (ret != null)
@@ -856,7 +856,7 @@ namespace BIMRL
                 sqlStmt = "INSERT INTO USERGEOM_TOPO_FACE (ELEMENTID, ID, TYPE, POLYGON, NORMAL, ANGLEFROMNORTH, CENTROID) "
                             + "VALUES (:1, :2, :3, :4, :5, :6, : 7)";
             else
-                sqlStmt = "INSERT INTO BIMRL_TOPO_FACE_" + _currFedID.ToString("X4") + "(ELEMENTID, ID, TYPE, POLYGON, NORMAL, ANGLEFROMNORTH, CENTROID) "
+                sqlStmt = "INSERT INTO " + DBOperation.formatTabName("BIMRL_TOPO_FACE") + "(ELEMENTID, ID, TYPE, POLYGON, NORMAL, ANGLEFROMNORTH, CENTROID) "
                             + "VALUES (:1, :2, :3, :4, :5, :6, : 7)";
             OracleCommand cmd = new OracleCommand(sqlStmt, DBOperation.DBConn);
             OracleParameter[] Params = new OracleParameter[7];
@@ -1142,7 +1142,7 @@ namespace BIMRL
             List<Point3D> OBBVerts = pca.OBBVertices;
 
             // Update BIMRL_ELEMENT table
-            string sqlStmt = "UPDATE BIMRL_ELEMENT_" + _currFedID.ToString("X4") + " SET BODY_MAJOR_AXIS_CENTROID=:1, BODY_MAJOR_AXIS1=:2, BODY_MAJOR_AXIS2=:3, BODY_MAJOR_AXIS3=:4, OBB=:5 WHERE ELEMENTID='" + _elementid + "'";
+            string sqlStmt = "UPDATE " + DBOperation.formatTabName("BIMRL_ELEMENT") + " SET BODY_MAJOR_AXIS_CENTROID=:1, BODY_MAJOR_AXIS1=:2, BODY_MAJOR_AXIS2=:3, BODY_MAJOR_AXIS3=:4, OBB=:5 WHERE ELEMENTID='" + _elementid + "'";
             OracleCommand cmd = new OracleCommand(sqlStmt, DBOperation.DBConn);
             OracleParameter[] Params = new OracleParameter[5];
 
