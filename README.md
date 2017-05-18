@@ -29,13 +29,11 @@ You will need to have a few things:
 2. You also need Visual Studio 2015 to compile BIMRL as well as Xbim. Visual Studio Community Edition from Microsoft is sufficient. It can be downloaded for free from [Microsoft Visual Studio Website](https://www.visualstudio.com/downloads/)
 
 3. Download Xbim modules needed for BIMRL. They can be downloaded directly from [Xbim Github](https://xbimteam.github.io/), or from a forked project for [Invicara BIM Assure](https://github.com/invicara/). The later version contains small modification to improve XbimWindowsUI. They are also available through nuget packages that can be used directly within the Visual Studio project. There 3 modules needed:
-
   1. [Xbim Essentials](https://github.com/Invicara/XbimEssentials)
   2. [Xbim Geometry](https://github.com/Invicara/XbimGeometry)
   3. [Xbim WindowsUI or Xplorer](https://github.com/Invicara/XbimWindowsUI)
 
 4. Once you are able to compile BIMRL, the project executables need to be copied to XbimXplorer\Plugins folder keeping the project names the same as a plugin folder:
-
   1. BIMRL_ETL.XplorerPlugin
   2. BIMRL_ETLConfig.XplorerPlugin
   3. BIMRL_Main.XplorerPlugin
