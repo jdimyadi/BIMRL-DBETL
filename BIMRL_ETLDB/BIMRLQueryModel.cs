@@ -88,6 +88,7 @@ namespace BIMRL
 
                      fedModels.Add(fedModel);
                 }
+               reader.Close();
             }
             catch (OracleException e)
             {
@@ -136,6 +137,7 @@ namespace BIMRL
 
                     modelInfos.Add(modelInfo);
                 }
+               reader.Close();
             }
             catch (OracleException e)
             {

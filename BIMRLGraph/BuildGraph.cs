@@ -64,7 +64,7 @@ namespace BIMRLGraph
 
         public void generateUndirectedGraph(int FedID, string networkName)
         {
-            string sqlStmt = "SELECT a.node_id, b.elementid, b.elementtype, b.name, b.body_major_axis_centroid from " + networkName + "_node$ a, "
+            string sqlStmt = "SELECT a.node_id, b.elementid, b.elementtype, b.name, b.body_major_axis_centroid from " + DBOperation.formatTabName(networkName) + "_node$ a, "
                             + "bimrl_element_" + FedID.ToString("X4") + " b where a.node_name = b.elementid";
             OracleCommand command = new OracleCommand(sqlStmt, DBOperation.DBConn);
 
@@ -92,7 +92,7 @@ namespace BIMRLGraph
                 reader.Dispose();
 
                 // generate the graph
-                sqlStmt = "Select link_id, start_node_id, end_node_id from " + networkName + "_link$ where active='Y'";
+                sqlStmt = "Select link_id, start_node_id, end_node_id from " + DBOperation.formatTabName(networkName) + "_link$ where active='Y'";
                 command.CommandText = sqlStmt;
                 reader = command.ExecuteReader();
                 while (reader.Read())
@@ -123,7 +123,7 @@ namespace BIMRLGraph
 
         public void generateBiDirectionalGraph(int FedID, string networkName)
         {
-            string sqlStmt = "SELECT a.node_id, b.elementid, b.elementtype, b.name, b.body_major_axis_centroid from " + networkName + "_node$ a, "
+            string sqlStmt = "SELECT a.node_id, b.elementid, b.elementtype, b.name, b.body_major_axis_centroid from " + DBOperation.formatTabName(networkName, FedID) + "_node$ a, "
                             + DBOperation.formatTabName("bimrl_element", FedID) + " b where a.node_name = b.elementid";
             OracleCommand command = new OracleCommand(sqlStmt, DBOperation.DBConn);
 
@@ -151,7 +151,7 @@ namespace BIMRLGraph
                 reader.Dispose();
 
                 // generate the graph
-                sqlStmt = "Select link_id, start_node_id, end_node_id from " + networkName + "_link$ where active='Y'";
+                sqlStmt = "Select link_id, start_node_id, end_node_id from " + DBOperation.formatTabName(networkName, FedID) + "_link$ where active='Y'";
                 command.CommandText = sqlStmt;
                 reader = command.ExecuteReader();
                 while (reader.Read())

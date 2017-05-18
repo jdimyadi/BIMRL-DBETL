@@ -744,6 +744,7 @@ namespace BIMRL
                     vertIdxStr.Clear();
                     coordStr.Clear();
                 }
+                  reader.Close();
                 oFile.WriteEndElement();  // Transform
                 oFile.Flush();
             }
@@ -1134,6 +1135,7 @@ namespace BIMRL
                     vertIdxStr.Clear();
                     coordStr.Clear();
                 }
+               reader.Close();
                 oFile.WriteEndElement();  // Transform
                 oFile.Flush();
             }

@@ -567,18 +567,20 @@ namespace BIMRLGraph
                                 processedVertPair.Add(new Tuple<string, string>(elemID, spaceAbove));
                             }
                         }
+                        reader2.Close();
                     }
                     else
                     {
+                        reader2.Close();
                         // Missing space above, cannot determine the vertical circulation connectivity
                         refBimrlCommon.StackPushError("%%Warning: Elementid '" + elemID + "' does not have a space above that it can connect to!");
                         continue;
                     }
                 }
-
+               reader.Close();
                 projectUnit projUnit = DBOperation.getProjectUnitLength(FedID);
                 double maxHeight = 2.5; // default in Meter
-            // Model now is always in Meter
+               // Model now is always in Meter
                 //if (projUnit == projectUnit.SIUnit_Length_MilliMeter)
                 //    maxHeight = maxHeight * 1000;
                 //else if (projUnit == projectUnit.Imperial_Length_Foot)
@@ -764,8 +766,9 @@ namespace BIMRLGraph
                             }
                         }
                     }
+                     reader2.Close();
                 }
-
+               reader.Close();
                 insertNode(networkName, nodeIdList, nodeNameList, nodeTypeList, activeList, hierarchyLevelList, parentIdList);
                 insertLink(networkName, linkIdList, linkNameList, startNodeList, endNodeList, linkTypeList, linkActive, linkParentID, linkParentStatus);
             }

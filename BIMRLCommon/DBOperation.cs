@@ -87,6 +87,8 @@ namespace BIMRL.Common
                 currStep = "Opening Oracle connection using: " + constr;
                 m_DBconn.Open();
                 m_connStr = constr;
+               transactionActive = false;
+               m_longTrans = null;
             }
             catch (OracleException e)
             {
@@ -311,6 +313,7 @@ namespace BIMRL.Common
          {
             if (!reader.Read())
             {
+               reader.Close();
                return null;
             }
 
@@ -333,6 +336,8 @@ namespace BIMRL.Common
                fedModel.Owner = reader.GetString(7);
             if (!reader.IsDBNull(8))
                fedModel.DBConnection = reader.GetString(8);
+
+            reader.Close();
          }
          catch (OracleException e)
          {
@@ -393,6 +398,8 @@ namespace BIMRL.Common
                   fedModel.Owner = reader.GetString(7);
                if (!reader.IsDBNull(8))
                   fedModel.DBConnection = reader.GetString(8);
+
+               reader.Close();
             }
             catch (OracleException e)
             {
@@ -401,7 +408,6 @@ namespace BIMRL.Common
                 command.Dispose();
                 throw;
             }
-
             command.Dispose();
 
             return stat;

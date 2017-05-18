@@ -182,19 +182,30 @@ namespace BIMRLMainXplorerPlugin
                 Button_genGraph.IsEnabled = true;
                 projectUnit projectUnit = DBOperation.getProjectUnitLength(DBOperation.currFedModel.FederatedID);
                 DBOperation.currModelProjectUnitLength = projectUnit;
-               
-            // Model now is always in Meter
-                //if (projectUnit == projectUnit.SIUnit_Length_MilliMeter)
-                //{
-                //    MathUtils.tol = 0.1;
-                //    MathUtils._doubleDecimalPrecision = 1;
-                //    MathUtils._floatDecimalPrecision = 1;
-                //}
-                //else if (projectUnit == projectUnit.SIUnit_Length_Meter)
-                //{
-                    MathUtils.tol = 0.0001;
-                    MathUtils._doubleDecimalPrecision = 4;
-                    MathUtils._floatDecimalPrecision = 4;
+                if (DBOperation.DBUserID.Equals(selFedModelsItem.Owner))
+               {
+                  Button_genGraph.IsEnabled = true;
+                  Button_EnhanceSpB.IsEnabled = true;
+                  Button_RegenGeometry.IsEnabled = true;
+               }
+               else
+               {
+                  Button_genGraph.IsEnabled = false;
+                  Button_EnhanceSpB.IsEnabled = false;
+                  Button_RegenGeometry.IsEnabled = false;
+               }
+               // Model now is always in Meter
+               //if (projectUnit == projectUnit.SIUnit_Length_MilliMeter)
+               //{
+               //    MathUtils.tol = 0.1;
+               //    MathUtils._doubleDecimalPrecision = 1;
+               //    MathUtils._floatDecimalPrecision = 1;
+               //}
+               //else if (projectUnit == projectUnit.SIUnit_Length_Meter)
+               //{
+                  MathUtils.tol = 0.0001;
+                  MathUtils._doubleDecimalPrecision = 4;
+                  MathUtils._floatDecimalPrecision = 4;
                 //}
                 //else if (projectUnit == projectUnit.Imperial_Length_Foot)
                 //{

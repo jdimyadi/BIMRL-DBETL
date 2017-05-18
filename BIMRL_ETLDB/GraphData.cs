@@ -125,7 +125,7 @@ namespace BIMRL.BIMRLGraph
             OracleCommand command = new OracleCommand("", DBOperation.DBConn);
             OracleCommand command2 = new OracleCommand("", DBOperation.DBConn);
             OracleCommand commandPlSql = new OracleCommand("", DBOperation.DBConn);
-            string networkName = DBOperation.formatTabName("CIRCULATION", FedID);
+            string networkName = "CIRCULATION_" + FedID.ToString("X4");
             try
             {
                 // Create network tables
@@ -135,12 +135,12 @@ namespace BIMRL.BIMRLGraph
                 commandPlSql.CommandText = sqlStmt;
                 commandPlSql.CommandType = CommandType.StoredProcedure;
                 commandPlSql.BindByName = true;
-                int noHierarchy = 2;
+                decimal noHierarchy = 2;
                 bool isDirected = false;
                 commandPlSql.Parameters.Add("network", OracleDbType.Varchar2, networkName, ParameterDirection.Input);
-                commandPlSql.Parameters.Add("no_of_hierarchy_levels", OracleDbType.Int32, noHierarchy, ParameterDirection.Input);
+                commandPlSql.Parameters.Add("no_of_hierarchy_levels", OracleDbType.Decimal, noHierarchy, ParameterDirection.Input);
                 commandPlSql.Parameters.Add("is_directed", OracleDbType.Boolean, isDirected, ParameterDirection.Input);
-                commandPlSql.ExecuteNonQuery();
+               commandPlSql.ExecuteNonQuery();
                 DBOperation.commitTransaction();
                 commandPlSql.Dispose();
 
@@ -163,20 +163,6 @@ namespace BIMRL.BIMRLGraph
                     string container = string.Empty;
                     if (reader.IsDBNull(1))
                     {
-                        // If container is null, most likely the object has parts as aggregates or dependencies
-                        //command2.CommandText = "select container from bimrl_element_" + FedID.ToString("X4")
-                        //                        + " where elementid in (select aggregateelementid  from bimrl_relaggregation_" + FedID.ToString("X4")
-                        //                        + " where masterelementid='" + elemID + "' union all select dependentelementid from  bimrl_elementdependency_" + FedID.ToString("X4")
-                        //                        + " where elementid='" + elemID + "')";
-                        //reader2 = command2.ExecuteReader();
-                        //while (reader2.Read())
-                        //{
-                        //    if (reader2.IsDBNull(0))
-                        //        continue;
-                        //    container = reader2.GetString(0);
-                        //}
-                        //reader2.Close();
-
                         container = containerFromDetail(FedID, elemID);
 
                         if (string.IsNullOrEmpty(container))
@@ -370,66 +356,7 @@ namespace BIMRL.BIMRLGraph
                 }
                 reader2.Dispose();
 
-                //sqlStmt = "Insert into " + networkName + "_NODE$ (NODE_ID, NODE_NAME, NODE_TYPE, ACTIVE, HIERARCHY_LEVEL, PARENT_NODE_ID) "
-                //                        + "VALUES (:1, :2, :3, :4, :5, :6)";
-                //command.CommandText = sqlStmt;
-                //OracleParameter[] pars = new OracleParameter[6];
-                //pars[0] = command.Parameters.Add("1", OracleDbType.Int32);
-                //pars[1] = command.Parameters.Add("2", OracleDbType.Varchar2);
-                //pars[2] = command.Parameters.Add("3", OracleDbType.Varchar2);
-                //pars[3] = command.Parameters.Add("4", OracleDbType.Varchar2);
-                //pars[4] = command.Parameters.Add("5", OracleDbType.Int32);
-                //pars[5] = command.Parameters.Add("6", OracleDbType.Int32);
-                //for (int i = 0; i < 6; i++)
-                //{
-                //    pars[i].Direction = ParameterDirection.Input;
-                //}
-                //if (nodeIdList.Count > 0)
-                //{
-                //    pars[0].Value = nodeIdList.ToArray();
-                //    pars[1].Value = nodeNameList.ToArray();
-                //    pars[2].Value = nodeTypeList.ToArray();
-                //    pars[3].Value = activeList.ToArray();
-                //    pars[4].Value = hierarchyLevelList.ToArray();
-                //    pars[5].Value = parentIdList.ToArray();
-                //    command.ArrayBindCount = nodeIdList.Count;
-
-                //    command.ExecuteNonQuery();
-                //    DBOperation.commitTransaction();
-                //}
-
                 insertNode(networkName, nodeIdList, nodeNameList, nodeTypeList, activeList, hierarchyLevelList, parentIdList);
-
-                //sqlStmt = "Insert into " + networkName + "_LINK$ (LINK_ID, LINK_NAME, START_NODE_ID, END_NODE_ID, LINK_TYPE, ACTIVE) VALUES (:1, :2, :3, :4, :5, :6)";
-                //command.CommandText = sqlStmt;
-                //OracleParameter[] parsLink = new OracleParameter[6];
-                //command.Parameters.Clear();
-                //parsLink[0] = command.Parameters.Add("1", OracleDbType.Int32);
-                //parsLink[1] = command.Parameters.Add("2", OracleDbType.Varchar2);
-                //parsLink[2] = command.Parameters.Add("3", OracleDbType.Int32);
-                //parsLink[3] = command.Parameters.Add("4", OracleDbType.Int32);
-                //parsLink[4] = command.Parameters.Add("5", OracleDbType.Varchar2);
-                //parsLink[5] = command.Parameters.Add("6", OracleDbType.Varchar2);
-                //for (int i = 0; i < 6; i++)
-                //{
-                //    parsLink[i].Direction = ParameterDirection.Input;
-                //}
-                //if (linkIdList.Count > 0)
-                //{
-                //    parsLink[0].Value = linkIdList.ToArray();
-                //    parsLink[1].Value = linkNameList.ToArray();
-                //    parsLink[2].Value = startNodeList.ToArray();
-                //    parsLink[3].Value = endNodeList.ToArray();
-                //    parsLink[4].Value = linkTypeList.ToArray();
-                //    parsLink[5].Value = linkActive.ToArray();
-                //    command.ArrayBindCount = linkIdList.Count;
-
-                //    command.ExecuteNonQuery();
-                //    DBOperation.commitTransaction();
-                //}
-                //command.Dispose();
-                //command2.Dispose();
-
                 insertLink(networkName, linkIdList, linkNameList, startNodeList, endNodeList, linkTypeList, linkActive);
                 resetLists();
 
@@ -624,6 +551,7 @@ namespace BIMRL.BIMRLGraph
                         continue;
                     }
                 }
+                reader.Close();
 
                 projectUnit projUnit = DBOperation.getProjectUnitLength(FedID);
                 double maxHeight = maxHeightLimit; // default in Meter
@@ -827,8 +755,9 @@ namespace BIMRL.BIMRLGraph
                                 break;      // break from the while loop if one object above is already processed
                         }
                     }
+                     reader2.Close();
                 }
-
+               reader.Close();
                 insertNode(networkName, nodeIdList, nodeNameList, nodeTypeList, activeList, hierarchyLevelList, parentIdList);
                 insertLink(networkName, linkIdList, linkNameList, startNodeList, endNodeList, linkTypeList, linkActive, linkParentID, linkParentStatus);
             }

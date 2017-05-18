@@ -100,7 +100,7 @@ namespace GraphTest
                         return;
                 graph = new BuildGraph(GraphData.refBimrlCommon);
                 //graph.generateUndirectedGraph(fedID, "CIRCULATION_" + fedID.ToString("X4"));
-                graph.generateBiDirectionalGraph(fedID, "CIRCULATION_" + fedID.ToString("X4"));
+                graph.generateBiDirectionalGraph(fedID, "CIRCULATION");
             }
 
             List<string> result = graph.getShortestPath(TextBox_StartNode.Text, TextBox_EndNode.Text);
@@ -151,7 +151,7 @@ namespace GraphTest
                     if (!int.TryParse(TextBox_FedModelID.Text, out fedID))
                         return;
                 graph = new BuildGraph(GraphData.refBimrlCommon);
-                graph.generateBiDirectionalGraph(fedID, "CIRCULATION_" + fedID.ToString("X4"));
+                graph.generateBiDirectionalGraph(fedID, "CIRCULATION");
             }
 
             List<List<string>> results = graph.getkShortestPath(TextBox_StartNode.Text, TextBox_EndNode.Text, kPaths);

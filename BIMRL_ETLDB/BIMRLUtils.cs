@@ -90,6 +90,7 @@ namespace BIMRL
             //    }
             //}
          }
+         reader.Close();
       }
 
       public static void UpdateElementTransform(IfcStore _model, string projectNumber, string projectName)
@@ -130,6 +131,7 @@ namespace BIMRL
             int lineNo = reader.GetInt32(1);
             elemList.Add(lineNo, elemid);
          }
+         reader.Close();
 
          Xbim3DModelContext context = new Xbim3DModelContext(_model);
 
