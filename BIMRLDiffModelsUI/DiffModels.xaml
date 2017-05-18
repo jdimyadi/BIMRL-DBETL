@@ -5,51 +5,49 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DiffModelsUI"
         mc:Ignorable="d"
-        Title="BIMRL - Compare Two Models" Height="468.059" Width="780.257">
+        Title="BIMRL - Compare Two Models" Height="532.459" Width="780.257">
    <Grid>
       <Grid.RowDefinitions>
-         <RowDefinition Height="285*"/>
-         <RowDefinition Height="34*"/>
+         <RowDefinition Height="463*"/>
+         <RowDefinition Height="40*"/>
       </Grid.RowDefinitions>
-      <DataGrid x:Name="dataGrid_ModelList" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" Height="269" Width="344" SelectionChanged="dataGrid_ModelList_SelectionChanged"/>
-      <Button x:Name="button_1stModel" Content="Model (New)" HorizontalAlignment="Left" Margin="365,40,0,0" VerticalAlignment="Top" Width="75" Click="button_1stModel_Click"/>
-      <Button x:Name="button_2ndModel" Content="Model (Ref)" HorizontalAlignment="Left" Margin="365,68,0,0" VerticalAlignment="Top" Width="75" Click="button_2ndModel_Click"/>
-      <TextBox x:Name="textBox_1stModel" Height="23" Margin="468,37,10,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-      <TextBox x:Name="textBox_2ndModel" Height="23" Margin="468,65,10,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-      <Rectangle Fill="#FFF4F4F5" Height="174" Margin="365,126,10,0" Stroke="Black" VerticalAlignment="Top"/>
-      <Button x:Name="button_Run" Content="Run" Margin="0,10,10,0" Grid.Row="1" VerticalAlignment="Top" Click="button_Run_Click" HorizontalAlignment="Right" Width="75"/>
-      <Button x:Name="button_Cancel" Content="Cancel" Height="20" Margin="0,10,93,0" VerticalAlignment="Top" Grid.Row="1" RenderTransformOrigin="0.199,0.514" Click="button_Cancel_Click" HorizontalAlignment="Right" Width="75"/>
-      <Label x:Name="label" Content="Models:" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top"/>
-      <Label x:Name="label1" Content="Options:" HorizontalAlignment="Left" Margin="365,100,0,0" VerticalAlignment="Top"/>
-      <Label x:Name="label2" Content="Models to Compare:" HorizontalAlignment="Left" Margin="468,6,0,0" VerticalAlignment="Top"/>
-      <CheckBox x:Name="checkBox_NewDelObjects" Content="Check New/Deleted Objects" HorizontalAlignment="Left" Margin="369,134,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_CheckGeometryBySignature" Content="Check Geometry Changes" HorizontalAlignment="Left" Margin="369,234,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_CheckTypeAssignments" Content="Check Type Assignments" HorizontalAlignment="Left" Margin="369,154,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_CheckContainmentRelations" Content="Check Containment Relations" HorizontalAlignment="Left" Margin="369,174,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_CheckOwnerHistory" Content="Check OwnerHistory" HorizontalAlignment="Left" Margin="369,194,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_CheckProperties" Content="Check Properties" HorizontalAlignment="Left" Margin="369,214,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_CheckMaterials" Content="Check Materials" HorizontalAlignment="Left" Margin="574,134,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_Classifications" Content="Check Classifications" HorizontalAlignment="Left" Margin="574,154,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_CheckGroupMemberships" Content="Check Group Memberships" HorizontalAlignment="Left" Margin="574,174,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_CheckAggregations" Content="Check Aggregations" HorizontalAlignment="Left" Margin="574,194,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_CheckConnections" Content="Check Connections" HorizontalAlignment="Left" Margin="574,214,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_CheckElementDependencies" Content="Check Element Dependencies" HorizontalAlignment="Left" Margin="574,234,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <CheckBox x:Name="checkBox_CheckSpaceBoundaries" Content="Check Space Boundaries" HorizontalAlignment="Left" Margin="574,254,0,0" VerticalAlignment="Top" IsChecked="True"/>
-      <TextBox x:Name="textBox_Tolerance" HorizontalAlignment="Left" Height="23" Margin="445,255,0,0" TextWrapping="Wrap" Text="0.0001" VerticalAlignment="Top" Width="75" IsReadOnly="True" TextAlignment="Right"/>
-      <Label x:Name="label3" Content="Tolerance:" HorizontalAlignment="Left" Margin="382,249,0,0" VerticalAlignment="Top"/>
-      <Label x:Name="label4" Content="Output Json file:" HorizontalAlignment="Left" Margin="7,312,0,0" VerticalAlignment="Top"/>
-      <TextBox x:Name="textBox_OutputJson" HorizontalAlignment="Left" Height="23" Margin="117,316,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="548" TextChanged="textBox_TextChanged" LostFocus="textBox_OutputJson_LostFocus"/>
-      <Button x:Name="button_Browse" Content="Browse ..." Margin="0,315,10,0" VerticalAlignment="Top" Click="button_Browse_Click" HorizontalAlignment="Right" Width="75"/>
-      <TextBlock x:Name="textBlock_Message" HorizontalAlignment="Left" Margin="10,348,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="36" Width="752" RenderTransformOrigin="0.5,0.5">
-         <TextBlock.RenderTransform>
-            <TransformGroup>
-               <ScaleTransform/>
-               <SkewTransform AngleY="0.077"/>
-               <RotateTransform/>
-               <TranslateTransform Y="-0.499"/>
-            </TransformGroup>
-         </TextBlock.RenderTransform>
-      </TextBlock>
+      <DataGrid x:Name="dataGrid_ModelList" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" Height="321" Width="344" SelectionChanged="dataGrid_ModelList_SelectionChanged"/>
+      <Button x:Name="button_1stModel" Content="Model (New)" HorizontalAlignment="Left" Margin="365,85,0,0" VerticalAlignment="Top" Width="75" Click="button_1stModel_Click" Height="19"/>
+      <Button x:Name="button_2ndModel" Content="Model (Ref)" HorizontalAlignment="Left" Margin="365,127,0,0" VerticalAlignment="Top" Width="75" Click="button_2ndModel_Click" Height="19"/>
+      <TextBox x:Name="textBox_1stModel" Height="39" Margin="468,76,9.6,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+      <TextBox x:Name="textBox_2ndModel" Height="38" Margin="468,120,9.6,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+      <Rectangle Fill="#FFF4F4F5" Height="174" Margin="365,177,9.6,0" Stroke="Black" VerticalAlignment="Top"/>
+      <Button x:Name="button_Run" Content="Run" Margin="0,9.8,9.6,10.2" Grid.Row="1" Click="button_Run_Click" HorizontalAlignment="Right" Width="75"/>
+      <Button x:Name="button_Cancel" Content="Cancel" Margin="0,9.8,92.6,10.2" Grid.Row="1" RenderTransformOrigin="0.199,0.514" Click="button_Cancel_Click" HorizontalAlignment="Right" Width="75"/>
+      <Label x:Name="label" Content="Models:" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Height="26" Width="51"/>
+      <Label x:Name="label1" Content="Options:" HorizontalAlignment="Left" Margin="365,151,0,0" VerticalAlignment="Top" Height="26" Width="54"/>
+      <Label x:Name="label2" Content="Models to Compare:" HorizontalAlignment="Left" Margin="468,50,0,0" VerticalAlignment="Top" Height="26" Width="118"/>
+      <CheckBox x:Name="checkBox_NewDelObjects" Content="Check New/Deleted Objects" HorizontalAlignment="Left" Margin="369,185,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="169"/>
+      <CheckBox x:Name="checkBox_CheckGeometryBySignature" Content="Check Geometry Changes" HorizontalAlignment="Left" Margin="369,285,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="156"/>
+      <CheckBox x:Name="checkBox_CheckTypeAssignments" Content="Check Type Assignments" HorizontalAlignment="Left" Margin="369,205,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="150"/>
+      <CheckBox x:Name="checkBox_CheckContainmentRelations" Content="Check Containment Relations" HorizontalAlignment="Left" Margin="369,225,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="175"/>
+      <CheckBox x:Name="checkBox_CheckOwnerHistory" Content="Check OwnerHistory" HorizontalAlignment="Left" Margin="369,245,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="128"/>
+      <CheckBox x:Name="checkBox_CheckProperties" Content="Check Properties" HorizontalAlignment="Left" Margin="369,265,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="109"/>
+      <CheckBox x:Name="checkBox_CheckMaterials" Content="Check Materials" HorizontalAlignment="Left" Margin="574,185,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="104"/>
+      <CheckBox x:Name="checkBox_Classifications" Content="Check Classifications" HorizontalAlignment="Left" Margin="574,205,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="128"/>
+      <CheckBox x:Name="checkBox_CheckGroupMemberships" Content="Check Group Memberships" HorizontalAlignment="Left" Margin="574,225,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="164"/>
+      <CheckBox x:Name="checkBox_CheckAggregations" Content="Check Aggregations" HorizontalAlignment="Left" Margin="574,245,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="126"/>
+      <CheckBox x:Name="checkBox_CheckConnections" Content="Check Connections" HorizontalAlignment="Left" Margin="574,265,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="120"/>
+      <CheckBox x:Name="checkBox_CheckElementDependencies" Content="Check Element Dependencies" HorizontalAlignment="Left" Margin="574,285,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="176"/>
+      <CheckBox x:Name="checkBox_CheckSpaceBoundaries" Content="Check Space Boundaries" HorizontalAlignment="Left" Margin="574,305,0,0" VerticalAlignment="Top" IsChecked="True" Height="15" Width="150"/>
+      <TextBox x:Name="textBox_Tolerance" HorizontalAlignment="Left" Height="23" Margin="445,306,0,0" TextWrapping="Wrap" Text="0.0001" VerticalAlignment="Top" Width="75" IsReadOnly="True" TextAlignment="Right"/>
+      <Label x:Name="label3" Content="Tolerance:" HorizontalAlignment="Left" Margin="382,300,0,0" VerticalAlignment="Top" Height="26" Width="63"/>
+      <Label x:Name="label4" Content="Output Json file:" HorizontalAlignment="Left" Margin="7,357,0,0" VerticalAlignment="Top" Height="26" Width="96"/>
+      <TextBox x:Name="textBox_OutputJson" HorizontalAlignment="Left" Height="23" Margin="117,361,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="548" LostFocus="textBox_OutputJson_LostFocus"/>
+      <Button x:Name="button_Browse" Content="Browse ..." Margin="0,360,9.6,0" VerticalAlignment="Top" Click="button_Browse_Click" HorizontalAlignment="Right" Width="75" Height="19"/>
+      <Label x:Name="label5" Content=" Database connection:" HorizontalAlignment="Left" Margin="370,0,0,0" VerticalAlignment="Top" Width="132" Height="26"/>
+      <TextBox x:Name="textBox_Username" HorizontalAlignment="Left" Height="23" Margin="396,25,0,0" TextWrapping="Wrap" Text="BIMRL" VerticalAlignment="Top" Width="92"/>
+      <TextBox x:Name="textBox_Password" HorizontalAlignment="Left" Height="23" Margin="512,25,0,0" TextWrapping="Wrap" Text="bimrl" VerticalAlignment="Top" Width="95"/>
+      <TextBox x:Name="textBox_DBConnect" Height="23" Margin="630,25,9.6,0" TextWrapping="Wrap" Text="pdborcl" VerticalAlignment="Top"/>
+      <Label x:Name="label6" Content="/" HorizontalAlignment="Left" Margin="493,22,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.861,-0.523" Height="26" Width="14"/>
+      <Label x:Name="label7" Content="@" HorizontalAlignment="Left" Margin="610,22,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.861,-0.523" Height="26" Width="20"/>
+      <TextBox x:Name="textBox_Message" HorizontalAlignment="Left" Height="74" Margin="10,389,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="754" Foreground="Red" BorderThickness="0" IsReadOnly="True" VerticalScrollBarVisibility="Auto"/>
+      <Button x:Name="button_Clear" Content="Clear" HorizontalAlignment="Left" Margin="10,10.8,0,10.2" Grid.Row="1" Width="75" Click="button_Clear_Click"/>
 
    </Grid>
 </Window>

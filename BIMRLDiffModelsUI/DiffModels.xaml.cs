@@ -136,8 +136,20 @@ namespace DiffModelsUI
          options.CheckElementDependencies = checkBox_CheckElementDependencies.IsChecked.Value;
          options.CheckSpaceBoundaries = checkBox_CheckSpaceBoundaries.IsChecked.Value;
 
-         BIMRLDiffModels diffModels = new BIMRLDiffModels(modelIDNew, modelIDRef, BIMRLCommonRef);
-         diffModels.RunDiff(outputFileName, options: options);
+         string userName = textBox_Username.Text;
+         string pwd = textBox_Password.Text;
+         string dbconnect = textBox_DBConnect.Text;
+
+         try
+         {
+            DBOperation.ConnectToDB(userName, pwd, dbconnect);
+            BIMRLDiffModels diffModels = new BIMRLDiffModels(modelIDNew, modelIDRef, BIMRLCommonRef);
+            diffModels.RunDiff(outputFileName, options: options);
+         }
+         catch (Exception ex)
+         {
+            textBox_Message.Text = ex.Message + "\n" + BIMRLCommonRef.ErrorMessages;
+         }
       }
 
       private void button_Cancel_Click(object sender, RoutedEventArgs e)
@@ -155,11 +167,6 @@ namespace DiffModelsUI
             button_1stModel.IsEnabled = true;
             button_2ndModel.IsEnabled = true;
          }
-      }
-
-      private void textBox_TextChanged(object sender, TextChangedEventArgs e)
-      {
-         
       }
 
       private void button_Browse_Click(object sender, RoutedEventArgs e)
@@ -203,16 +210,21 @@ namespace DiffModelsUI
                FileStream oFile = File.Create(outputFileName);
                oFile.Close();
                File.Delete(outputFileName);
-               textBlock_Message.Text = "";
+               textBox_Message.Text = "";
             }
             catch (Exception excp)
             {
-               textBlock_Message.Foreground = Brushes.Red ;
-               textBlock_Message.FontWeight = FontWeights.ExtraBold;
+               textBox_Message.Foreground = Brushes.Red ;
+               textBox_Message.FontWeight = FontWeights.ExtraBold;
 
-               textBlock_Message.Text = "ERROR: Output file cannot be created! " + excp.Message;
+               textBox_Message.Text = "ERROR: Output file cannot be created! " + excp.Message;
             }
          }
+      }
+
+      private void button_Clear_Click(object sender, RoutedEventArgs e)
+      {
+         textBox_Message.Text = "";
       }
    }
 }
