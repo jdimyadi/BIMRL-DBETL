@@ -161,8 +161,8 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>mkdir $(OutDir)script
-copy $(SolutionDir)script\* $(OutDir)script /y</PostBuildEvent>
+    <PostBuildEvent>mkdir "$(TargetDir)script"
+copy "$(SolutionDir)script\*" "$(TargetDir)script\" /y</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
